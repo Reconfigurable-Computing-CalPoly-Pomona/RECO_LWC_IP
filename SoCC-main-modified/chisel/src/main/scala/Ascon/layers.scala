@@ -87,7 +87,6 @@ class addition_layer extends Module {
 
 }
 
-
 class substitution_layer extends Module {
   val io = IO(new Bundle {
     val x_in        = Input(Vec(5, UInt(64.W)))

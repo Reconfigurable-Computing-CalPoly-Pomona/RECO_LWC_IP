@@ -1,12 +1,7 @@
 package layers
 
 import chisel3._
-import chisel3.iotesters._
-import chisel3.stage.ChiselStage
 import chisel3.util._
-import scala.io.Source
-
-
 
 
 class addition_layer extends Module {
@@ -14,77 +9,24 @@ class addition_layer extends Module {
     val round_in        = Input(UInt(8.W))
     val x2_in        = Input(UInt(64.W))
     val x2_out = Output(UInt(64.W))
-    val clk = Input(Clock()) //CT
-    val rst = Input(Bool())  //CT
   })
 
-//    Combinational
-//    val array = Wire(Vec(12, UInt(64.W)))
-//    array(0) := "hf0".U
-//    array(1) := "he1".U
-//    array(2) := "hd2".U
-//    array(3) := "hc3".U
-//    array(4) := "hb4".U
-//    array(5) := "ha5".U
-//    array(6) := "h96".U
-//    array(7) := "h87".U
-//    array(8) := "h78".U
-//    array(9) := "h69".U
-//    array(10) := "h5a".U
-//    array(11) := "h4b".U
-//
-//    io.x2_out := io.x2_in ^ array(io.round_in)
+    // Combinational
+    val array = Wire(Vec(12, UInt(64.W)))
+    array(0) := "hf0".U
+    array(1) := "he1".U
+    array(2) := "hd2".U
+    array(3) := "hc3".U
+    array(4) := "hb4".U
+    array(5) := "ha5".U
+    array(6) := "h96".U
+    array(7) := "h87".U
+    array(8) := "h78".U
+    array(9) := "h69".U
+    array(10) := "h5a".U
+    array(11) := "h4b".U
 
-  //Sequential Attempt - CT
-  val constant = withClockAndReset(io.clk, io.rst) {
-    Reg(UInt(64.W))
-  }
-
-  when(io.rst) {
-    constant := "d0".U
-  } otherwise {
-    switch(io.round_in) {
-      is("d0".U) {
-        constant := "hf0".U
-      }
-      is("d1".U) {
-        constant := "he1".U
-      }
-      is("d2".U) {
-        constant := "hd2".U
-      }
-      is("d3".U) {
-        constant := "hc3".U
-      }
-      is("d4".U) {
-        constant := "hb4".U
-      }
-      is("d5".U) {
-        constant := "ha5".U
-      }
-      is("d6".U) {
-        constant := "h96".U
-      }
-      is("d7".U) {
-        constant := "h87".U
-      }
-      is("d8".U) {
-        constant := "h78".U
-      }
-      is("d9".U) {
-        constant := "h69".U
-      }
-      is("d10".U) {
-        constant := "h5a".U
-      }
-      is("d11".U) {
-        constant := "h4b".U
-      }
-    }
-  }
-
-  io.x2_out := io.x2_in ^ constant
-
+    io.x2_out := io.x2_in ^ array(io.round_in)
 }
 
 

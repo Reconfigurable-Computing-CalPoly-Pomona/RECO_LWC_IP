@@ -1,10 +1,7 @@
 package permutation
 
 import chisel3._
-import chisel3.iotesters._
-import chisel3.stage.ChiselStage
 import chisel3.util._
-import scala.io.Source
 import layers._
 
 
@@ -22,8 +19,6 @@ class permutation_one extends Module {
     val substitution = Module(new substitution_layer())
     val diffusion= Module(new diffusion_layer())
 
-    addition.io.clk := io.clk   //CT
-    addition.io.rst := io.rst   //CT
     addition.io.round_in := io.round_in
     addition.io.x2_in := io.x_in(2)
     io.round_out :=  io.round_in + 1.U
@@ -56,8 +51,6 @@ class permutation_one_wrapper extends Module {
     val round        = Input(UInt(4.W))
     val done        = Output(Bool())
     val s_out = Output(UInt(320.W))
-    val clk = Input(Clock()) //CT
-    val rst = Input(Bool()) //CT
   })
     val x0_Reg = RegInit(0.U(64.W))
     val x1_Reg = RegInit(0.U(64.W))
@@ -68,8 +61,6 @@ class permutation_one_wrapper extends Module {
     val single_round = Module(new permutation_one())
     val run = RegInit(0.U(1.W))
 
-    single_round.io.clk := io.clk //CT
-    single_round.io.rst := io.rst //CT
 
     when (run === 0.U) {
       x0_Reg := io.s_in(319,256)
@@ -115,8 +106,8 @@ class permutation_two extends Module {
     val round_in        = Input(UInt(8.W))
     val x_in        = Input(Vec(5, UInt(64.W)))
     val x_out = Output(Vec(5, UInt(64.W)))
-    val clk = Input(Clock()) //CT
-    val rst = Input(Bool()) //CT
+    // val clk = Input(Clock()) //CT
+    // val rst = Input(Bool()) //CT
   })
 
     val addition = Module(new addition_layer())
@@ -124,8 +115,8 @@ class permutation_two extends Module {
     val diffusion= Module(new diffusion_layer())
     val substitution_reg = Reg(Vec(5, UInt(64.W)))
 
-    addition.io.clk := io.clk //CT
-    addition.io.rst := io.rst //CT
+    // addition.io.clk := io.clk //CT
+    // addition.io.rst := io.rst //CT
     addition.io.round_in := io.round_in
     addition.io.x2_in := io.x_in(2)
 
@@ -163,8 +154,6 @@ class permutation_two_wrapper extends Module {
     val round        = Input(UInt(4.W))
     val done        = Output(Bool())
     val s_out = Output(UInt(320.W))
-    val clk = Input(Clock()) //CT
-    val rst = Input(Bool()) //CT
   })
     val x0_Reg = RegInit(0.U(64.W))
     val x1_Reg = RegInit(0.U(64.W))
@@ -175,9 +164,6 @@ class permutation_two_wrapper extends Module {
     val single_round = Module(new permutation_two())
     val run = RegInit(0.U(1.W))
     val counter = RegInit(0.U(2.W))
-
-    single_round.io.clk := io.clk //CT
-    single_round.io.rst := io.rst //CT
 
     when (run === 0.U) {
       x0_Reg := io.s_in(319,256)
@@ -237,8 +223,6 @@ class permutation_three extends Module {
     val round_in        = Input(UInt(8.W))
     val x_in        = Input(Vec(5, UInt(64.W)))
     val x_out = Output(Vec(5, UInt(64.W)))
-    val clk = Input(Clock()) //CT
-    val rst = Input(Bool()) //CT
   })
 
     val addition = Module(new addition_layer())
@@ -247,8 +231,6 @@ class permutation_three extends Module {
     val addition_reg = Reg(Vec(5, UInt(64.W)))
     val substitution_reg = Reg(Vec(5, UInt(64.W)))
 
-    addition.io.clk := io.clk //CT
-    addition.io.rst := io.rst //CT
     addition.io.round_in := io.round_in
     addition.io.x2_in := io.x_in(2)
 
@@ -292,8 +274,6 @@ class permutation_three_wrapper extends Module {
     val round        = Input(UInt(4.W))
     val done        = Output(Bool())
     val s_out = Output(UInt(320.W))
-    val clk = Input(Clock()) //CT
-    val rst = Input(Bool()) //CT
   })
     val x0_Reg = RegInit(0.U(64.W))
     val x1_Reg = RegInit(0.U(64.W))
@@ -304,9 +284,6 @@ class permutation_three_wrapper extends Module {
     val single_round = Module(new permutation_three())
     val run = RegInit(0.U(1.W))
     val counter = RegInit(0.U(2.W))
-
-    single_round.io.clk := io.clk //CT
-    single_round.io.rst := io.rst //CT
 
     when (run === 0.U) {
       x0_Reg := io.s_in(319,256)
