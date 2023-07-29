@@ -125,22 +125,20 @@ class permutation_two extends Module {
     val addition = Module(new addition_layer())
     val substitution = Module(new substitution_layer())
     val diffusion= Module(new diffusion_layer())
-    // val substitution_reg = Reg(Vec(5, UInt(64.W)))
     val posedge = Module(new posedge())
     posedge.io.in := io.start
     val start::add::sub::diff::done::Nil = Enum(5)
     val current = RegInit(done)
-    // maybe initialize
-    //val state = Reg(Vec(5, UInt(64.W)))
     val state = VecInit(Seq.fill(5)(RegInit(0.U(64.W))))
-    // RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
-    //val done_reg = RegInit(UInt(1.W))
+    val sub_state = VecInit(Seq.fill(5)(RegInit(0.U(64.W))))
+    val diff_state = VecInit(Seq.fill(5)(RegInit(0.U(64.W))))
+    //val state = VecInit(Seq.fill(5)(RegInit(0.U(64.W))))
     
-    diffusion.io.x_in(0) := state(0)
-    diffusion.io.x_in(1) := state(1)
-    diffusion.io.x_in(2) := state(2)
-    diffusion.io.x_in(3) := state(3)
-    diffusion.io.x_in(4) := state(4)
+    diffusion.io.x_in(0) := sub_state(0)
+    diffusion.io.x_in(1) := sub_state(1)
+    diffusion.io.x_in(2) := sub_state(2)
+    diffusion.io.x_in(3) := sub_state(3)
+    diffusion.io.x_in(4) := sub_state(4)
     substitution.io.x_in(0) := io.x_in(0)
     substitution.io.x_in(1) := io.x_in(1)
     substitution.io.x_in(2) := state(2)
@@ -148,7 +146,6 @@ class permutation_two extends Module {
     substitution.io.x_in(4) := io.x_in(4)
     addition.io.round_in := io.round_in
     addition.io.x2_in := io.x_in(2)
-    // io.done := true.B
     
     switch (current){
       // start the state machine
@@ -161,16 +158,11 @@ class permutation_two extends Module {
         current := sub
       }
       is(sub){
-        state := substitution.io.x_out
+        sub_state := substitution.io.x_out
         current := diff
       }
       is(diff){
-        state := diffusion.io.x_out
-        // state(0) := diffusion.io.x_out(0)
-        // state(1) := diffusion.io.x_out(1)
-        // state(2) := diffusion.io.x_out(2)
-        // state(3) := diffusion.io.x_out(3)
-        // state(4) := diffusion.io.x_out(4)
+        diff_state := diffusion.io.x_out
         current := done
       }
       is(done){
@@ -187,25 +179,7 @@ class permutation_two extends Module {
       io.done := false.B
     }
     
-    io.x_out := state
-    
-    // substitution_reg(0) := substitution.io.x_out(0)
-    // substitution_reg(1) := substitution.io.x_out(1)
-    // substitution_reg(2) := substitution.io.x_out(2)
-    // substitution_reg(3) := substitution.io.x_out(3)
-    // substitution_reg(4) := substitution.io.x_out(4)
-  
-    // diffusion.io.x_in(0) := substitution_reg(0)
-    // diffusion.io.x_in(1) := substitution_reg(1)
-    // diffusion.io.x_in(2) := substitution_reg(2)
-    // diffusion.io.x_in(3) := substitution_reg(3)
-    // diffusion.io.x_in(4) := substitution_reg(4)
-
-    // io.x_out(0) := diffusion.io.x_out(0)
-    // io.x_out(1) := diffusion.io.x_out(1)
-    // io.x_out(2) := diffusion.io.x_out(2)
-    // io.x_out(3) := diffusion.io.x_out(3)
-    // io.x_out(4) := diffusion.io.x_out(4) 
+    io.x_out := diff_state
 }
 
 
@@ -239,11 +213,6 @@ class permutation_two_wrapper extends Module {
       run := io.start
     }//Starts
     .elsewhen (run === 1.U) {
-      // x0_Reg := single_round.io.x_out(0)
-      // x1_Reg := single_round.io.x_out(1)
-      // x2_Reg := single_round.io.x_out(2)
-      // x3_Reg := single_round.io.x_out(3)
-      // x4_Reg := single_round.io.x_out(4)
       run := Mux(current_round === 11.U, 0.U, 1.U)
     }
     
