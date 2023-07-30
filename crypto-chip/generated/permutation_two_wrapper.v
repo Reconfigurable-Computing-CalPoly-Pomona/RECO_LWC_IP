@@ -2273,6 +2273,16 @@ module permutation_two(
 );
 `ifdef RANDOMIZE_REG_INIT
   reg [31:0] _RAND_0;
+  reg [63:0] _RAND_1;
+  reg [63:0] _RAND_2;
+  reg [63:0] _RAND_3;
+  reg [63:0] _RAND_4;
+  reg [63:0] _RAND_5;
+  reg [63:0] _RAND_6;
+  reg [63:0] _RAND_7;
+  reg [63:0] _RAND_8;
+  reg [63:0] _RAND_9;
+  reg [63:0] _RAND_10;
 `endif // RANDOMIZE_REG_INIT
   wire [7:0] addition_io_round_in; // @[permutation.scala 125:26]
   wire [63:0] addition_io_x2_in; // @[permutation.scala 125:26]
@@ -2302,35 +2312,34 @@ module permutation_two(
   wire  posedge__io_in; // @[permutation.scala 128:25]
   wire  posedge__io_out; // @[permutation.scala 128:25]
   reg [2:0] current; // @[permutation.scala 131:26]
-  wire [2:0] _GEN_0 = posedge__io_out ? 3'h0 : current; // @[permutation.scala 170:31 171:19 131:26]
-  wire [2:0] _GEN_1 = 3'h4 == current ? _GEN_0 : current; // @[permutation.scala 150:21 131:26]
-  wire [63:0] _GEN_2 = 3'h3 == current ? diffusion_io_x_out_0 : 64'h0; // @[permutation.scala 150:21 165:20 134:29]
-  wire [63:0] _GEN_3 = 3'h3 == current ? diffusion_io_x_out_1 : 64'h0; // @[permutation.scala 150:21 165:20 134:29]
-  wire [63:0] _GEN_4 = 3'h3 == current ? diffusion_io_x_out_2 : 64'h0; // @[permutation.scala 150:21 165:20 134:29]
-  wire [63:0] _GEN_5 = 3'h3 == current ? diffusion_io_x_out_3 : 64'h0; // @[permutation.scala 150:21 165:20 134:29]
-  wire [63:0] _GEN_6 = 3'h3 == current ? diffusion_io_x_out_4 : 64'h0; // @[permutation.scala 150:21 165:20 134:29]
-  wire [2:0] _GEN_7 = 3'h3 == current ? 3'h4 : _GEN_1; // @[permutation.scala 150:21 166:17]
-  wire [63:0] _GEN_8 = 3'h2 == current ? substitution_io_x_out_0 : 64'h0; // @[permutation.scala 150:21 161:19 133:28]
-  wire [63:0] _GEN_9 = 3'h2 == current ? substitution_io_x_out_1 : 64'h0; // @[permutation.scala 150:21 161:19 133:28]
-  wire [63:0] _GEN_10 = 3'h2 == current ? substitution_io_x_out_2 : 64'h0; // @[permutation.scala 150:21 161:19 133:28]
-  wire [63:0] _GEN_11 = 3'h2 == current ? substitution_io_x_out_3 : 64'h0; // @[permutation.scala 150:21 161:19 133:28]
-  wire [63:0] _GEN_12 = 3'h2 == current ? substitution_io_x_out_4 : 64'h0; // @[permutation.scala 150:21 161:19 133:28]
-  wire [63:0] _GEN_14 = 3'h2 == current ? 64'h0 : _GEN_2; // @[permutation.scala 150:21 134:29]
-  wire [63:0] _GEN_15 = 3'h2 == current ? 64'h0 : _GEN_3; // @[permutation.scala 150:21 134:29]
-  wire [63:0] _GEN_16 = 3'h2 == current ? 64'h0 : _GEN_4; // @[permutation.scala 150:21 134:29]
-  wire [63:0] _GEN_17 = 3'h2 == current ? 64'h0 : _GEN_5; // @[permutation.scala 150:21 134:29]
-  wire [63:0] _GEN_18 = 3'h2 == current ? 64'h0 : _GEN_6; // @[permutation.scala 150:21 134:29]
-  wire [63:0] _GEN_19 = 3'h1 == current ? addition_io_x2_out : 64'h0; // @[permutation.scala 150:21 157:18 132:24]
-  wire [63:0] _GEN_21 = 3'h1 == current ? 64'h0 : _GEN_8; // @[permutation.scala 150:21 133:28]
-  wire [63:0] _GEN_22 = 3'h1 == current ? 64'h0 : _GEN_9; // @[permutation.scala 150:21 133:28]
-  wire [63:0] _GEN_23 = 3'h1 == current ? 64'h0 : _GEN_10; // @[permutation.scala 150:21 133:28]
-  wire [63:0] _GEN_24 = 3'h1 == current ? 64'h0 : _GEN_11; // @[permutation.scala 150:21 133:28]
-  wire [63:0] _GEN_25 = 3'h1 == current ? 64'h0 : _GEN_12; // @[permutation.scala 150:21 133:28]
-  wire [63:0] _GEN_26 = 3'h1 == current ? 64'h0 : _GEN_14; // @[permutation.scala 150:21 134:29]
-  wire [63:0] _GEN_27 = 3'h1 == current ? 64'h0 : _GEN_15; // @[permutation.scala 150:21 134:29]
-  wire [63:0] _GEN_28 = 3'h1 == current ? 64'h0 : _GEN_16; // @[permutation.scala 150:21 134:29]
-  wire [63:0] _GEN_29 = 3'h1 == current ? 64'h0 : _GEN_17; // @[permutation.scala 150:21 134:29]
-  wire [63:0] _GEN_30 = 3'h1 == current ? 64'h0 : _GEN_18; // @[permutation.scala 150:21 134:29]
+  reg [63:0] REG__0; // @[permutation.scala 157:25]
+  reg [63:0] REG__1; // @[permutation.scala 157:25]
+  reg [63:0] REG__2; // @[permutation.scala 157:25]
+  reg [63:0] REG__3; // @[permutation.scala 157:25]
+  reg [63:0] REG__4; // @[permutation.scala 157:25]
+  reg [63:0] REG_1_0; // @[permutation.scala 163:25]
+  reg [63:0] REG_1_1; // @[permutation.scala 163:25]
+  reg [63:0] REG_1_2; // @[permutation.scala 163:25]
+  reg [63:0] REG_1_3; // @[permutation.scala 163:25]
+  reg [63:0] REG_1_4; // @[permutation.scala 163:25]
+  wire [2:0] _GEN_0 = posedge__io_out ? 3'h0 : current; // @[permutation.scala 168:31 169:19 131:26]
+  wire [2:0] _GEN_1 = 3'h4 == current ? _GEN_0 : current; // @[permutation.scala 146:21 131:26]
+  wire [63:0] _GEN_2 = 3'h3 == current ? REG_1_0 : 64'h0; // @[permutation.scala 146:21 163:15 132:24]
+  wire [63:0] _GEN_3 = 3'h3 == current ? REG_1_1 : 64'h0; // @[permutation.scala 146:21 163:15 132:24]
+  wire [63:0] _GEN_4 = 3'h3 == current ? REG_1_2 : 64'h0; // @[permutation.scala 146:21 163:15 132:24]
+  wire [63:0] _GEN_5 = 3'h3 == current ? REG_1_3 : 64'h0; // @[permutation.scala 146:21 163:15 132:24]
+  wire [63:0] _GEN_6 = 3'h3 == current ? REG_1_4 : 64'h0; // @[permutation.scala 146:21 163:15 132:24]
+  wire [2:0] _GEN_7 = 3'h3 == current ? 3'h4 : _GEN_1; // @[permutation.scala 146:21 164:17]
+  wire [63:0] _GEN_8 = 3'h2 == current ? REG__0 : _GEN_2; // @[permutation.scala 146:21 157:15]
+  wire [63:0] _GEN_9 = 3'h2 == current ? REG__1 : _GEN_3; // @[permutation.scala 146:21 157:15]
+  wire [63:0] _GEN_10 = 3'h2 == current ? REG__2 : _GEN_4; // @[permutation.scala 146:21 157:15]
+  wire [63:0] _GEN_11 = 3'h2 == current ? REG__3 : _GEN_5; // @[permutation.scala 146:21 157:15]
+  wire [63:0] _GEN_12 = 3'h2 == current ? REG__4 : _GEN_6; // @[permutation.scala 146:21 157:15]
+  wire [63:0] _GEN_14 = 3'h1 == current ? addition_io_x2_out : _GEN_10; // @[permutation.scala 146:21 153:18]
+  wire [63:0] _GEN_16 = 3'h1 == current ? 64'h0 : _GEN_8; // @[permutation.scala 146:21 132:24]
+  wire [63:0] _GEN_17 = 3'h1 == current ? 64'h0 : _GEN_9; // @[permutation.scala 146:21 132:24]
+  wire [63:0] _GEN_18 = 3'h1 == current ? 64'h0 : _GEN_11; // @[permutation.scala 146:21 132:24]
+  wire [63:0] _GEN_19 = 3'h1 == current ? 64'h0 : _GEN_12; // @[permutation.scala 146:21 132:24]
   addition_layer addition ( // @[permutation.scala 125:26]
     .io_round_in(addition_io_round_in),
     .io_x2_in(addition_io_x2_in),
@@ -2366,39 +2375,49 @@ module permutation_two(
     .io_in(posedge__io_in),
     .io_out(posedge__io_out)
   );
-  assign io_x_out_0 = 3'h0 == current ? 64'h0 : _GEN_26; // @[permutation.scala 150:21 134:29]
-  assign io_x_out_1 = 3'h0 == current ? 64'h0 : _GEN_27; // @[permutation.scala 150:21 134:29]
-  assign io_x_out_2 = 3'h0 == current ? 64'h0 : _GEN_28; // @[permutation.scala 150:21 134:29]
-  assign io_x_out_3 = 3'h0 == current ? 64'h0 : _GEN_29; // @[permutation.scala 150:21 134:29]
-  assign io_x_out_4 = 3'h0 == current ? 64'h0 : _GEN_30; // @[permutation.scala 150:21 134:29]
-  assign io_done = current == 3'h4; // @[permutation.scala 176:19]
-  assign addition_io_round_in = io_round_in; // @[permutation.scala 147:26]
-  assign addition_io_x2_in = io_x_in_2; // @[permutation.scala 148:23]
-  assign substitution_io_x_in_0 = io_x_in_0; // @[permutation.scala 142:29]
-  assign substitution_io_x_in_1 = io_x_in_1; // @[permutation.scala 143:29]
-  assign substitution_io_x_in_2 = 3'h0 == current ? 64'h0 : _GEN_19; // @[permutation.scala 150:21 132:24]
-  assign substitution_io_x_in_3 = io_x_in_3; // @[permutation.scala 145:29]
-  assign substitution_io_x_in_4 = io_x_in_4; // @[permutation.scala 146:29]
-  assign diffusion_io_x_in_0 = 3'h0 == current ? 64'h0 : _GEN_21; // @[permutation.scala 150:21 133:28]
-  assign diffusion_io_x_in_1 = 3'h0 == current ? 64'h0 : _GEN_22; // @[permutation.scala 150:21 133:28]
-  assign diffusion_io_x_in_2 = 3'h0 == current ? 64'h0 : _GEN_23; // @[permutation.scala 150:21 133:28]
-  assign diffusion_io_x_in_3 = 3'h0 == current ? 64'h0 : _GEN_24; // @[permutation.scala 150:21 133:28]
-  assign diffusion_io_x_in_4 = 3'h0 == current ? 64'h0 : _GEN_25; // @[permutation.scala 150:21 133:28]
+  assign io_x_out_0 = 3'h0 == current ? 64'h0 : _GEN_16; // @[permutation.scala 146:21 132:24]
+  assign io_x_out_1 = 3'h0 == current ? 64'h0 : _GEN_17; // @[permutation.scala 146:21 132:24]
+  assign io_x_out_2 = 3'h0 == current ? 64'h0 : _GEN_14; // @[permutation.scala 146:21 132:24]
+  assign io_x_out_3 = 3'h0 == current ? 64'h0 : _GEN_18; // @[permutation.scala 146:21 132:24]
+  assign io_x_out_4 = 3'h0 == current ? 64'h0 : _GEN_19; // @[permutation.scala 146:21 132:24]
+  assign io_done = current == 3'h4; // @[permutation.scala 174:19]
+  assign addition_io_round_in = io_round_in; // @[permutation.scala 134:26]
+  assign addition_io_x2_in = io_x_in_2; // @[permutation.scala 133:23]
+  assign substitution_io_x_in_0 = io_x_in_0; // @[permutation.scala 135:29]
+  assign substitution_io_x_in_1 = io_x_in_1; // @[permutation.scala 136:29]
+  assign substitution_io_x_in_2 = 3'h0 == current ? 64'h0 : _GEN_14; // @[permutation.scala 146:21 132:24]
+  assign substitution_io_x_in_3 = io_x_in_3; // @[permutation.scala 138:29]
+  assign substitution_io_x_in_4 = io_x_in_4; // @[permutation.scala 139:29]
+  assign diffusion_io_x_in_0 = 3'h0 == current ? 64'h0 : _GEN_16; // @[permutation.scala 146:21 132:24]
+  assign diffusion_io_x_in_1 = 3'h0 == current ? 64'h0 : _GEN_17; // @[permutation.scala 146:21 132:24]
+  assign diffusion_io_x_in_2 = 3'h0 == current ? 64'h0 : _GEN_14; // @[permutation.scala 146:21 132:24]
+  assign diffusion_io_x_in_3 = 3'h0 == current ? 64'h0 : _GEN_18; // @[permutation.scala 146:21 132:24]
+  assign diffusion_io_x_in_4 = 3'h0 == current ? 64'h0 : _GEN_19; // @[permutation.scala 146:21 132:24]
   assign posedge__clock = clock;
   assign posedge__reset = reset;
   assign posedge__io_in = io_start; // @[permutation.scala 129:19]
   always @(posedge clock) begin
     if (reset) begin // @[permutation.scala 131:26]
       current <= 3'h4; // @[permutation.scala 131:26]
-    end else if (3'h0 == current) begin // @[permutation.scala 150:21]
-      current <= 3'h1; // @[permutation.scala 154:17]
-    end else if (3'h1 == current) begin // @[permutation.scala 150:21]
-      current <= 3'h2; // @[permutation.scala 158:17]
-    end else if (3'h2 == current) begin // @[permutation.scala 150:21]
-      current <= 3'h3; // @[permutation.scala 162:17]
+    end else if (3'h0 == current) begin // @[permutation.scala 146:21]
+      current <= 3'h1; // @[permutation.scala 150:17]
+    end else if (3'h1 == current) begin // @[permutation.scala 146:21]
+      current <= 3'h2; // @[permutation.scala 154:17]
+    end else if (3'h2 == current) begin // @[permutation.scala 146:21]
+      current <= 3'h3; // @[permutation.scala 160:17]
     end else begin
       current <= _GEN_7;
     end
+    REG__0 <= substitution_io_x_out_0; // @[permutation.scala 157:25]
+    REG__1 <= substitution_io_x_out_1; // @[permutation.scala 157:25]
+    REG__2 <= substitution_io_x_out_2; // @[permutation.scala 157:25]
+    REG__3 <= substitution_io_x_out_3; // @[permutation.scala 157:25]
+    REG__4 <= substitution_io_x_out_4; // @[permutation.scala 157:25]
+    REG_1_0 <= diffusion_io_x_out_0; // @[permutation.scala 163:25]
+    REG_1_1 <= diffusion_io_x_out_1; // @[permutation.scala 163:25]
+    REG_1_2 <= diffusion_io_x_out_2; // @[permutation.scala 163:25]
+    REG_1_3 <= diffusion_io_x_out_3; // @[permutation.scala 163:25]
+    REG_1_4 <= diffusion_io_x_out_4; // @[permutation.scala 163:25]
   end
 // Register and memory initialization
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
@@ -2438,6 +2457,26 @@ initial begin
 `ifdef RANDOMIZE_REG_INIT
   _RAND_0 = {1{`RANDOM}};
   current = _RAND_0[2:0];
+  _RAND_1 = {2{`RANDOM}};
+  REG__0 = _RAND_1[63:0];
+  _RAND_2 = {2{`RANDOM}};
+  REG__1 = _RAND_2[63:0];
+  _RAND_3 = {2{`RANDOM}};
+  REG__2 = _RAND_3[63:0];
+  _RAND_4 = {2{`RANDOM}};
+  REG__3 = _RAND_4[63:0];
+  _RAND_5 = {2{`RANDOM}};
+  REG__4 = _RAND_5[63:0];
+  _RAND_6 = {2{`RANDOM}};
+  REG_1_0 = _RAND_6[63:0];
+  _RAND_7 = {2{`RANDOM}};
+  REG_1_1 = _RAND_7[63:0];
+  _RAND_8 = {2{`RANDOM}};
+  REG_1_2 = _RAND_8[63:0];
+  _RAND_9 = {2{`RANDOM}};
+  REG_1_3 = _RAND_9[63:0];
+  _RAND_10 = {2{`RANDOM}};
+  REG_1_4 = _RAND_10[63:0];
 `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
@@ -2465,38 +2504,38 @@ module permutation_two_wrapper(
   reg [31:0] _RAND_6;
   reg [31:0] _RAND_7;
 `endif // RANDOMIZE_REG_INIT
-  wire  single_round_clock; // @[permutation.scala 201:30]
-  wire  single_round_reset; // @[permutation.scala 201:30]
-  wire  single_round_io_start; // @[permutation.scala 201:30]
-  wire [7:0] single_round_io_round_in; // @[permutation.scala 201:30]
-  wire [63:0] single_round_io_x_in_0; // @[permutation.scala 201:30]
-  wire [63:0] single_round_io_x_in_1; // @[permutation.scala 201:30]
-  wire [63:0] single_round_io_x_in_2; // @[permutation.scala 201:30]
-  wire [63:0] single_round_io_x_in_3; // @[permutation.scala 201:30]
-  wire [63:0] single_round_io_x_in_4; // @[permutation.scala 201:30]
-  wire [63:0] single_round_io_x_out_0; // @[permutation.scala 201:30]
-  wire [63:0] single_round_io_x_out_1; // @[permutation.scala 201:30]
-  wire [63:0] single_round_io_x_out_2; // @[permutation.scala 201:30]
-  wire [63:0] single_round_io_x_out_3; // @[permutation.scala 201:30]
-  wire [63:0] single_round_io_x_out_4; // @[permutation.scala 201:30]
-  wire  single_round_io_done; // @[permutation.scala 201:30]
-  reg [63:0] x0_Reg; // @[permutation.scala 195:25]
-  reg [63:0] x1_Reg; // @[permutation.scala 196:25]
-  reg [63:0] x2_Reg; // @[permutation.scala 197:25]
-  reg [63:0] x3_Reg; // @[permutation.scala 198:25]
-  reg [63:0] x4_Reg; // @[permutation.scala 199:25]
-  reg [7:0] current_round; // @[permutation.scala 200:32]
-  reg  run; // @[permutation.scala 202:22]
-  reg [1:0] counter; // @[permutation.scala 203:26]
-  wire [3:0] _current_round_T_1 = 4'hc - io_round; // @[permutation.scala 212:29]
-  wire  _run_T = current_round == 8'hb; // @[permutation.scala 216:32]
-  wire [7:0] _GEN_6 = ~run ? {{4'd0}, _current_round_T_1} : current_round; // @[permutation.scala 206:24 212:21 200:32]
-  wire  _T_5 = counter == 2'h1; // @[permutation.scala 236:23]
-  wire [7:0] _current_round_T_3 = current_round + 8'h1; // @[permutation.scala 237:42]
-  wire [1:0] _counter_T_1 = counter + 2'h1; // @[permutation.scala 241:30]
+  wire  single_round_clock; // @[permutation.scala 199:30]
+  wire  single_round_reset; // @[permutation.scala 199:30]
+  wire  single_round_io_start; // @[permutation.scala 199:30]
+  wire [7:0] single_round_io_round_in; // @[permutation.scala 199:30]
+  wire [63:0] single_round_io_x_in_0; // @[permutation.scala 199:30]
+  wire [63:0] single_round_io_x_in_1; // @[permutation.scala 199:30]
+  wire [63:0] single_round_io_x_in_2; // @[permutation.scala 199:30]
+  wire [63:0] single_round_io_x_in_3; // @[permutation.scala 199:30]
+  wire [63:0] single_round_io_x_in_4; // @[permutation.scala 199:30]
+  wire [63:0] single_round_io_x_out_0; // @[permutation.scala 199:30]
+  wire [63:0] single_round_io_x_out_1; // @[permutation.scala 199:30]
+  wire [63:0] single_round_io_x_out_2; // @[permutation.scala 199:30]
+  wire [63:0] single_round_io_x_out_3; // @[permutation.scala 199:30]
+  wire [63:0] single_round_io_x_out_4; // @[permutation.scala 199:30]
+  wire  single_round_io_done; // @[permutation.scala 199:30]
+  reg [63:0] x0_Reg; // @[permutation.scala 193:25]
+  reg [63:0] x1_Reg; // @[permutation.scala 194:25]
+  reg [63:0] x2_Reg; // @[permutation.scala 195:25]
+  reg [63:0] x3_Reg; // @[permutation.scala 196:25]
+  reg [63:0] x4_Reg; // @[permutation.scala 197:25]
+  reg [7:0] current_round; // @[permutation.scala 198:32]
+  reg  run; // @[permutation.scala 200:22]
+  reg [1:0] counter; // @[permutation.scala 201:26]
+  wire [3:0] _current_round_T_1 = 4'hc - io_round; // @[permutation.scala 210:29]
+  wire  _run_T = current_round == 8'hb; // @[permutation.scala 214:32]
+  wire [7:0] _GEN_6 = ~run ? {{4'd0}, _current_round_T_1} : current_round; // @[permutation.scala 204:24 210:21 198:32]
+  wire  _T_5 = counter == 2'h1; // @[permutation.scala 234:23]
+  wire [7:0] _current_round_T_3 = current_round + 8'h1; // @[permutation.scala 235:42]
+  wire [1:0] _counter_T_1 = counter + 2'h1; // @[permutation.scala 239:30]
   wire [319:0] _io_s_out_T = {single_round_io_x_out_0,single_round_io_x_out_1,single_round_io_x_out_2,
     single_round_io_x_out_3,single_round_io_x_out_4}; // @[Cat.scala 33:92]
-  permutation_two single_round ( // @[permutation.scala 201:30]
+  permutation_two single_round ( // @[permutation.scala 199:30]
     .clock(single_round_clock),
     .reset(single_round_reset),
     .io_start(single_round_io_start),
@@ -2513,84 +2552,84 @@ module permutation_two_wrapper(
     .io_x_out_4(single_round_io_x_out_4),
     .io_done(single_round_io_done)
   );
-  assign io_done = _run_T & _T_5; // @[permutation.scala 246:34]
-  assign io_s_out = _run_T & _T_5 ? _io_s_out_T : _io_s_out_T; // @[permutation.scala 246:54 249:16 253:16]
+  assign io_done = _run_T & _T_5; // @[permutation.scala 244:34]
+  assign io_s_out = _run_T & _T_5 ? _io_s_out_T : _io_s_out_T; // @[permutation.scala 244:54 247:16 251:16]
   assign single_round_clock = clock;
   assign single_round_reset = reset;
-  assign single_round_io_start = run; // @[permutation.scala 226:34]
-  assign single_round_io_round_in = current_round; // @[permutation.scala 227:30]
-  assign single_round_io_x_in_0 = x0_Reg; // @[permutation.scala 229:29]
-  assign single_round_io_x_in_1 = x1_Reg; // @[permutation.scala 230:29]
-  assign single_round_io_x_in_2 = x2_Reg; // @[permutation.scala 231:29]
-  assign single_round_io_x_in_3 = x3_Reg; // @[permutation.scala 232:29]
-  assign single_round_io_x_in_4 = x4_Reg; // @[permutation.scala 233:29]
+  assign single_round_io_start = run; // @[permutation.scala 224:34]
+  assign single_round_io_round_in = current_round; // @[permutation.scala 225:30]
+  assign single_round_io_x_in_0 = x0_Reg; // @[permutation.scala 227:29]
+  assign single_round_io_x_in_1 = x1_Reg; // @[permutation.scala 228:29]
+  assign single_round_io_x_in_2 = x2_Reg; // @[permutation.scala 229:29]
+  assign single_round_io_x_in_3 = x3_Reg; // @[permutation.scala 230:29]
+  assign single_round_io_x_in_4 = x4_Reg; // @[permutation.scala 231:29]
   always @(posedge clock) begin
+    if (reset) begin // @[permutation.scala 193:25]
+      x0_Reg <= 64'h0; // @[permutation.scala 193:25]
+    end else if (single_round_io_done) begin // @[permutation.scala 217:33]
+      x0_Reg <= single_round_io_x_out_0; // @[permutation.scala 218:14]
+    end else if (~run) begin // @[permutation.scala 204:24]
+      x0_Reg <= io_s_in[319:256]; // @[permutation.scala 205:14]
+    end
+    if (reset) begin // @[permutation.scala 194:25]
+      x1_Reg <= 64'h0; // @[permutation.scala 194:25]
+    end else if (single_round_io_done) begin // @[permutation.scala 217:33]
+      x1_Reg <= single_round_io_x_out_1; // @[permutation.scala 219:14]
+    end else if (~run) begin // @[permutation.scala 204:24]
+      x1_Reg <= io_s_in[255:192]; // @[permutation.scala 206:14]
+    end
     if (reset) begin // @[permutation.scala 195:25]
-      x0_Reg <= 64'h0; // @[permutation.scala 195:25]
-    end else if (single_round_io_done) begin // @[permutation.scala 219:33]
-      x0_Reg <= single_round_io_x_out_0; // @[permutation.scala 220:14]
-    end else if (~run) begin // @[permutation.scala 206:24]
-      x0_Reg <= io_s_in[319:256]; // @[permutation.scala 207:14]
+      x2_Reg <= 64'h0; // @[permutation.scala 195:25]
+    end else if (single_round_io_done) begin // @[permutation.scala 217:33]
+      x2_Reg <= single_round_io_x_out_2; // @[permutation.scala 220:14]
+    end else if (~run) begin // @[permutation.scala 204:24]
+      x2_Reg <= io_s_in[191:128]; // @[permutation.scala 207:14]
     end
     if (reset) begin // @[permutation.scala 196:25]
-      x1_Reg <= 64'h0; // @[permutation.scala 196:25]
-    end else if (single_round_io_done) begin // @[permutation.scala 219:33]
-      x1_Reg <= single_round_io_x_out_1; // @[permutation.scala 221:14]
-    end else if (~run) begin // @[permutation.scala 206:24]
-      x1_Reg <= io_s_in[255:192]; // @[permutation.scala 208:14]
+      x3_Reg <= 64'h0; // @[permutation.scala 196:25]
+    end else if (single_round_io_done) begin // @[permutation.scala 217:33]
+      x3_Reg <= single_round_io_x_out_3; // @[permutation.scala 221:14]
+    end else if (~run) begin // @[permutation.scala 204:24]
+      x3_Reg <= io_s_in[127:64]; // @[permutation.scala 208:14]
     end
     if (reset) begin // @[permutation.scala 197:25]
-      x2_Reg <= 64'h0; // @[permutation.scala 197:25]
-    end else if (single_round_io_done) begin // @[permutation.scala 219:33]
-      x2_Reg <= single_round_io_x_out_2; // @[permutation.scala 222:14]
-    end else if (~run) begin // @[permutation.scala 206:24]
-      x2_Reg <= io_s_in[191:128]; // @[permutation.scala 209:14]
+      x4_Reg <= 64'h0; // @[permutation.scala 197:25]
+    end else if (single_round_io_done) begin // @[permutation.scala 217:33]
+      x4_Reg <= single_round_io_x_out_4; // @[permutation.scala 222:14]
+    end else if (~run) begin // @[permutation.scala 204:24]
+      x4_Reg <= io_s_in[63:0]; // @[permutation.scala 209:14]
     end
-    if (reset) begin // @[permutation.scala 198:25]
-      x3_Reg <= 64'h0; // @[permutation.scala 198:25]
-    end else if (single_round_io_done) begin // @[permutation.scala 219:33]
-      x3_Reg <= single_round_io_x_out_3; // @[permutation.scala 223:14]
-    end else if (~run) begin // @[permutation.scala 206:24]
-      x3_Reg <= io_s_in[127:64]; // @[permutation.scala 210:14]
-    end
-    if (reset) begin // @[permutation.scala 199:25]
-      x4_Reg <= 64'h0; // @[permutation.scala 199:25]
-    end else if (single_round_io_done) begin // @[permutation.scala 219:33]
-      x4_Reg <= single_round_io_x_out_4; // @[permutation.scala 224:14]
-    end else if (~run) begin // @[permutation.scala 206:24]
-      x4_Reg <= io_s_in[63:0]; // @[permutation.scala 211:14]
-    end
-    if (reset) begin // @[permutation.scala 200:32]
-      current_round <= 8'h0; // @[permutation.scala 200:32]
-    end else if (run & ~single_round_io_done) begin // @[permutation.scala 235:60]
-      if (counter == 2'h1) begin // @[permutation.scala 236:32]
-        current_round <= _current_round_T_3; // @[permutation.scala 237:25]
+    if (reset) begin // @[permutation.scala 198:32]
+      current_round <= 8'h0; // @[permutation.scala 198:32]
+    end else if (run & ~single_round_io_done) begin // @[permutation.scala 233:60]
+      if (counter == 2'h1) begin // @[permutation.scala 234:32]
+        current_round <= _current_round_T_3; // @[permutation.scala 235:25]
       end else begin
         current_round <= _GEN_6;
       end
     end else begin
       current_round <= _GEN_6;
     end
-    if (reset) begin // @[permutation.scala 202:22]
-      run <= 1'h0; // @[permutation.scala 202:22]
-    end else if (~run) begin // @[permutation.scala 206:24]
-      run <= io_start; // @[permutation.scala 213:11]
-    end else if (run) begin // @[permutation.scala 215:29]
-      if (current_round == 8'hb) begin // @[permutation.scala 216:17]
+    if (reset) begin // @[permutation.scala 200:22]
+      run <= 1'h0; // @[permutation.scala 200:22]
+    end else if (~run) begin // @[permutation.scala 204:24]
+      run <= io_start; // @[permutation.scala 211:11]
+    end else if (run) begin // @[permutation.scala 213:29]
+      if (current_round == 8'hb) begin // @[permutation.scala 214:17]
         run <= 1'h0;
       end else begin
         run <= 1'h1;
       end
     end
-    if (reset) begin // @[permutation.scala 203:26]
-      counter <= 2'h0; // @[permutation.scala 203:26]
-    end else if (_run_T & _T_5) begin // @[permutation.scala 246:54]
-      counter <= 2'h0; // @[permutation.scala 247:15]
-    end else if (run & ~single_round_io_done) begin // @[permutation.scala 235:60]
-      if (counter == 2'h1) begin // @[permutation.scala 236:32]
-        counter <= 2'h0; // @[permutation.scala 238:19]
+    if (reset) begin // @[permutation.scala 201:26]
+      counter <= 2'h0; // @[permutation.scala 201:26]
+    end else if (_run_T & _T_5) begin // @[permutation.scala 244:54]
+      counter <= 2'h0; // @[permutation.scala 245:15]
+    end else if (run & ~single_round_io_done) begin // @[permutation.scala 233:60]
+      if (counter == 2'h1) begin // @[permutation.scala 234:32]
+        counter <= 2'h0; // @[permutation.scala 236:19]
       end else begin
-        counter <= _counter_T_1; // @[permutation.scala 241:19]
+        counter <= _counter_T_1; // @[permutation.scala 239:19]
       end
     end
   end

@@ -130,23 +130,19 @@ class permutation_two extends Module {
     val start::add::sub::diff::done::Nil = Enum(5)
     val current = RegInit(done)
     val state = VecInit(Seq.fill(5)(RegInit(0.U(64.W))))
-    val sub_state = VecInit(Seq.fill(5)(RegInit(0.U(64.W))))
-    val diff_state = VecInit(Seq.fill(5)(RegInit(0.U(64.W))))
-    //val state = VecInit(Seq.fill(5)(RegInit(0.U(64.W))))
-    
-    diffusion.io.x_in(0) := sub_state(0)
-    diffusion.io.x_in(1) := sub_state(1)
-    diffusion.io.x_in(2) := sub_state(2)
-    diffusion.io.x_in(3) := sub_state(3)
-    diffusion.io.x_in(4) := sub_state(4)
+    addition.io.x2_in := io.x_in(2)
+    addition.io.round_in := io.round_in
     substitution.io.x_in(0) := io.x_in(0)
     substitution.io.x_in(1) := io.x_in(1)
     substitution.io.x_in(2) := state(2)
     substitution.io.x_in(3) := io.x_in(3)
     substitution.io.x_in(4) := io.x_in(4)
-    addition.io.round_in := io.round_in
-    addition.io.x2_in := io.x_in(2)
-    
+    diffusion.io.x_in(0) := state(0) 
+    diffusion.io.x_in(1) := state(1) 
+    diffusion.io.x_in(2) := state(2) 
+    diffusion.io.x_in(3) := state(3) 
+    diffusion.io.x_in(4) := state(4) 
+  
     switch (current){
       // start the state machine
       is(start){
@@ -158,11 +154,13 @@ class permutation_two extends Module {
         current := sub
       }
       is(sub){
-        sub_state := substitution.io.x_out
+        state := RegNext(substitution.io.x_out)
+        // state := (substitution.io.x_out)
+        // sub_state := state
         current := diff
       }
       is(diff){
-        diff_state := diffusion.io.x_out
+        state := RegNext(diffusion.io.x_out)
         current := done
       }
       is(done){
@@ -179,7 +177,7 @@ class permutation_two extends Module {
       io.done := false.B
     }
     
-    io.x_out := diff_state
+    io.x_out := state
 }
 
 
