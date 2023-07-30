@@ -1392,44 +1392,127 @@ circuit permutation_two_wrapper :
     node _io_x_out_4_T_7 = xor(_io_x_out_4_T_3, _io_x_out_4_T_6) @[layers.scala 94:71]
     io.x_out[4] <= _io_x_out_4_T_7 @[layers.scala 94:17]
 
+  module posedge :
+    input clock : Clock
+    input reset : Reset
+    output io : { flip in : UInt<1>, out : UInt<1>}
+
+    reg temp_reg : UInt<1>, clock with :
+      reset => (reset, UInt<1>("h0")) @[permutation.scala 109:25]
+    temp_reg <= io.in @[permutation.scala 110:12]
+    node _io_out_T = not(temp_reg) @[permutation.scala 111:21]
+    node _io_out_T_1 = and(io.in, _io_out_T) @[permutation.scala 111:19]
+    io.out <= _io_out_T_1 @[permutation.scala 111:10]
+
   module permutation_two :
     input clock : Clock
     input reset : Reset
-    output io : { flip round_in : UInt<8>, flip x_in : UInt<64>[5], x_out : UInt<64>[5]}
+    output io : { flip start : UInt<1>, flip round_in : UInt<8>, flip x_in : UInt<64>[5], x_out : UInt<64>[5], done : UInt<1>}
 
-    inst addition of addition_layer @[permutation.scala 113:26]
+    inst addition of addition_layer @[permutation.scala 125:26]
     addition.clock <= clock
     addition.reset <= reset
-    inst substitution of substitution_layer @[permutation.scala 114:30]
+    inst substitution of substitution_layer @[permutation.scala 126:30]
     substitution.clock <= clock
     substitution.reset <= reset
-    inst diffusion of diffusion_layer @[permutation.scala 115:26]
+    inst diffusion of diffusion_layer @[permutation.scala 127:26]
     diffusion.clock <= clock
     diffusion.reset <= reset
-    reg substitution_reg : UInt<64>[5], clock with :
-      reset => (UInt<1>("h0"), substitution_reg) @[permutation.scala 116:31]
-    addition.io.round_in <= io.round_in @[permutation.scala 120:26]
-    addition.io.x2_in <= io.x_in[2] @[permutation.scala 121:23]
-    substitution.io.x_in[0] <= io.x_in[0] @[permutation.scala 123:29]
-    substitution.io.x_in[1] <= io.x_in[1] @[permutation.scala 124:29]
-    substitution.io.x_in[2] <= addition.io.x2_out @[permutation.scala 125:29]
-    substitution.io.x_in[3] <= io.x_in[3] @[permutation.scala 126:29]
-    substitution.io.x_in[4] <= io.x_in[4] @[permutation.scala 127:29]
-    substitution_reg[0] <= substitution.io.x_out[0] @[permutation.scala 129:25]
-    substitution_reg[1] <= substitution.io.x_out[1] @[permutation.scala 130:25]
-    substitution_reg[2] <= substitution.io.x_out[2] @[permutation.scala 131:25]
-    substitution_reg[3] <= substitution.io.x_out[3] @[permutation.scala 132:25]
-    substitution_reg[4] <= substitution.io.x_out[4] @[permutation.scala 133:25]
-    diffusion.io.x_in[0] <= substitution_reg[0] @[permutation.scala 135:26]
-    diffusion.io.x_in[1] <= substitution_reg[1] @[permutation.scala 136:26]
-    diffusion.io.x_in[2] <= substitution_reg[2] @[permutation.scala 137:26]
-    diffusion.io.x_in[3] <= substitution_reg[3] @[permutation.scala 138:26]
-    diffusion.io.x_in[4] <= substitution_reg[4] @[permutation.scala 139:26]
-    io.x_out[0] <= diffusion.io.x_out[0] @[permutation.scala 141:17]
-    io.x_out[1] <= diffusion.io.x_out[1] @[permutation.scala 142:17]
-    io.x_out[2] <= diffusion.io.x_out[2] @[permutation.scala 143:17]
-    io.x_out[3] <= diffusion.io.x_out[3] @[permutation.scala 144:17]
-    io.x_out[4] <= diffusion.io.x_out[4] @[permutation.scala 145:17]
+    inst posedge of posedge @[permutation.scala 128:25]
+    posedge.clock <= clock
+    posedge.reset <= reset
+    posedge.io.in <= io.start @[permutation.scala 129:19]
+    reg current : UInt<3>, clock with :
+      reset => (reset, UInt<3>("h4")) @[permutation.scala 131:26]
+    reg state_REG : UInt<64>, clock with :
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 132:44]
+    reg state_REG_1 : UInt<64>, clock with :
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 132:44]
+    reg state_REG_2 : UInt<64>, clock with :
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 132:44]
+    reg state_REG_3 : UInt<64>, clock with :
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 132:44]
+    reg state_REG_4 : UInt<64>, clock with :
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 132:44]
+    wire state : UInt<64>[5] @[permutation.scala 132:24]
+    state[0] <= state_REG @[permutation.scala 132:24]
+    state[1] <= state_REG_1 @[permutation.scala 132:24]
+    state[2] <= state_REG_2 @[permutation.scala 132:24]
+    state[3] <= state_REG_3 @[permutation.scala 132:24]
+    state[4] <= state_REG_4 @[permutation.scala 132:24]
+    reg sub_state_REG : UInt<64>, clock with :
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 133:48]
+    reg sub_state_REG_1 : UInt<64>, clock with :
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 133:48]
+    reg sub_state_REG_2 : UInt<64>, clock with :
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 133:48]
+    reg sub_state_REG_3 : UInt<64>, clock with :
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 133:48]
+    reg sub_state_REG_4 : UInt<64>, clock with :
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 133:48]
+    wire sub_state : UInt<64>[5] @[permutation.scala 133:28]
+    sub_state[0] <= sub_state_REG @[permutation.scala 133:28]
+    sub_state[1] <= sub_state_REG_1 @[permutation.scala 133:28]
+    sub_state[2] <= sub_state_REG_2 @[permutation.scala 133:28]
+    sub_state[3] <= sub_state_REG_3 @[permutation.scala 133:28]
+    sub_state[4] <= sub_state_REG_4 @[permutation.scala 133:28]
+    reg diff_state_REG : UInt<64>, clock with :
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 134:49]
+    reg diff_state_REG_1 : UInt<64>, clock with :
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 134:49]
+    reg diff_state_REG_2 : UInt<64>, clock with :
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 134:49]
+    reg diff_state_REG_3 : UInt<64>, clock with :
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 134:49]
+    reg diff_state_REG_4 : UInt<64>, clock with :
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 134:49]
+    wire diff_state : UInt<64>[5] @[permutation.scala 134:29]
+    diff_state[0] <= diff_state_REG @[permutation.scala 134:29]
+    diff_state[1] <= diff_state_REG_1 @[permutation.scala 134:29]
+    diff_state[2] <= diff_state_REG_2 @[permutation.scala 134:29]
+    diff_state[3] <= diff_state_REG_3 @[permutation.scala 134:29]
+    diff_state[4] <= diff_state_REG_4 @[permutation.scala 134:29]
+    diffusion.io.x_in[0] <= sub_state[0] @[permutation.scala 137:26]
+    diffusion.io.x_in[1] <= sub_state[1] @[permutation.scala 138:26]
+    diffusion.io.x_in[2] <= sub_state[2] @[permutation.scala 139:26]
+    diffusion.io.x_in[3] <= sub_state[3] @[permutation.scala 140:26]
+    diffusion.io.x_in[4] <= sub_state[4] @[permutation.scala 141:26]
+    substitution.io.x_in[0] <= io.x_in[0] @[permutation.scala 142:29]
+    substitution.io.x_in[1] <= io.x_in[1] @[permutation.scala 143:29]
+    substitution.io.x_in[2] <= state[2] @[permutation.scala 144:29]
+    substitution.io.x_in[3] <= io.x_in[3] @[permutation.scala 145:29]
+    substitution.io.x_in[4] <= io.x_in[4] @[permutation.scala 146:29]
+    addition.io.round_in <= io.round_in @[permutation.scala 147:26]
+    addition.io.x2_in <= io.x_in[2] @[permutation.scala 148:23]
+    node _T = eq(UInt<3>("h0"), current) @[permutation.scala 150:21]
+    when _T : @[permutation.scala 150:21]
+      current <= UInt<3>("h1") @[permutation.scala 154:17]
+    else :
+      node _T_1 = eq(UInt<3>("h1"), current) @[permutation.scala 150:21]
+      when _T_1 : @[permutation.scala 150:21]
+        state[2] <= addition.io.x2_out @[permutation.scala 157:18]
+        current <= UInt<3>("h2") @[permutation.scala 158:17]
+      else :
+        node _T_2 = eq(UInt<3>("h2"), current) @[permutation.scala 150:21]
+        when _T_2 : @[permutation.scala 150:21]
+          sub_state <= substitution.io.x_out @[permutation.scala 161:19]
+          current <= UInt<3>("h3") @[permutation.scala 162:17]
+        else :
+          node _T_3 = eq(UInt<3>("h3"), current) @[permutation.scala 150:21]
+          when _T_3 : @[permutation.scala 150:21]
+            diff_state <= diffusion.io.x_out @[permutation.scala 165:20]
+            current <= UInt<3>("h4") @[permutation.scala 166:17]
+          else :
+            node _T_4 = eq(UInt<3>("h4"), current) @[permutation.scala 150:21]
+            when _T_4 : @[permutation.scala 150:21]
+              when posedge.io.out : @[permutation.scala 170:31]
+                current <= UInt<3>("h0") @[permutation.scala 171:19]
+    node _T_5 = eq(current, UInt<3>("h4")) @[permutation.scala 176:19]
+    when _T_5 : @[permutation.scala 176:29]
+      io.done <= UInt<1>("h1") @[permutation.scala 177:15]
+    else :
+      io.done <= UInt<1>("h0") @[permutation.scala 179:15]
+    io.x_out <= diff_state @[permutation.scala 182:14]
 
   module permutation_two_wrapper :
     input clock : Clock
@@ -1437,86 +1520,91 @@ circuit permutation_two_wrapper :
     output io : { flip s_in : UInt<320>, flip start : UInt<1>, flip round : UInt<4>, done : UInt<1>, s_out : UInt<320>}
 
     reg x0_Reg : UInt<64>, clock with :
-      reset => (reset, UInt<64>("h0")) @[permutation.scala 158:25]
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 195:25]
     reg x1_Reg : UInt<64>, clock with :
-      reset => (reset, UInt<64>("h0")) @[permutation.scala 159:25]
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 196:25]
     reg x2_Reg : UInt<64>, clock with :
-      reset => (reset, UInt<64>("h0")) @[permutation.scala 160:25]
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 197:25]
     reg x3_Reg : UInt<64>, clock with :
-      reset => (reset, UInt<64>("h0")) @[permutation.scala 161:25]
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 198:25]
     reg x4_Reg : UInt<64>, clock with :
-      reset => (reset, UInt<64>("h0")) @[permutation.scala 162:25]
+      reset => (reset, UInt<64>("h0")) @[permutation.scala 199:25]
     reg current_round : UInt<8>, clock with :
-      reset => (reset, UInt<8>("h0")) @[permutation.scala 163:32]
-    inst single_round of permutation_two @[permutation.scala 164:30]
+      reset => (reset, UInt<8>("h0")) @[permutation.scala 200:32]
+    inst single_round of permutation_two @[permutation.scala 201:30]
     single_round.clock <= clock
     single_round.reset <= reset
     reg run : UInt<1>, clock with :
-      reset => (reset, UInt<1>("h0")) @[permutation.scala 165:22]
+      reset => (reset, UInt<1>("h0")) @[permutation.scala 202:22]
     reg counter : UInt<2>, clock with :
-      reset => (reset, UInt<2>("h0")) @[permutation.scala 166:26]
-    node _T = eq(run, UInt<1>("h0")) @[permutation.scala 168:15]
-    when _T : @[permutation.scala 168:24]
-      node _x0_Reg_T = bits(io.s_in, 319, 256) @[permutation.scala 169:24]
-      x0_Reg <= _x0_Reg_T @[permutation.scala 169:14]
-      node _x1_Reg_T = bits(io.s_in, 255, 192) @[permutation.scala 170:24]
-      x1_Reg <= _x1_Reg_T @[permutation.scala 170:14]
-      node _x2_Reg_T = bits(io.s_in, 191, 128) @[permutation.scala 171:24]
-      x2_Reg <= _x2_Reg_T @[permutation.scala 171:14]
-      node _x3_Reg_T = bits(io.s_in, 127, 64) @[permutation.scala 172:24]
-      x3_Reg <= _x3_Reg_T @[permutation.scala 172:14]
-      node _x4_Reg_T = bits(io.s_in, 63, 0) @[permutation.scala 173:24]
-      x4_Reg <= _x4_Reg_T @[permutation.scala 173:14]
-      node _current_round_T = sub(UInt<4>("hc"), io.round) @[permutation.scala 174:29]
-      node _current_round_T_1 = tail(_current_round_T, 1) @[permutation.scala 174:29]
-      current_round <= _current_round_T_1 @[permutation.scala 174:21]
-      run <= io.start @[permutation.scala 175:11]
+      reset => (reset, UInt<2>("h0")) @[permutation.scala 203:26]
+    node _T = eq(run, UInt<1>("h0")) @[permutation.scala 206:15]
+    when _T : @[permutation.scala 206:24]
+      node _x0_Reg_T = bits(io.s_in, 319, 256) @[permutation.scala 207:24]
+      x0_Reg <= _x0_Reg_T @[permutation.scala 207:14]
+      node _x1_Reg_T = bits(io.s_in, 255, 192) @[permutation.scala 208:24]
+      x1_Reg <= _x1_Reg_T @[permutation.scala 208:14]
+      node _x2_Reg_T = bits(io.s_in, 191, 128) @[permutation.scala 209:24]
+      x2_Reg <= _x2_Reg_T @[permutation.scala 209:14]
+      node _x3_Reg_T = bits(io.s_in, 127, 64) @[permutation.scala 210:24]
+      x3_Reg <= _x3_Reg_T @[permutation.scala 210:14]
+      node _x4_Reg_T = bits(io.s_in, 63, 0) @[permutation.scala 211:24]
+      x4_Reg <= _x4_Reg_T @[permutation.scala 211:14]
+      node _current_round_T = sub(UInt<4>("hc"), io.round) @[permutation.scala 212:29]
+      node _current_round_T_1 = tail(_current_round_T, 1) @[permutation.scala 212:29]
+      current_round <= _current_round_T_1 @[permutation.scala 212:21]
+      run <= io.start @[permutation.scala 213:11]
     else :
-      node _T_1 = eq(run, UInt<1>("h1")) @[permutation.scala 177:20]
-      when _T_1 : @[permutation.scala 177:29]
-        x0_Reg <= single_round.io.x_out[0] @[permutation.scala 178:14]
-        x1_Reg <= single_round.io.x_out[1] @[permutation.scala 179:14]
-        x2_Reg <= single_round.io.x_out[2] @[permutation.scala 180:14]
-        x3_Reg <= single_round.io.x_out[3] @[permutation.scala 181:14]
-        x4_Reg <= single_round.io.x_out[4] @[permutation.scala 182:14]
-        node _run_T = eq(current_round, UInt<4>("hb")) @[permutation.scala 183:32]
-        node _run_T_1 = mux(_run_T, UInt<1>("h0"), UInt<1>("h1")) @[permutation.scala 183:17]
-        run <= _run_T_1 @[permutation.scala 183:11]
-    single_round.io.round_in <= current_round @[permutation.scala 186:30]
-    single_round.io.x_in[0] <= x0_Reg @[permutation.scala 187:29]
-    single_round.io.x_in[1] <= x1_Reg @[permutation.scala 188:29]
-    single_round.io.x_in[2] <= x2_Reg @[permutation.scala 189:29]
-    single_round.io.x_in[3] <= x3_Reg @[permutation.scala 190:29]
-    single_round.io.x_in[4] <= x4_Reg @[permutation.scala 191:29]
-    node _T_2 = eq(run, UInt<1>("h1")) @[permutation.scala 194:15]
-    when _T_2 : @[permutation.scala 194:24]
-      node _T_3 = eq(counter, UInt<1>("h1")) @[permutation.scala 195:23]
-      when _T_3 : @[permutation.scala 195:32]
-        node _current_round_T_2 = add(current_round, UInt<1>("h1")) @[permutation.scala 196:42]
-        node _current_round_T_3 = tail(_current_round_T_2, 1) @[permutation.scala 196:42]
-        current_round <= _current_round_T_3 @[permutation.scala 196:25]
-        counter <= UInt<1>("h0") @[permutation.scala 197:19]
+      node _T_1 = eq(run, UInt<1>("h1")) @[permutation.scala 215:20]
+      when _T_1 : @[permutation.scala 215:29]
+        node _run_T = eq(current_round, UInt<4>("hb")) @[permutation.scala 216:32]
+        node _run_T_1 = mux(_run_T, UInt<1>("h0"), UInt<1>("h1")) @[permutation.scala 216:17]
+        run <= _run_T_1 @[permutation.scala 216:11]
+    when single_round.io.done : @[permutation.scala 219:33]
+      x0_Reg <= single_round.io.x_out[0] @[permutation.scala 220:14]
+      x1_Reg <= single_round.io.x_out[1] @[permutation.scala 221:14]
+      x2_Reg <= single_round.io.x_out[2] @[permutation.scala 222:14]
+      x3_Reg <= single_round.io.x_out[3] @[permutation.scala 223:14]
+      x4_Reg <= single_round.io.x_out[4] @[permutation.scala 224:14]
+    node _single_round_io_start_T = bits(run, 0, 0) @[permutation.scala 226:34]
+    single_round.io.start <= _single_round_io_start_T @[permutation.scala 226:27]
+    single_round.io.round_in <= current_round @[permutation.scala 227:30]
+    single_round.io.x_in[0] <= x0_Reg @[permutation.scala 229:29]
+    single_round.io.x_in[1] <= x1_Reg @[permutation.scala 230:29]
+    single_round.io.x_in[2] <= x2_Reg @[permutation.scala 231:29]
+    single_round.io.x_in[3] <= x3_Reg @[permutation.scala 232:29]
+    single_round.io.x_in[4] <= x4_Reg @[permutation.scala 233:29]
+    node _T_2 = eq(run, UInt<1>("h1")) @[permutation.scala 235:15]
+    node _T_3 = eq(single_round.io.done, UInt<1>("h0")) @[permutation.scala 235:47]
+    node _T_4 = and(_T_2, _T_3) @[permutation.scala 235:23]
+    when _T_4 : @[permutation.scala 235:60]
+      node _T_5 = eq(counter, UInt<1>("h1")) @[permutation.scala 236:23]
+      when _T_5 : @[permutation.scala 236:32]
+        node _current_round_T_2 = add(current_round, UInt<1>("h1")) @[permutation.scala 237:42]
+        node _current_round_T_3 = tail(_current_round_T_2, 1) @[permutation.scala 237:42]
+        current_round <= _current_round_T_3 @[permutation.scala 237:25]
+        counter <= UInt<1>("h0") @[permutation.scala 238:19]
       else :
-        node _counter_T = add(counter, UInt<1>("h1")) @[permutation.scala 200:30]
-        node _counter_T_1 = tail(_counter_T, 1) @[permutation.scala 200:30]
-        counter <= _counter_T_1 @[permutation.scala 200:19]
-    node _T_4 = eq(current_round, UInt<4>("hb")) @[permutation.scala 205:25]
-    node _T_5 = eq(counter, UInt<1>("h1")) @[permutation.scala 205:45]
-    node _T_6 = and(_T_4, _T_5) @[permutation.scala 205:34]
-    when _T_6 : @[permutation.scala 205:54]
-      counter <= UInt<1>("h0") @[permutation.scala 206:15]
-      io.done <= UInt<1>("h1") @[permutation.scala 207:15]
+        node _counter_T = add(counter, UInt<1>("h1")) @[permutation.scala 241:30]
+        node _counter_T_1 = tail(_counter_T, 1) @[permutation.scala 241:30]
+        counter <= _counter_T_1 @[permutation.scala 241:19]
+    node _T_6 = eq(current_round, UInt<4>("hb")) @[permutation.scala 246:25]
+    node _T_7 = eq(counter, UInt<1>("h1")) @[permutation.scala 246:45]
+    node _T_8 = and(_T_6, _T_7) @[permutation.scala 246:34]
+    when _T_8 : @[permutation.scala 246:54]
+      counter <= UInt<1>("h0") @[permutation.scala 247:15]
+      io.done <= UInt<1>("h1") @[permutation.scala 248:15]
       node io_s_out_lo = cat(single_round.io.x_out[3], single_round.io.x_out[4]) @[Cat.scala 33:92]
       node io_s_out_hi_hi = cat(single_round.io.x_out[0], single_round.io.x_out[1]) @[Cat.scala 33:92]
       node io_s_out_hi = cat(io_s_out_hi_hi, single_round.io.x_out[2]) @[Cat.scala 33:92]
       node _io_s_out_T = cat(io_s_out_hi, io_s_out_lo) @[Cat.scala 33:92]
-      io.s_out <= _io_s_out_T @[permutation.scala 208:16]
+      io.s_out <= _io_s_out_T @[permutation.scala 249:16]
     else :
-      io.done <= UInt<1>("h0") @[permutation.scala 211:15]
+      io.done <= UInt<1>("h0") @[permutation.scala 252:15]
       node io_s_out_lo_1 = cat(single_round.io.x_out[3], single_round.io.x_out[4]) @[Cat.scala 33:92]
       node io_s_out_hi_hi_1 = cat(single_round.io.x_out[0], single_round.io.x_out[1]) @[Cat.scala 33:92]
       node io_s_out_hi_1 = cat(io_s_out_hi_hi_1, single_round.io.x_out[2]) @[Cat.scala 33:92]
       node _io_s_out_T_1 = cat(io_s_out_hi_1, io_s_out_lo_1) @[Cat.scala 33:92]
-      io.s_out <= _io_s_out_T_1 @[permutation.scala 212:16]
+      io.s_out <= _io_s_out_T_1 @[permutation.scala 253:16]
 
 

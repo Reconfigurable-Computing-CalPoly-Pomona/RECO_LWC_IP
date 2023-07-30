@@ -14,7 +14,7 @@
             "type": "scala",
             "request": "launch",
             "name": "main",
-            "mainClass": "permutationMain.permutationEmit",
+            "mainClass": "permutationEmit.permutationMain",
             "args": [],
             "jvmOptions": [],
             "env": {}
