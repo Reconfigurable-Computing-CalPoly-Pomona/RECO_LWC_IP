@@ -22,12 +22,13 @@ class rotateTest extends AnyFlatSpec with ChiselScalatestTester {
     } 
     "rotateTest_loop" should "work" in {
         test(new rotateRight()) { dut =>
-            
             val start = 1
-            for (amountLeftShifted <- 0 until 31) {
+            for (amountLeftShifted <- 0 until 64) {
                 // start * pow(2, amountLeftShifted)
-                print(amountLeftShifted + "leftShifted value is: ")
-                val leftShifted = start * math.pow(2,amountLeftShifted).toInt
+                print(amountLeftShifted + ".leftShifted value is: ")
+                //val leftShifted = BigDecimal(start * math.pow(2,amountLeftShifted)).toBigInt
+                //val leftShifted = start * math.pow(2,amountLeftShifted).toLong
+                val leftShifted = start * BigDecimal(2).pow(amountLeftShifted).toBigInt
                 print(leftShifted)
                 println()
                 dut.io.input.poke(leftShifted)
