@@ -8,7 +8,13 @@
             "type": "scala",
             "request": "launch",
             "name": "test",
-            "testClass": "permutation.PermutationTester"
+            "testClass": "permutation.Permutation_once"
+        },
+        {
+            "type": "scala",
+            "request": "launch",
+            "name": "test rotate",
+            "testClass": "layers.rotateTest"
         },
         {
             "type": "scala",

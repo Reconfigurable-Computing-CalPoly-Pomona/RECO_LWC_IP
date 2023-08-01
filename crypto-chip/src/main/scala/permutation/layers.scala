@@ -95,6 +95,15 @@ class diffusion_layer extends Module {
 }
 
 
+class rotateRight extends Module {
+  val io = IO(new Bundle {
+    val input = Input(UInt(64.W))
+    val amount = Input(UInt(6.W))
+    val output = Output(UInt(64.W))
+  })
+  io.output := io.input.rotateRight(io.amount)
+}
+
 // single round permutation
 class permutation extends Module {
   val io = IO(new Bundle {

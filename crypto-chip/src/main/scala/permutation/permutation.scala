@@ -129,7 +129,9 @@ class permutation_two extends Module {
     posedge.io.in := io.start
     val start::add::sub::diff::done::Nil = Enum(5)
     val current = RegInit(done)
-    val state = VecInit(Seq.fill(5)(RegInit(0.U(64.W))))
+    // val state = VecInit(Seq.fill(5)(RegInit(0.U(64.W))))
+    // val state = Wire(Vec(5, UInt (64.W)))
+    val state = VecInit(Seq.fill(5)((0.U(64.W))))
     addition.io.x2_in := io.x_in(2)
     addition.io.round_in := io.round_in
     substitution.io.x_in(0) := io.x_in(0)

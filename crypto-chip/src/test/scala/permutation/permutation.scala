@@ -10,6 +10,7 @@ package permutation
 import chisel3._
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
+import permutation._
 
 class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
   test(new permutation_two()) { dut =>
