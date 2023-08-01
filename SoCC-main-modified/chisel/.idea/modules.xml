@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="ProjectModuleManager">
-    <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/chisel-ascon.iml" filepath="$PROJECT_DIR$/.idea/modules/chisel-ascon.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/chisel-ascon-build.iml" filepath="$PROJECT_DIR$/.idea/modules/chisel-ascon-build.iml" />
-    </modules>
-  </component>
-</project>
