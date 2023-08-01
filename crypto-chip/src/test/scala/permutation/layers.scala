@@ -38,4 +38,22 @@ class rotateTest extends AnyFlatSpec with ChiselScalatestTester {
             }
         }
     }
+    "rotateTestBarrel_loop" should "work" in {
+        test(new barrelShifter()) { dut =>
+            val start = 1
+            for (amountLeftShifted <- 0 until 64) {
+                // start * pow(2, amountLeftShifted)
+                print(amountLeftShifted + ".leftShifted value is: ")
+                //val leftShifted = BigDecimal(start * math.pow(2,amountLeftShifted)).toBigInt
+                //val leftShifted = start * math.pow(2,amountLeftShifted).toLong
+                val leftShifted = start * BigDecimal(2).pow(amountLeftShifted).toBigInt
+                print(leftShifted)
+                println()
+                dut.io.input.poke(leftShifted)
+                dut.io.amount.poke(amountLeftShifted)
+                dut.io.output.expect(start)
+                println(dut.io.output.peek())
+            }
+        }
+    }
 }
