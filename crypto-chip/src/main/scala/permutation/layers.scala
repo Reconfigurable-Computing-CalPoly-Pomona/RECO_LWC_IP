@@ -2,6 +2,7 @@ package layers
 
 import chisel3._
 import chisel3.util._
+import scala.math._
 
 
 class addition_layer extends Module {
@@ -87,72 +88,101 @@ class barrelShifter extends Module {
   })
 
   
-  val muxOut0 = Vec(64, Bool())
-  val muxOut1 = Vec(64, Bool())
-  val muxOut2 = Vec(64, Bool())
-  val muxOut3 = Vec(64, Bool())
-  val muxOut4 = Vec(64, Bool())
-  val muxOut5 = Vec(64, Bool())
+  // val muxOut0 = VecInit(Seq.fill(64)(0.U(1.W)))
+  // val muxOut1 = VecInit(Seq.fill(64)(0.U(1.W)))
+  // val muxOut2 = VecInit(Seq.fill(64)(0.U(1.W)))
+  // val muxOut3 = VecInit(Seq.fill(64)(0.U(1.W)))
+  // val muxOut4 = VecInit(Seq.fill(64)(0.U(1.W)))
+  // val muxOut5 = VecInit(Seq.fill(64)(0.U(1.W)))
+  // val muxOut0 = Wire(Vec(64,UInt(1.W)))
+  // val muxOut1 = Wire(Vec(64,UInt(1.W)))
+  // val muxOut2 = Wire(Vec(64,UInt(1.W)))
+  // val muxOut3 = Wire(Vec(64,UInt(1.W)))
+  // val muxOut4 = Wire(Vec(64,UInt(1.W)))
+  // val muxOut5 = Wire(Vec(64,UInt(1.W)))
+
+  val muxOut = VecInit(Seq.fill(6)(VecInit(Seq.fill(64)(0.U(1.W)))))
   
-  // Level 0
-  // can combine loops together with a "when" statement
-  for(i <- 0 until 1) //until pow(2,level)
+  for(level <- 0 until 6)
   {
-    // for 63's shift to right, need to update 0
-    muxOut0(63-i) := Mux(io.amount(0),io.input(i),io.input(63-i))
+    if(level != 0)
+    { 
+      //Bits that are rotated to the front
+      for(i <- 0 until math.pow(2,level).toInt)
+      {
+        muxOut(level)(63-i) := Mux(io.amount(level),muxOut(level-1)(math.pow(2,level).toInt-i),muxOut(level-1)(63-i))
+      }
+      //Shifted bits
+      for (i <- 0 until 64-math.pow(2,level).toInt) {
+        muxOut(level)(i) := Mux(io.amount(level),muxOut(level-1)(i+math.pow(2,level).toInt),muxOut(level-1)(i))
+      }
+    } 
+    else
+    {
+      //Bits that are rotated to the front
+      muxOut(0)(63) := Mux(io.amount(0),io.input(0),io.input(63))
+      //Shifted bits
+      for (i <- 0 until 1) {
+        muxOut(0)(i) := Mux(io.amount(0),io.input(i+1),io.input(i))
+      }
+    }
   }
-  for (i <- 0 until 64-1) {
-    muxOut0(i) := Mux(io.amount(0),io.input(i+1),io.input(i))
-  }
+  io.output := muxOut(5).asUInt
 
-  // Level 1
-  for(i <- 0 until 2) //until pow(2,level)
-  {
-    //for(j < 2 until 0)
-    // when shifting 62, go into 0 ((62 + 2) % 64); when shifting 63, go into 1 ((63 + 2) % 64)
-    muxOut0(63-i) := Mux(io.amount(0),muxOut0(2-i),muxOut0(63-i))
-    // // i=0
-    // muxOut0(63) := Mux(io.amount(0),io.input(1),io.input(63))
-    // // i=1
-    // muxOut0(62) := Mux(io.amount(0),io.input(0),io.input(62))
-  }
-  for (i <- 0 until 64-2) {
-    muxOut1(i) := Mux(io.amount(1),muxOut0(i+2),muxOut0(i))
-  }
+  // // Level 0
+  // // can combine loops together with a "when" statement
+  // for(i <- 0 until 1) //until pow(2,level)
+  // {
+  //   // for 63's shift to right, need to update 0
+  //   muxOut0(63-i) := Mux(io.amount(0),io.input(i),io.input(63-i))
+  // }
+  // for (i <- 0 until 64-1) {
+  //   muxOut0(i) := Mux(io.amount(0),io.input(i+1),io.input(i))
+  // }
 
-  // Level 2
-  for(i <- 0 until 4) //until pow(2,level)
-  {
-    muxOut2(63-i) := Mux(io.amount(0),muxOut1(4-i),muxOut1(63-i))
-  }
-  for (i <- 0 until 64-4) {
-    muxOut2(i) := Mux(io.amount(2),muxOut1(i+4),muxOut1(i))
-  }
-  // Level 3
-  for(i <- 0 until 8) //until pow(2,level)
-  {
-    muxOut3(63-i) := Mux(io.amount(0),muxOut2(8-i),muxOut2(63-i))
-  }
-  for (i <- 0 until 64-8) {
-    muxOut3(i) := Mux(io.amount(3),muxOut2(i+8),muxOut2(i))
-  }
-  // Level 4
-  for(i <- 0 until 16) //until pow(2,level)
-  {
-    muxOut4(63-i) := Mux(io.amount(0),muxOut3(16-i),muxOut3(63-i))
-  }
-  for (i <- 0 until 64-16) {
-    muxOut4(i) := Mux(io.amount(4),muxOut3(i+16),muxOut3(i))
-  }
-  // Level 5
-  for(i <- 0 until 32) //until pow(2,level)
-  {
-    muxOut5(63-i) := Mux(io.amount(0),muxOut4(32-i),muxOut4(63-i))
-  }
-  for (i <- 0 until 64-32) {
-    muxOut5(i) := Mux(io.amount(5),muxOut4(i+32),muxOut4(i))
-  }
-  io.output := muxOut5.asUInt
+  // // Level 1
+  // for(i <- 0 until 2) //until pow(2,level)
+  // {
+  //   muxOut1(63-i) := Mux(io.amount(1),muxOut0(2-i),muxOut0(63-i))
+  // }
+  // for (i <- 0 until 64-2) {
+  //   muxOut1(i) := Mux(io.amount(1),muxOut0(i+2),muxOut0(i))
+  // }
+
+  // // Level 2
+  // for(i <- 0 until 4) //until pow(2,level)
+  // {
+  //   muxOut2(63-i) := Mux(io.amount(2),muxOut1(4-i),muxOut1(63-i))
+  // }
+  // for (i <- 0 until 64-4) {
+  //   muxOut2(i) := Mux(io.amount(2),muxOut1(i+4),muxOut1(i))
+  // }
+  // // Level 3
+  // for(i <- 0 until 8) //until pow(2,level)
+  // {
+  //   muxOut3(63-i) := Mux(io.amount(3),muxOut2(8-i),muxOut2(63-i))
+  // }
+  // for (i <- 0 until 64-8) {
+  //   muxOut3(i) := Mux(io.amount(3),muxOut2(i+8),muxOut2(i))
+  // }
+  // // Level 4
+  // for(i <- 0 until 16) //until pow(2,level)
+  // {
+  //   muxOut4(63-i) := Mux(io.amount(4),muxOut3(16-i),muxOut3(63-i))
+  // }
+  // for (i <- 0 until 64-16) {
+  //   muxOut4(i) := Mux(io.amount(4),muxOut3(i+16),muxOut3(i))
+  // }
+  // // Level 5
+  // for(i <- 0 until 32) //until pow(2,level)
+  // {
+  //   muxOut5(63-i) := Mux(io.amount(5),muxOut4(32-i),muxOut4(63-i))
+  // }
+  // for (i <- 0 until 64-32) {
+  //   muxOut5(i) := Mux(io.amount(5),muxOut4(i+32),muxOut4(i))
+  // }
+  // io.output := muxOut5.asUInt
+
   // for (j <- 0 until log_2(64)) {
   //   for (i <- 0 until j) {
   //     //Mux(io.amount(0),io.input(63),io.input(0), , )

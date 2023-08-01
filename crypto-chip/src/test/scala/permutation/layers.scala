@@ -26,7 +26,7 @@ class rotateTest extends AnyFlatSpec with ChiselScalatestTester {
             val start = 1
             for (amountLeftShifted <- 0 until 31) {
                 // start * pow(2, amountLeftShifted)
-                print("leftShifted value is: ")
+                print(amountLeftShifted + "leftShifted value is: ")
                 val leftShifted = start * math.pow(2,amountLeftShifted).toInt
                 print(leftShifted)
                 println()
