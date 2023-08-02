@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram name="Page-1" id="eaKB3j1fzKeqU2Oe0nWr">
-        <mxGraphModel dx="1129" dy="1570" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="906" dy="1803" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -15,20 +15,16 @@
                 <mxCell id="gf_bH93EiBqwr-e0P0p5-1" value="input (64 bit)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="100" y="150" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="gf_bH93EiBqwr-e0P0p5-10" value="delay until barrel shifter for b cycles" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="gf_bH93EiBqwr-e0P0p5-2" target="gf_bH93EiBqwr-e0P0p5-3" edge="1">
+                <mxCell id="6" style="edgeStyle=none;html=1;" edge="1" parent="1" source="gf_bH93EiBqwr-e0P0p5-2" target="4">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="gf_bH93EiBqwr-e0P0p5-2" value="xor" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="365" y="230" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="gf_bH93EiBqwr-e0P0p5-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="gf_bH93EiBqwr-e0P0p5-3" target="gf_bH93EiBqwr-e0P0p5-13" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="gf_bH93EiBqwr-e0P0p5-3" value="xor" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="710" y="200" width="120" height="60" as="geometry"/>
-                </mxCell>
-                <mxCell id="gf_bH93EiBqwr-e0P0p5-8" value="second bit rotates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="gf_bH93EiBqwr-e0P0p5-4" target="gf_bH93EiBqwr-e0P0p5-3" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
+                <mxCell id="gf_bH93EiBqwr-e0P0p5-8" value="second bit rotates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" parent="1" source="gf_bH93EiBqwr-e0P0p5-4" target="gf_bH93EiBqwr-e0P0p5-2" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="770" y="260" as="targetPoint"/>
+                    </mxGeometry>
                 </mxCell>
                 <mxCell id="gf_bH93EiBqwr-e0P0p5-9" value="first bit rotates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="gf_bH93EiBqwr-e0P0p5-4" target="gf_bH93EiBqwr-e0P0p5-2" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
@@ -67,6 +63,19 @@
                 </mxCell>
                 <mxCell id="gf_bH93EiBqwr-e0P0p5-20" value="change once output is done" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="100" y="-10" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" style="edgeStyle=none;html=1;" edge="1" parent="1" source="4" target="gf_bH93EiBqwr-e0P0p5-2">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="530" y="200"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="8" style="edgeStyle=none;html=1;" edge="1" parent="1" source="4" target="gf_bH93EiBqwr-e0P0p5-13">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="temp" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="560" y="230" width="120" height="60" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
