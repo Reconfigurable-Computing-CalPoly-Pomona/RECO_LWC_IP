@@ -101,31 +101,31 @@ class barrelShifter(amountOfLayers: Int) extends Module {
   // val muxOut4 = Wire(Vec(64,UInt(1.W)))
   // val muxOut5 = Wire(Vec(64,UInt(1.W)))
 
-  val muxOut = VecInit(Seq.fill(6)(VecInit(Seq.fill(64)(0.U(1.W)))))
+  val muxOut = VecInit(Seq.fill(amountOfLayers)(VecInit(Seq.fill(math.pow(2,amountOfLayers).toInt)(0.U(1.W)))))
   
   for(level <- 0 until amountOfLayers)
   {
     if(level != 0)
     {
       //Shifted bits
-      for (i <- 0 until 64) {
-        println("current mux is: " + i)
-        println("shift location is: " + (i+(math.pow(2,level).toInt))%64)
-        println("level is: " + level)
-        muxOut(level)(i) := Mux(io.amount(level),muxOut(level-1)((i+(math.pow(2,level).toInt))%64),muxOut(level-1)(i))
+      for (i <- 0 until math.pow(2,amountOfLayers).toInt) {
+        // println("current mux is: " + i)
+        // println("shift location is: " + (i+(math.pow(2,level).toInt))%(math.pow(2,amountOfLayers).toInt))
+        // println("level is: " + level)
+        muxOut(level)(i) := Mux(io.amount(level),muxOut(level-1)((i+(math.pow(2,level).toInt))%(math.pow(2,amountOfLayers).toInt)),muxOut(level-1)(i))
       }
     } 
     else
     {
       //Bits that are rotated to the front
-      muxOut(0)(63) := Mux(io.amount(0),io.input(0),io.input(63))
+      muxOut(0)(math.pow(2,amountOfLayers).toInt - 1) := Mux(io.amount(0),io.input(0),io.input(math.pow(2,amountOfLayers).toInt - 1))
       //Shifted bits
-      for (i <- 0 until 64) {
+      for (i <- 0 until math.pow(2,amountOfLayers).toInt-1) {
         muxOut(0)(i) := Mux(io.amount(0),io.input(i+1),io.input(i))
       }
     }
   }
-  io.output := muxOut(5).asUInt
+  io.output := muxOut(amountOfLayers-1).asUInt
   
 
   // // Level 0
@@ -217,6 +217,15 @@ class rotateRight extends Module {
   })
   io.output := io.input.rotateRight(io.amount)
 }
+
+// class rotateLeft extends Module {
+//   val io = IO(new Bundle {
+//     val input = Input(UInt(64.W))
+//     val amount = Input(UInt(6.W))
+//     val output = Output(UInt(64.W))
+//   })
+//   io.output := io.input.rotateLeft(io.amount)
+// }
 
 // single round permutation
 class permutation extends Module {

@@ -22,7 +22,7 @@ class rotateTest extends AnyFlatSpec with ChiselScalatestTester {
     } 
     "rotateTest_loop" should "work" in {
         test(new rotateRight()) { dut =>
-            val start = 51
+            val start = 1
             for (amountLeftShifted <- 0 until 30) {
                 // start * pow(2, amountLeftShifted)
                 print(amountLeftShifted + ".leftShifted value is: ")
@@ -38,22 +38,43 @@ class rotateTest extends AnyFlatSpec with ChiselScalatestTester {
             }
         }
     }
-    "rotateTestBarrel_loop" should "work" in {
-        test(new barrelShifter(6)) { dut =>
-            val start = 51
-            for (amountLeftShifted <- 0 until 30) {
-                // start * pow(2, amountLeftShifted)
-                print(amountLeftShifted + ".leftShifted value is: ")
-                //val leftShifted = BigDecimal(start * math.pow(2,amountLeftShifted)).toBigInt
-                //val leftShifted = start * math.pow(2,amountLeftShifted).toLong
-                val leftShifted = start * BigDecimal(2).pow(amountLeftShifted).toBigInt
-                print(leftShifted)
-                println()
-                dut.io.input.poke(leftShifted)
+// public static BigInt rotateLeft(BigInt value, int shift, int bitSize)
+// {
+//     // Note: shift must be positive, if necessary add checks.
+
+//     BigInt topBits = value.shiftRight(bitSize - shift);
+//     BigInt mask = BigInt.ONE.shiftLeft(bitSize).subtract(BigInteger.ONE);
+//     return value.shiftLeft(shift).or(topBits).and(mask);
+// }
+
+// rotate a max of 64 bit to left
+def rotateLeft(amount: Int, input: BigInt) : BigInt = {
+    // mask for lsb
+    val mask = BigDecimal(2).pow(64).toBigInt - 2
+    var result = input
+    for (i <- 0 until amount) {
+        // take lsb and save for later
+        val temp = result >> 63 & 1
+        // mask out top bit to write the temp variable at the msb
+        result = ((result << 1) & mask) | temp
+    }
+    return result
+}
+"rotateTestBarrel_loop" should "work" in {
+    test(new barrelShifter(6)) { dut =>
+        var start = BigInt(1)
+        while (start < BigDecimal(2).pow(6).toBigInt - 1) {
+            for (amountLeftShifted <- 0 until 64) {
+                // println("start is: " + start)
+                // println("amount left shifted is: " + amountLeftShifted)
+                dut.io.input.poke(rotateLeft(amountLeftShifted, start))
+                // println("result of start shifted is: " + amountLeftShifted)
                 dut.io.amount.poke(amountLeftShifted)
                 dut.io.output.expect(start)
-                println(dut.io.output.peek())
+                // println(dut.io.output.peek())
             }
+            start = start + BigInt(1)
         }
     }
+}
 }

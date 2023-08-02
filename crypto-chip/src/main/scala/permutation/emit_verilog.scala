@@ -10,5 +10,5 @@ object permutationMain extends App {
   emitVerilog(new addition_layer(), Array("--target-dir", "generated"))
   emitVerilog(new substitution_layer(), Array("--target-dir", "generated"))
   emitVerilog(new diffusion_layer(), Array("--target-dir", "generated"))
-  emitVerilog(new barrelShifter(), Array("--target-dir", "generated"))
+  emitVerilog(new barrelShifter(6), Array("--target-dir", "generated"))
 }
