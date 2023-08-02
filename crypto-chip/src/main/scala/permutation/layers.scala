@@ -80,11 +80,11 @@ class substitution_layer extends Module {
   }
 }
 
-class barrelShifter extends Module {
+class barrelShifter(amountOfLayers: Int) extends Module {
   val io = IO(new Bundle {
-    val input = Input(UInt(64.W))
-    val amount = Input(UInt(6.W))
-    val output = Output(UInt(64.W))
+    val input = Input(UInt(math.pow(2,amountOfLayers).toInt.W))
+    val amount = Input(UInt(amountOfLayers.W))
+    val output = Output(UInt(math.pow(2,amountOfLayers).toInt.W))
   })
 
   
@@ -103,18 +103,16 @@ class barrelShifter extends Module {
 
   val muxOut = VecInit(Seq.fill(6)(VecInit(Seq.fill(64)(0.U(1.W)))))
   
-  for(level <- 0 until 6)
+  for(level <- 0 until amountOfLayers)
   {
     if(level != 0)
-    { 
-      //Bits that are rotated to the front
-      for(i <- 0 until math.pow(2,level).toInt)
-      {
-        muxOut(level)(63-i) := Mux(io.amount(level),muxOut(level-1)(math.pow(2,level).toInt-i),muxOut(level-1)(63-i))
-      }
+    {
       //Shifted bits
-      for (i <- 0 until 64-math.pow(2,level).toInt) {
-        muxOut(level)(i) := Mux(io.amount(level),muxOut(level-1)(i+math.pow(2,level).toInt),muxOut(level-1)(i))
+      for (i <- 0 until 64) {
+        println("current mux is: " + i)
+        println("shift location is: " + (i+(math.pow(2,level).toInt))%64)
+        println("level is: " + level)
+        muxOut(level)(i) := Mux(io.amount(level),muxOut(level-1)((i+(math.pow(2,level).toInt))%64),muxOut(level-1)(i))
       }
     } 
     else
@@ -122,12 +120,13 @@ class barrelShifter extends Module {
       //Bits that are rotated to the front
       muxOut(0)(63) := Mux(io.amount(0),io.input(0),io.input(63))
       //Shifted bits
-      for (i <- 0 until 1) {
+      for (i <- 0 until 64) {
         muxOut(0)(i) := Mux(io.amount(0),io.input(i+1),io.input(i))
       }
     }
   }
   io.output := muxOut(5).asUInt
+  
 
   // // Level 0
   // // can combine loops together with a "when" statement
