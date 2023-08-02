@@ -21,23 +21,21 @@ class rotateTest extends AnyFlatSpec with ChiselScalatestTester {
         }
     } 
     "rotateTest_loop" should "work" in {
-        test(new rotateRight()) { dut =>
-            val start = 1
-            for (amountLeftShifted <- 0 until 30) {
-                // start * pow(2, amountLeftShifted)
-                print(amountLeftShifted + ".leftShifted value is: ")
-                //val leftShifted = BigDecimal(start * math.pow(2,amountLeftShifted)).toBigInt
-                //val leftShifted = start * math.pow(2,amountLeftShifted).toLong
-                val leftShifted = start * BigDecimal(2).pow(amountLeftShifted).toBigInt
-                print(leftShifted)
-                println()
-                dut.io.input.poke(leftShifted)
+    test(new rotateRight) { dut =>
+        var start = BigInt(1)
+        while (start < BigDecimal(2).pow(6).toBigInt - 1) {
+            for (amountLeftShifted <- 0 until 64) {
+                // println("start is: " + start)
+                // println("amount left shifted is: " + amountLeftShifted)
+                dut.io.input.poke(rotateLeft(amountLeftShifted, start))
+                // println("result of start shifted is: " + amountLeftShifted)
                 dut.io.amount.poke(amountLeftShifted)
                 dut.io.output.expect(start)
-                println(dut.io.output.peek())
+                // println(dut.io.output.peek())
             }
+            start = start + BigInt(1)
         }
-    }
+    }    }
 // public static BigInt rotateLeft(BigInt value, int shift, int bitSize)
 // {
 //     // Note: shift must be positive, if necessary add checks.
