@@ -287,12 +287,12 @@ class diffusion_layer_single extends Module {
     is(first){
       reg_amount := io.amountFirst
       // save output of first barrel rotate & xor
-      temp := io.x_in ^ barrel.io.output
       current := second
     }
     is(second){
       // second rotate
       reg_amount := io.amountSecond
+      temp := io.x_in ^ barrel.io.output
       //temp := RegNext(temp ^ barrel.io.output)
       //barrel.io.input := io.x_in
       current := done
@@ -314,7 +314,7 @@ class diffusion_layer_single extends Module {
 
   // use saved temp value to xor with second rotate
   //io.x_out := io.x_in ^ temp ^ barrel.io.output
-  io.x_out := io.x_in ^ barrel.io.output
+  io.x_out := temp ^ barrel.io.output
   //io.x_out := temp
 
 }
