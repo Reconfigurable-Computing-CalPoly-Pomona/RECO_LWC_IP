@@ -169,6 +169,8 @@ class permutation_two extends Module {
         // io.done := true.B
         when (posedge.io.out) {
           current := start
+        }.otherwise {
+          current := done
         }
       }
     }

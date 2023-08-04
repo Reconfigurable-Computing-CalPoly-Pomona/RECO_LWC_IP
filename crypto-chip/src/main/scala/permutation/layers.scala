@@ -3,6 +3,7 @@ package layers
 import chisel3._
 import chisel3.util._
 import scala.math._
+import _root_.permutation.posedge
 
 
 class addition_layer extends Module {
@@ -205,6 +206,117 @@ class diffusion_layer extends Module {
     io.x_out(2) := io.x_in(2) ^ Cat(io.x_in(2)(0,0),io.x_in(2)(63,1)) ^ Cat(io.x_in(2)(5,0),io.x_in(2)(63,6))
     io.x_out(3) := io.x_in(3) ^ Cat(io.x_in(3)(9,0),io.x_in(3)(63,10)) ^ Cat(io.x_in(3)(16,0),io.x_in(3)(63,17))
     io.x_out(4) := io.x_in(4) ^ Cat(io.x_in(4)(6,0),io.x_in(4)(63,7)) ^ Cat(io.x_in(4)(40,0),io.x_in(4)(63,41))
+}
+
+class diffusion_layer_barrel extends Module {
+  val io = IO(new Bundle {
+    val x_in        = Input(Vec(5, UInt(64.W)))
+    val x_out = Output(Vec(5, UInt(64.W)))
+  })
+    
+}
+// 
+class regAssign extends Module {
+  val io = IO(new Bundle {
+    val start = Input(Bool())
+    val x_out = Output(UInt(4.W))
+    val done = Output(Bool())
+  })
+  val first::second::done::Nil = Enum(3)
+
+  val temp = RegInit(0.U(4.W))
+  val current = RegInit(done)
+  val mode_test = WireDefault(false.B)
+  // choose 4  or 8
+  val mux_out = Mux(mode_test, 4.U, 8.U)
+  // save x_in with value that changes (simulate wire)
+    switch (current){
+      is(first) {
+        // add muxout (probably 0)
+        current := second
+      }
+      is(second) {
+        temp := mux_out
+        mode_test := true.B
+        // shouldn't affect temp
+        current := done
+      }
+      is(done) {
+        when (io.start) {
+          current := first
+        } .otherwise {
+          current := done
+        }
+      }
+    }
+    // expecting 4
+  when (current === done) {
+    io.done := true.B
+  } .otherwise {
+    io.done := false.B
+  }
+  io.x_out := temp
+}
+
+class diffusion_layer_single extends Module {
+  val io = IO(new Bundle {
+    val x_in        = Input(UInt(64.W))
+    val start = Input(Bool())
+    val amountFirst = Input(UInt(6.W))
+    val amountSecond = Input(UInt(6.W))
+    val x_out = Output(UInt(64.W))
+    val done = Output(Bool())
+  })
+  val edge = Module(new posedge())
+  edge.io.in := io.start
+  val temp = RegInit(0.U(64.W))
+  val barrel = Module(new barrelShifter(6))
+  val reg_amount = RegInit(io.amountFirst)
+  //val start::first::second::done::Nil = Enum(4)
+  val first::second::done::Nil = Enum(3)
+  val current = RegInit(done)
+  barrel.io.input := io.x_in
+  barrel.io.amount := reg_amount
+  
+  switch (current){
+    // start the state machine
+    // is(start){
+      //   // first rotate
+      //   current := first
+      // }
+    is(first){
+      reg_amount := io.amountFirst
+      // save output of first barrel rotate & xor
+      temp := io.x_in ^ barrel.io.output
+      current := second
+    }
+    is(second){
+      // second rotate
+      reg_amount := io.amountSecond
+      //temp := RegNext(temp ^ barrel.io.output)
+      //barrel.io.input := io.x_in
+      current := done
+    }
+    is(done){
+      when (edge.io.out) {
+        current := first
+      } .otherwise {
+        current := done
+      }
+    }
+  }
+
+  when (current === done) {
+    io.done := true.B
+  } .otherwise {
+    io.done := false.B
+  }
+
+  // use saved temp value to xor with second rotate
+  //io.x_out := io.x_in ^ temp ^ barrel.io.output
+  io.x_out := io.x_in ^ barrel.io.output
+  //io.x_out := temp
+
 }
 
 

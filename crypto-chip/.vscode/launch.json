@@ -19,6 +19,12 @@
         {
             "type": "scala",
             "request": "launch",
+            "name": "test diffusion",
+            "testClass": "layers.diffusionTest"
+        },
+        {
+            "type": "scala",
+            "request": "launch",
             "name": "main",
             "mainClass": "permutationEmit.permutationMain",
             "args": [],
