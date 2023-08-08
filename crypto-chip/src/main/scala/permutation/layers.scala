@@ -311,27 +311,24 @@ class diffusion_layer_single extends Module {
   barrel.io.amount := reg_amount
   
   switch (current){
-    // start the state machine
-    // is(start){
-      //   // first rotate
-      //   current := first
-      // }
-    // is(first){
-    //   // save output of first barrel rotate & xor
-    //   current := second
-    // }
-    is(second){
-      // second rotate
+    is(first){
+      // store first rotate
+      temp := temp ^ barrel.io.output
+      // start second rotate
       reg_amount := io.amountSecond
-      temp := io.x_in ^ barrel.io.output
-      //temp := RegNext(temp ^ barrel.io.output)
-      //barrel.io.input := io.x_in
+      current := second
+    }
+    is(second) {
+      // store second rotate
+      temp := temp ^ barrel.io.output
       current := done
     }
     is(done){
       when (edge.io.out) {
+        // store the io.input value, start first rotate
+        temp := io.x_in
         reg_amount := io.amountFirst
-        current := second
+        current := first
       } .otherwise {
         current := done
       }
@@ -344,10 +341,7 @@ class diffusion_layer_single extends Module {
     io.done := false.B
   }
 
-  // use saved temp value to xor with second rotate
-  //io.x_out := io.x_in ^ temp ^ barrel.io.output
-  io.x_out := temp ^ barrel.io.output
-  //io.x_out := temp
+  io.x_out := temp
 
 }
 
