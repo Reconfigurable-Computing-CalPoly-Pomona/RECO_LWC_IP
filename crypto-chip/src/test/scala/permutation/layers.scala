@@ -186,7 +186,7 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
             dut.io.start.poke(true)
             dut.clock.step()
             dut.io.start.poke(false)
-            for (i <- 0 until 10) {
+            for (i <- 0 until 15) {
                 println("x_out value is: " + dut.io.x_out.peekInt())
                 println("done is: " + dut.io.done.peekBoolean())
                 dut.clock.step()

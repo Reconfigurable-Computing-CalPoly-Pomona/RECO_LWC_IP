@@ -219,30 +219,62 @@ class diffusion_layer_barrel extends Module {
 class regAssign extends Module {
   val io = IO(new Bundle {
     val start = Input(Bool())
-    val x_out = Output(UInt(4.W))
+    val x_out = Output(UInt(5.W))
     val done = Output(Bool())
   })
-  val first::second::done::Nil = Enum(3)
+  val first::second::third::fourth::done::Nil = Enum(5)
 
-  val temp = RegInit(0.U(4.W))
+  val temp = RegInit(0.U(5.W))
   val current = RegInit(done)
-  val mode_test = WireDefault(false.B)
-  // choose 4  or 8
-  val mux_out = Mux(mode_test, 4.U, 8.U)
+  // wires can't hold values!!! (except for default values)
+  // val mode_test = WireDefault(2.U(3.W))
+  val mode_test = RegInit(2.U(3.W))
+  val wire_out = Wire(UInt(5.W))
+  // choose
+  when (mode_test === 0.U) {
+    wire_out := 2.U
+  }
+  .elsewhen (mode_test === 1.U) {
+    wire_out := 4.U
+  }
+  .elsewhen (mode_test === 2.U) {
+    wire_out := 6.U
+  }
+  .elsewhen (mode_test === 3.U) {
+    wire_out := 8.U
+  } .otherwise {
+    wire_out := 10.U
+  }
   // save x_in with value that changes (simulate wire)
     switch (current){
       is(first) {
-        // add muxout (probably 0)
-        current := second
+        // set to 4
+        // IMPORTANT FINDINGS: the mode_test register assignment takes a clock cycle to apply; the register assignments are "to be assigned" and are basically nonblocking assignments
+        // shouldn't affect temp; maybe result in 8
+        mode_test := 3.U
+        temp := wire_out
+        current := fourth
       }
-      is(second) {
-        temp := mux_out
-        mode_test := true.B
-        // shouldn't affect temp
+      // is(second) {
+      //   // shouldn't affect temp; maybe result in 6
+      //   // mode_test := 2.U
+      //   current := third
+      // }
+      // is(third) {
+      //   // shouldn't result in 2
+      //   // mode_test := 2.U
+      //   // should save 4
+      //   // simulating multiple cycles to output
+      //   // IMPORTANT FINDINGS: in this switch statement, a mode_test wire gets set to default if not assigned
+        
+      //   current := fourth
+      // }
+      is(fourth) {
         current := done
       }
       is(done) {
         when (io.start) {
+          mode_test := 1.U
           current := first
         } .otherwise {
           current := done
@@ -271,7 +303,7 @@ class diffusion_layer_single extends Module {
   edge.io.in := io.start
   val temp = RegInit(0.U(64.W))
   val barrel = Module(new barrelShifter(6))
-  val reg_amount = RegInit(io.amountFirst)
+  val reg_amount = RegInit(0.U(6.W))
   //val start::first::second::done::Nil = Enum(4)
   val first::second::done::Nil = Enum(3)
   val current = RegInit(done)
@@ -284,11 +316,10 @@ class diffusion_layer_single extends Module {
       //   // first rotate
       //   current := first
       // }
-    is(first){
-      reg_amount := io.amountFirst
-      // save output of first barrel rotate & xor
-      current := second
-    }
+    // is(first){
+    //   // save output of first barrel rotate & xor
+    //   current := second
+    // }
     is(second){
       // second rotate
       reg_amount := io.amountSecond
@@ -299,7 +330,8 @@ class diffusion_layer_single extends Module {
     }
     is(done){
       when (edge.io.out) {
-        current := first
+        reg_amount := io.amountFirst
+        current := second
       } .otherwise {
         current := done
       }
