@@ -290,6 +290,19 @@ class regAssign extends Module {
   io.x_out := temp
 }
 
+// class xor_test extends Module{
+//   val io = IO(new Bundle {
+//     val x_in        = Input(UInt(1.W))
+//     val x_in1        = Input(UInt(1.W))
+//     val x_out = Output(UInt(2.W))
+//     val x_out1 = Output(UInt(2.W))
+//   })
+//   val muxWire = WireDefault(0.U(2.W))
+//   muxWire := Mux(io.x_in.asBool, 1.U, 3.U)
+//   io.x_out := muxWire
+//   io.x_out1 := muxWire
+// }
+
 class diffusion_layer_single extends Module {
   val io = IO(new Bundle {
     val x_in        = Input(UInt(64.W))
@@ -309,20 +322,21 @@ class diffusion_layer_single extends Module {
   val current = RegInit(done)
   barrel.io.input := io.x_in
   barrel.io.amount := reg_amount
-  
+  val xor_temp = WireDefault(0.U(64.W))
+  xor_temp := temp ^ barrel.io.output
   switch (current){
     is(first){
       // store first rotate
-      temp := temp ^ barrel.io.output
+      temp := xor_temp
       // start second rotate
       reg_amount := io.amountSecond
-      current := second
-    }
-    is(second) {
-      // store second rotate
-      temp := temp ^ barrel.io.output
       current := done
     }
+    // is(second) {
+    //   // store second rotate
+    //   temp := temp ^ barrel.io.output
+    //   current := done
+    // }
     is(done){
       when (edge.io.out) {
         // store the io.input value, start first rotate
@@ -340,9 +354,7 @@ class diffusion_layer_single extends Module {
   } .otherwise {
     io.done := false.B
   }
-
-  io.x_out := temp
-
+  io.x_out := xor_temp
 }
 
 
