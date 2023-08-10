@@ -147,14 +147,14 @@ class permutation_two extends Module {
   
     switch (current){
       // start the state machine
-      is(start){
-        //io.done := false.B
-        current := add
-      }
-      is(add){
-        state(2) := addition.io.x2_out
-        current := sub
-      }
+      // is(start){
+      //   //io.done := false.B
+      //   current := add
+      // }
+      // is(add){
+        
+      //   current := sub
+      // }
       is(sub){
         state := RegNext(substitution.io.x_out)
         // state := (substitution.io.x_out)
@@ -168,7 +168,8 @@ class permutation_two extends Module {
       is(done){
         // io.done := true.B
         when (posedge.io.out) {
-          current := start
+          state(2) := addition.io.x2_out
+          current := sub
         }.otherwise {
           current := done
         }

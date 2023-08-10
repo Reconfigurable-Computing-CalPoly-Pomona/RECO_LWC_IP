@@ -7,7 +7,7 @@
         {
             "type": "scala",
             "request": "launch",
-            "name": "test",
+            "name": "test permutation",
             "testClass": "permutation.Permutation_once"
         },
         {
