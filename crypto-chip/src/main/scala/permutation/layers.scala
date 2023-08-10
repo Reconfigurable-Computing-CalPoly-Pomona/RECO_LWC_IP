@@ -322,21 +322,19 @@ class diffusion_layer_single extends Module {
   val current = RegInit(done)
   barrel.io.input := io.x_in
   barrel.io.amount := reg_amount
-  val xor_temp = WireDefault(0.U(64.W))
-  xor_temp := temp ^ barrel.io.output
   switch (current){
     is(first){
       // store first rotate
-      temp := xor_temp
+      temp := temp ^ barrel.io.output
       // start second rotate
       reg_amount := io.amountSecond
+      current := second
+    }
+    is(second) {
+      // store second rotate
+      temp := temp ^ barrel.io.output
       current := done
     }
-    // is(second) {
-    //   // store second rotate
-    //   temp := temp ^ barrel.io.output
-    //   current := done
-    // }
     is(done){
       when (edge.io.out) {
         // store the io.input value, start first rotate
@@ -354,7 +352,7 @@ class diffusion_layer_single extends Module {
   } .otherwise {
     io.done := false.B
   }
-  io.x_out := xor_temp
+  io.x_out := temp
 }
 
 
