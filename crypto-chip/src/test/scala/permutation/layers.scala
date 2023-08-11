@@ -238,3 +238,33 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
         }
     }
 }
+class queueTest extends AnyFlatSpec with ChiselScalatestTester {
+        "queue" should "work" in {
+        test(new queue_test) { dut =>
+            println("inserting data")
+            for (i <- 0 until 8) {
+                println("empty is: " + dut.io.empty.peek())
+                println("full is: " + dut.io.full.peek())
+                dut.io.in.poke(i)
+                dut.io.start_in.poke(1)
+                dut.clock.step()
+                dut.io.start_in.poke(0)
+                dut.clock.step()
+            }
+            println("empty is: " + dut.io.empty.peek())
+            println("full is: " + dut.io.full.peek())
+            println("reading data")
+            for (i <- 0 until 8) {
+                println("empty is: " + dut.io.empty.peek())
+                println("full is: " + dut.io.full.peek())
+                dut.io.start_out.poke(1)
+                dut.io.out.expect(i)
+                dut.clock.step()
+                dut.io.start_out.poke(0)
+                dut.clock.step()
+            }
+            println("empty is: " + dut.io.empty.peek())
+            println("full is: " + dut.io.full.peek())
+        }
+    }
+}

@@ -208,6 +208,27 @@ class diffusion_layer extends Module {
     io.x_out(4) := io.x_in(4) ^ Cat(io.x_in(4)(6,0),io.x_in(4)(63,7)) ^ Cat(io.x_in(4)(40,0),io.x_in(4)(63,41))
 }
 
+class queue_test extends Module {
+  val io = IO(new Bundle {
+    // val in = Decoupled(UInt(8.W))
+    val start_in = Input(Bool())
+    val in = Input(UInt(8.W))
+    val start_out = Input(Bool())
+    val out = Output(UInt(8.W))
+    val empty = Output(Bool())
+    val full = Output(Bool())
+  })
+  val queue = Module(new Queue(UInt(8.W), 8))
+  // flags for reading/writing
+  io.full := ~queue.io.enq.ready
+  io.empty := ~queue.io.deq.valid
+  // bits in and out
+  queue.io.enq.bits := io.in
+  queue.io.enq.valid := io.start_in
+  io.out := queue.io.deq.bits
+  queue.io.deq.ready := io.start_out
+}
+
 class diffusion_layer_wrapper extends Module {
   val io = IO(new Bundle {
     val start = Input(Bool())
@@ -322,9 +343,8 @@ class diffusion_layer_wrapper extends Module {
     io.done := true.B
     io.x_out := fifo_out
   }
-
-    
 }
+
 // 
 class regAssign extends Module {
   val io = IO(new Bundle {
