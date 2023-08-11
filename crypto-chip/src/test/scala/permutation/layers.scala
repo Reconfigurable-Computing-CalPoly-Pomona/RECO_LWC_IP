@@ -238,6 +238,7 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
         }
     }
 }
+
 class queueTest extends AnyFlatSpec with ChiselScalatestTester {
         "queue" should "work" in {
         test(new queue_test) { dut =>

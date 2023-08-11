@@ -229,6 +229,82 @@ class queue_test extends Module {
   queue.io.deq.ready := io.start_out
 }
 
+class x_val extends Bundle {
+  val data = UInt(64.W)
+  val i = UInt(3.W)
+}
+
+class diffusion_fifo(fifo_size: Int) extends Module {
+  val io = IO(new Bundle {
+    val x_in        = Input(new x_val())
+    val startInsert = Input(Bool())
+    val x_out = Output(new x_val())
+    val startOutput = Input(Bool())
+    val full = Output(Bool())
+    val empty = Output(Bool())
+  })
+  val current = RegInit(done)
+  val wait::second::third::fourth::done::Nil = Enum(5)
+  val in = Module(new Queue(new x_val(), fifo_size))
+  val out = Module(new Queue(new x_val(), fifo_size))
+  val single_diffusion = Module(new diffusion_layer_single())
+  // continually assigned data that doesn't change over time in this module
+  single_diffusion.io.x_in := io.x_in.data
+  out.io.enq.bits.i := io.x_in.i
+  switch (current)
+  {
+    is()
+    {
+      
+    }
+  }
+  // check if the in fifo is not empty and if the output fifo is not full
+  // if true, then start the diffusion
+  when (~in.io.deq.valid === true.B && ~out.io.enq.ready === true.B) {
+    single_diffusion.io.start := true.B
+  }
+  // when finished, insert the data to the output fifo
+  when (single_diffusion.io.done) {
+    single_diffusion.io.start := false.B
+    out.io.enq.bits.data := single_diffusion.io.x_out
+    out.io.enq.ready := true.B
+  }
+
+  //Assign Amount First and Amount Second
+  when(io.x_in.i === 0.U)
+  {
+    single_diffusion.io.amountFirst := 19.U
+    single_diffusion.io.amountSecond := 28.U
+  }
+  .elsewhen(io.x_in.i === 1.U)
+  {
+    single_diffusion.io.amountFirst := 61.U
+    single_diffusion.io.amountSecond := 39.U
+  }
+  .elsewhen(io.x_in.i === 2.U)
+  {
+    single_diffusion.io.amountFirst := 1.U
+    single_diffusion.io.amountSecond := 6.U
+  }
+  .elsewhen(io.x_in.i === 3.U)
+  {
+    single_diffusion.io.amountFirst := 10.U
+    single_diffusion.io.amountSecond := 17.U
+  }
+  .elsewhen(io.x_in.i === 4.U)
+  {
+    single_diffusion.io.amountFirst := 7.U
+    single_diffusion.io.amountSecond := 41.U
+  }
+  .otherwise
+  {
+    single_diffusion.io.amountFirst := 0.U
+    single_diffusion.io.amountSecond := 0.U
+  }
+
+}
+
+
 class diffusion_layer_wrapper extends Module {
   val io = IO(new Bundle {
     val start = Input(Bool())
@@ -250,7 +326,7 @@ class diffusion_layer_wrapper extends Module {
   val current_amountSecond = RegInit(0.U(6.W))
   val single_start = Bool()
   val single_done = Bool()
-
+  
 
   //Instantiate diffusion_layer_single
   val single_diff = Module(new diffusion_layer_single())
