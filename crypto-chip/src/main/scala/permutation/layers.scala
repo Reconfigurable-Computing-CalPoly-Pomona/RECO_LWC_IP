@@ -208,11 +208,121 @@ class diffusion_layer extends Module {
     io.x_out(4) := io.x_in(4) ^ Cat(io.x_in(4)(6,0),io.x_in(4)(63,7)) ^ Cat(io.x_in(4)(40,0),io.x_in(4)(63,41))
 }
 
-class diffusion_layer_barrel extends Module {
+class diffusion_layer_wrapper extends Module {
   val io = IO(new Bundle {
+    val start = Input(Bool())
     val x_in        = Input(Vec(5, UInt(64.W)))
     val x_out = Output(Vec(5, UInt(64.W)))
+    val done = Output(Bool())
   })
+
+  //these two lines are to temporarily replace the actual FIFO
+  //More wires will be needed to control the push/pull & start/done flags
+  val fifo_in = VecInit(Seq.fill(5)(RegInit(0.U(64.W))))
+  val fifo_out = VecInit(Seq.fill(5)(RegInit(0.U(64.W))))
+  
+  //Keep track of what section of the S-box is used
+  val current_x = RegInit(0.U(3.W))
+  val current_in = RegInit(0.U(64.W))
+  val current_out = RegInit(0.U(64.W))
+  val current_amountFirst = RegInit(0.U(6.W))
+  val current_amountSecond = RegInit(0.U(6.W))
+  val single_start = Bool()
+  val single_done = Bool()
+
+
+  //Instantiate diffusion_layer_single
+  val single_diff = Module(new diffusion_layer_single())
+  single_diff.io.x_in := current_in
+  single_diff.io.start := single_start_edge
+  single_diff.io.amountFirst := current_amountFirst
+  single_diff.io.amountSecond := current_amountSecond
+  current_out := single_diff.io.x_out
+  single_done := single_diff.io.done
+
+  //Edge Detectors
+  val edge0 = Module(new posedge())
+  edge0.io.in := io.start
+  val start_edge = Bool()
+  start_edge := edge0.io.out
+
+  val edge1 = Module(new posedge())
+  edge1.io.in := single_start
+  val single_start_edge = Bool()
+  single_start_edge := edge1.io.out
+  
+  val edge2 = Module(new posedge())
+  edge2.io.in := single_done
+  val single_done_edge = Bool()
+  single_done_edge := edge2.io.out
+
+  //Assign Amount First and Amount Second
+  when(current_x === 0.U)
+  {
+    current_amountFirst := 19.U
+    current_amountSecond := 28.U
+  }
+  .elsewhen(current_x === 1.U)
+  {
+    current_amountFirst := 61.U
+    current_amountSecond := 39.U
+  }
+  .elsewhen(current_x === 2.U)
+  {
+    current_amountFirst := 1.U
+    current_amountSecond := 6.U
+  }
+  .elsewhen(current_x === 3.U)
+  {
+    current_amountFirst := 10.U
+    current_amountSecond := 17.U
+  }
+  .elsewhen(current_x === 4.U)
+  {
+    current_amountFirst := 7.U
+    current_amountSecond := 41.U
+  }
+  .otherwise
+  {
+    current_amountFirst := 0.U
+    current_amountSecond := 0.U
+  }
+
+  //On start, current_x will be reset to 0
+  when(start_edge)
+  {
+    current_x := 0.U
+  }
+
+  //When single_start is toggled on, contents of fifo_in(current_x) are stored in current_in
+  when(single_start_edge)
+  {
+    current_in := fifo_in(current_x)
+  }
+
+  //When single_done is turned on, single_start will turn off and
+  //fifo_out(current_x) will store current_out and incrememnt current_x 
+  when(single_done_edge)
+  {
+    single_start := false.B
+    fifo_out(current_x) := current_out
+    current_x := current_x + 1.U
+  }
+
+  //As long as current_x <= 4, done is false, single_start will be on, and x_out is 0
+  //Otherwise, done is true and x_out is updated with fifo_out
+  when(current_x <= 4.U)
+  {
+    io.done := false.B
+    single_start := true.B
+    io.x_out := 0.U
+  }
+  .otherwise
+  {
+    io.done := true.B
+    io.x_out := fifo_out
+  }
+
     
 }
 // 
