@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util._
 import scala.math._
 import _root_.permutation.posedge
+import org.scalatest.run
 
 
 class addition_layer extends Module {
@@ -234,6 +235,8 @@ class x_val extends Bundle {
   val i = UInt(3.W)
 }
 
+// read from x_in and continually insert into fifo
+// also read from input fifo and write to output fifo
 class diffusion_fifo(fifo_size: Int) extends Module {
   val io = IO(new Bundle {
     val x_in        = Input(new x_val())
@@ -243,34 +246,42 @@ class diffusion_fifo(fifo_size: Int) extends Module {
     val full = Output(Bool())
     val empty = Output(Bool())
   })
-  val current = RegInit(done)
-  val wait::second::third::fourth::done::Nil = Enum(5)
   val in = Module(new Queue(new x_val(), fifo_size))
   val out = Module(new Queue(new x_val(), fifo_size))
   val single_diffusion = Module(new diffusion_layer_single())
-  // continually assigned data that doesn't change over time in this module
-  single_diffusion.io.x_in := io.x_in.data
-  out.io.enq.bits.i := io.x_in.i
-  switch (current)
-  {
-    is()
-    {
-      
-    }
+  
+  // below connects the "outer" incoming and outgoing signals (in.io.enq, out.io.deq)
+    // also implements inserting and reading
+  
+  // connect x_in to input fifo and connect x_out to output fifo
+  in.io.enq.bits := io.x_in
+  io.x_out := out.io.deq.bits
+  // pass through input queue full to outside and output queue empty to outside
+  io.full := in.io.enq.ready
+  io.empty := out.io.deq.valid
+  
+  // noticing that the two when statements below are basically like in.io.enq.valid := io.startInsert
+  
+  // input fifo: runs on its own in theory based on start signal
+  // might need an edge detector to only make this happen once
+  // alternatively, the module outside should use an edge detector and not here since this can be considered "cycle accurate". This is the current implementation 
+  // important to check if the queue is full outside before the startInsert is used
+  when (io.startInsert === true.B) {
+    in.io.enq.valid := true.B
+  } .otherwise {
+    in.io.enq.valid := false.B
   }
-  // check if the in fifo is not empty and if the output fifo is not full
-  // if true, then start the diffusion
-  when (~in.io.deq.valid === true.B && ~out.io.enq.ready === true.B) {
-    single_diffusion.io.start := true.B
-  }
-  // when finished, insert the data to the output fifo
-  when (single_diffusion.io.done) {
-    single_diffusion.io.start := false.B
-    out.io.enq.bits.data := single_diffusion.io.x_out
-    out.io.enq.ready := true.B
+  
+  // also do the output fifo: runs on its own in theory
+  when (io.startOutput === true.B) {
+    out.io.deq.ready := true.B
+  } .otherwise {
+    out.io.deq.ready := false.B
   }
 
-  //Assign Amount First and Amount Second
+  // below is basically a lookup table handling the amounts to rotate by
+  
+  //Assign Amount First and Amount Second continuously based on i
   when(io.x_in.i === 0.U)
   {
     single_diffusion.io.amountFirst := 19.U
@@ -301,7 +312,73 @@ class diffusion_fifo(fifo_size: Int) extends Module {
     single_diffusion.io.amountFirst := 0.U
     single_diffusion.io.amountSecond := 0.U
   }
+  
+  // The next section below handles the "inner" fifo connections (in.io.deq, out.io.enq, single_diffusion.io)
+  
+  // testing default wire connection for inserting, reading flags; not sure if this works properly:
+    in.io.deq.ready := false.B
+    out.io.enq.valid := false.B
+    // set start false by default so it can be reset "automatically"
+    single_diffusion.io.start := false.B
+    
+    // keep input fifo's output to single_diffusion
+    // keep diffusion's output going to the output fifo
+    single_diffusion.io.x_in := in.io.deq.bits.data
+    out.io.enq.bits.data := single_diffusion.io.x_out
+    // also add the i value from the input fifo; note there's no differentiation between x_0 and y_0, so no mixing between multiple state registers. This can be easily added through the x_val struct but with extra bits
+    // this might be off by one since this might get the next value after in.io.deq happens
+    out.io.enq.bits.i := in.io.deq.bits.i
+    
+    // below are when statements that enable or disable start signals since everything is already connected
+    
+    
+    // The current problem with signals being held for multiple clocks can be solved with a state machine. This is the current implementation
+    // ready, running, done; ready is checking the first statement, running will wait and reset some signals, done will output data and go to ready
+    
+    // check if the in fifo is not empty and if the output fifo is not full
+    // if true, then start the diffusion
 
+    val checkReady::done::Nil = Enum(2)
+    val current = RegInit(done)
+    switch (current) {
+      is(checkReady) {
+        // init values (just in case)
+        out.io.enq.valid := false.B
+        in.io.deq.ready := false.B
+        single_diffusion.io.start := true.B
+        // if able to start (data in in fifo, output fifo not full), else wait
+        when (~in.io.deq.valid === true.B && ~out.io.enq.ready === true.B) {
+          in.io.deq.ready := true.B
+          single_diffusion.io.start := true.B
+          current := done
+        } .otherwise {
+          current := checkReady
+        }
+      }
+      is(done) {
+        // reset signals so they don't continually deq or enq
+        in.io.deq.ready := false.B
+        single_diffusion.io.start := false.B
+        // checks if diffusion is done and if so, sends to output fifo
+        when (single_diffusion.io.done) {
+          out.io.enq.valid := true.B
+          current := checkReady
+        } .otherwise {
+          current := done
+        }
+      }
+    }
+    // when (~in.io.deq.valid === true.B && ~out.io.enq.ready === true.B) {
+    //   // perform dequeue from input here, start diffusion; maybe problem here since ready is held too long, so multiple dequeues happen
+    // in.io.deq.ready := true.B
+    // single_diffusion.io.start := true.B
+    // }
+    // // when finished, insert the data to the output fifo
+    // when (single_diffusion.io.done) {
+    //   single_diffusion.io.start := false.B
+    //   // maybe same problem with valid being held for multiple clocks
+    //   out.io.enq.valid := true.B
+    // }
 }
 
 
