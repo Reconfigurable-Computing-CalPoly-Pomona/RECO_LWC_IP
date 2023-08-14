@@ -269,3 +269,40 @@ class queueTest extends AnyFlatSpec with ChiselScalatestTester {
         }
     }
 }
+
+class diffusion_fifo_test extends AnyFlatSpec with ChiselScalatestTester with testFunctions {
+        "diffusion with one val" should "work" in {
+        test(new diffusion_fifo(5)) { dut =>
+            println("inserting x")
+            println("empty is: " + dut.io.empty.peek())
+            println("full is: " + dut.io.full.peek())
+            // perform diffusion with x_0 = 0, i=0
+            // perform full check here (with an if/when statement)
+            dut.io.full.expect(false)
+            dut.io.x_in.data.poke(0)
+            dut.io.x_in.i.poke(0)
+            dut.io.startInsert.poke(1)
+            dut.clock.step()
+            dut.io.startInsert.poke(0)
+            // not sure how many clocks
+            dut.clock.step(10)
+            val result = singleDiffusion(0, 19, 28)
+            println("empty is: " + dut.io.empty.peek())
+            println("full is: " + dut.io.full.peek())
+            println("reading x")
+            println("empty is: " + dut.io.empty.peek())
+            println("full is: " + dut.io.full.peek())
+            // perform empty check here (with an if/when statement)
+            dut.io.empty.expect(false)
+            dut.io.startOutput.poke(1)
+            dut.clock.step()
+            dut.io.x_out.data.expect(result)
+            dut.io.x_out.i.expect(0)
+            dut.io.startOutput.poke(0)
+            dut.clock.step()
+            println("empty is: " + dut.io.empty.peek())
+            println("full is: " + dut.io.full.peek())
+        }
+    }
+}
+

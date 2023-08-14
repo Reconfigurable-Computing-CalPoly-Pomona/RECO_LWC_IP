@@ -256,9 +256,9 @@ class diffusion_fifo(fifo_size: Int) extends Module {
   // connect x_in to input fifo and connect x_out to output fifo
   in.io.enq.bits := io.x_in
   io.x_out := out.io.deq.bits
-  // pass through input queue full to outside and output queue empty to outside
-  io.full := in.io.enq.ready
-  io.empty := out.io.deq.valid
+  // pass through input queue full to outside and output queue empty to outside, inverting it so it makes sense
+  io.full := ~in.io.enq.ready
+  io.empty := ~out.io.deq.valid
   
   // noticing that the two when statements below are basically like in.io.enq.valid := io.startInsert
   
