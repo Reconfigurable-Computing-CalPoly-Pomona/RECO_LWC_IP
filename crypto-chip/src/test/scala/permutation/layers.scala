@@ -70,6 +70,36 @@ trait testFunctions {
         val x_out = xIn ^ (rotateRight(amountFirst, xIn)) ^ (rotateRight(amountSecond, xIn))
     return x_out
     }
+    def singleDiffusion_i(xIn: BigInt, i: Int) : BigInt = {
+        var amountFirst = 0;
+        var amountSecond = 0;
+        if (i == 0) {
+            amountFirst = 19
+            amountSecond = 28
+        }
+        else if(i == 1) {
+            amountFirst = 61
+            amountSecond = 39
+        }
+        else if(i == 2) {
+            amountFirst = 1
+            amountSecond = 6
+        }
+        else if(i == 3) {
+            amountFirst = 10
+            amountSecond = 17
+        }
+        else if(i == 4) {
+            amountFirst = 7
+            amountSecond = 41
+        }
+        else {
+            amountFirst = 0
+            amountSecond = 0
+        }
+        return singleDiffusion(xIn, amountFirst, amountSecond)
+    }
+
 }
 class rotateTest extends AnyFlatSpec with ChiselScalatestTester with testFunctions {
     // if the test description is missing, the error None.get() appears
@@ -237,6 +267,43 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
             }
         }
     }
+    "diffusion_fifo with one val" should "work" in {
+        test(new diffusion_fifo(5)) { dut =>
+            println("inserting x")
+            println("empty is: " + dut.io.empty.peek())
+            println("full is: " + dut.io.full.peek())
+            // perform diffusion with x_0 = 0, i=0
+            // perform full check here (with an if/when statement)
+            dut.io.full.expect(false)
+            val x_in = 0
+            val i = 0
+            dut.io.x_in.data.poke(x_in)
+            dut.io.x_in.i.poke(i)
+            dut.io.startInsert.poke(1)
+            dut.clock.step()
+            dut.io.startInsert.poke(0)
+            // not sure how many clocks
+            dut.clock.step(10)
+            // calculate result in scala
+            val result = singleDiffusion_i(x_in, i)
+            println("empty is: " + dut.io.empty.peek())
+            println("full is: " + dut.io.full.peek())
+            println("reading x")
+            println("empty is: " + dut.io.empty.peek())
+            println("full is: " + dut.io.full.peek())
+            // perform empty check here (with an if/when statement)
+            dut.io.empty.expect(false)
+            dut.io.startOutput.poke(1)
+            dut.clock.step()
+            dut.io.x_out.data.expect(result)
+            dut.io.x_out.i.expect(0)
+            dut.io.startOutput.poke(0)
+            dut.clock.step()
+            println("empty is: " + dut.io.empty.peek())
+            println("full is: " + dut.io.full.peek())
+        }
+    }
+
 }
 
 class queueTest extends AnyFlatSpec with ChiselScalatestTester {
@@ -269,40 +336,3 @@ class queueTest extends AnyFlatSpec with ChiselScalatestTester {
         }
     }
 }
-
-class diffusion_fifo_test extends AnyFlatSpec with ChiselScalatestTester with testFunctions {
-        "diffusion with one val" should "work" in {
-        test(new diffusion_fifo(5)) { dut =>
-            println("inserting x")
-            println("empty is: " + dut.io.empty.peek())
-            println("full is: " + dut.io.full.peek())
-            // perform diffusion with x_0 = 0, i=0
-            // perform full check here (with an if/when statement)
-            dut.io.full.expect(false)
-            dut.io.x_in.data.poke(0)
-            dut.io.x_in.i.poke(0)
-            dut.io.startInsert.poke(1)
-            dut.clock.step()
-            dut.io.startInsert.poke(0)
-            // not sure how many clocks
-            dut.clock.step(10)
-            val result = singleDiffusion(0, 19, 28)
-            println("empty is: " + dut.io.empty.peek())
-            println("full is: " + dut.io.full.peek())
-            println("reading x")
-            println("empty is: " + dut.io.empty.peek())
-            println("full is: " + dut.io.full.peek())
-            // perform empty check here (with an if/when statement)
-            dut.io.empty.expect(false)
-            dut.io.startOutput.poke(1)
-            dut.clock.step()
-            dut.io.x_out.data.expect(result)
-            dut.io.x_out.i.expect(0)
-            dut.io.startOutput.poke(0)
-            dut.clock.step()
-            println("empty is: " + dut.io.empty.peek())
-            println("full is: " + dut.io.full.peek())
-        }
-    }
-}
-

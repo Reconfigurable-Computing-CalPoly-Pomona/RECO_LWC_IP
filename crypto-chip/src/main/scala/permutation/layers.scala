@@ -326,7 +326,7 @@ class diffusion_fifo(fifo_size: Int) extends Module {
     single_diffusion.io.x_in := in.io.deq.bits.data
     out.io.enq.bits.data := single_diffusion.io.x_out
     // also add the i value from the input fifo; note there's no differentiation between x_0 and y_0, so no mixing between multiple state registers. This can be easily added through the x_val struct but with extra bits
-    // this might be off by one since this might get the next value after in.io.deq happens
+    // this might be off by one since this might get the next value after in.io.deq happens; basic test shows this is not a problem
     out.io.enq.bits.i := in.io.deq.bits.i
     
     // below are when statements that enable or disable start signals since everything is already connected
@@ -368,17 +368,6 @@ class diffusion_fifo(fifo_size: Int) extends Module {
         }
       }
     }
-    // when (~in.io.deq.valid === true.B && ~out.io.enq.ready === true.B) {
-    //   // perform dequeue from input here, start diffusion; maybe problem here since ready is held too long, so multiple dequeues happen
-    // in.io.deq.ready := true.B
-    // single_diffusion.io.start := true.B
-    // }
-    // // when finished, insert the data to the output fifo
-    // when (single_diffusion.io.done) {
-    //   single_diffusion.io.start := false.B
-    //   // maybe same problem with valid being held for multiple clocks
-    //   out.io.enq.valid := true.B
-    // }
 }
 
 
