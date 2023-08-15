@@ -275,6 +275,7 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
             // perform diffusion with x_0 = 0, i=0
             // perform full check here (with an if/when statement)
             dut.io.full.expect(false)
+            dut.io.empty.expect(true)
             val x_in = 0
             val i = 0
             dut.io.x_in.data.poke(x_in)
@@ -282,6 +283,7 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
             dut.io.startInsert.poke(1)
             dut.clock.step()
             dut.io.startInsert.poke(0)
+            dut.clock.step()
             // not sure how many clocks
             dut.clock.step(10)
             // calculate result in scala
@@ -296,11 +298,61 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
             dut.io.startOutput.poke(1)
             dut.clock.step()
             dut.io.x_out.data.expect(result)
-            dut.io.x_out.i.expect(0)
+            dut.io.x_out.i.expect(i)
             dut.io.startOutput.poke(0)
             dut.clock.step()
             println("empty is: " + dut.io.empty.peek())
             println("full is: " + dut.io.full.peek())
+        }
+    }
+    "diffusion_fifo with 5 val" should "work" in {
+        test(new diffusion_fifo(5)) { dut =>
+            // println("inserting x")
+            // println("empty is: " + dut.io.empty.peek())
+            // println("full is: " + dut.io.full.peek())
+            // perform diffusion with x_0 = 0, i=0
+            // perform full check here (with an if/when statement)
+            dut.io.full.expect(false)
+            println("full is: " + dut.io.full.peek())
+            println("empty is: " + dut.io.empty.peek())
+            for (i <- 0 until 5) {
+                if (dut.io.full.peekBoolean() == false) {
+                    dut.io.x_in.data.poke(i)
+                    dut.io.x_in.i.poke(i)
+                    dut.io.startInsert.poke(1)
+                    dut.clock.step()
+                    dut.io.startInsert.poke(0)
+                    dut.clock.step()
+                }
+                println("full is: " + dut.io.full.peek())
+                println("empty is: " + dut.io.empty.peek())
+            }
+            println("waiting to finish processing ")
+            // not sure how many clocks
+            for (i <- 0 until 20) {
+                dut.clock.step()
+                // dut.io.full.expect(false)
+                println("empty is: " + dut.io.empty.peek())
+                println("full is: " + dut.io.full.peek())
+            }
+            for (i <- 0 until 10) {
+                if (dut.io.empty.peekBoolean() == false) {
+                    // calculate result in scala
+                    println("data is: " + dut.io.x_out.data.peek())
+                    println("data should be: " + singleDiffusion_i(i, i))
+                    println("i is: " + dut.io.x_out.i.peek())
+                    println("i should be: " + i)
+                    dut.io.x_out.data.expect(singleDiffusion_i(i, i))
+                    dut.io.startOutput.poke(1)
+                    dut.clock.step()
+
+                    dut.io.startOutput.poke(0)
+                    dut.clock.step()
+                }
+                // dut.io.x_out.i.expect(i)
+            }
+            // println("empty is: " + dut.io.empty.peek())
+            // println("full is: " + dut.io.full.peek())
         }
     }
 
@@ -322,9 +374,11 @@ class queueTest extends AnyFlatSpec with ChiselScalatestTester {
             println("empty is: " + dut.io.empty.peek())
             println("full is: " + dut.io.full.peek())
             println("reading data")
+            // Note that the output is indeed valid even before start_out is set high. This means the fifo continually outputs data and gets the next value after start_out
             for (i <- 0 until 8) {
                 println("empty is: " + dut.io.empty.peek())
                 println("full is: " + dut.io.full.peek())
+                println("data is: " + dut.io.out.peek())
                 dut.io.start_out.poke(1)
                 dut.io.out.expect(i)
                 dut.clock.step()

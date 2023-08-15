@@ -266,43 +266,45 @@ class diffusion_fifo(fifo_size: Int) extends Module {
   // might need an edge detector to only make this happen once
   // alternatively, the module outside should use an edge detector and not here since this can be considered "cycle accurate". This is the current implementation 
   // important to check if the queue is full outside before the startInsert is used
-  when (io.startInsert === true.B) {
-    in.io.enq.valid := true.B
-  } .otherwise {
-    in.io.enq.valid := false.B
-  }
+  in.io.enq.valid := io.startInsert
+  // when (io.startInsert === true.B) {
+  //   in.io.enq.valid := true.B
+  // } .otherwise {
+  //   in.io.enq.valid := false.B
+  // }
   
   // also do the output fifo: runs on its own in theory
-  when (io.startOutput === true.B) {
-    out.io.deq.ready := true.B
-  } .otherwise {
-    out.io.deq.ready := false.B
-  }
+  out.io.deq.ready := io.startOutput
+  // when (io.startOutput === true.B) {
+  //   out.io.deq.ready := true.B
+  // } .otherwise {
+  //   out.io.deq.ready := false.B
+  // }
 
-  // below is basically a lookup table handling the amounts to rotate by
+  // below is basically a lookup table handling how much to rotate by
   
   //Assign Amount First and Amount Second continuously based on i
-  when(io.x_in.i === 0.U)
+  when(in.io.deq.bits.i === 0.U)
   {
     single_diffusion.io.amountFirst := 19.U
     single_diffusion.io.amountSecond := 28.U
   }
-  .elsewhen(io.x_in.i === 1.U)
+  .elsewhen(in.io.deq.bits.i === 1.U)
   {
     single_diffusion.io.amountFirst := 61.U
     single_diffusion.io.amountSecond := 39.U
   }
-  .elsewhen(io.x_in.i === 2.U)
+  .elsewhen(in.io.deq.bits.i === 2.U)
   {
     single_diffusion.io.amountFirst := 1.U
     single_diffusion.io.amountSecond := 6.U
   }
-  .elsewhen(io.x_in.i === 3.U)
+  .elsewhen(in.io.deq.bits.i === 3.U)
   {
     single_diffusion.io.amountFirst := 10.U
     single_diffusion.io.amountSecond := 17.U
   }
-  .elsewhen(io.x_in.i === 4.U)
+  .elsewhen(in.io.deq.bits.i === 4.U)
   {
     single_diffusion.io.amountFirst := 7.U
     single_diffusion.io.amountSecond := 41.U
@@ -315,7 +317,7 @@ class diffusion_fifo(fifo_size: Int) extends Module {
   
   // The next section below handles the "inner" fifo connections (in.io.deq, out.io.enq, single_diffusion.io)
   
-  // testing default wire connection for inserting, reading flags; not sure if this works properly:
+  // testing default wire connection for inserting, reading flags; not sure if this works properly. The behavior works, however it may not be best practice to have a "default" value to rely on
     in.io.deq.ready := false.B
     out.io.enq.valid := false.B
     // set start false by default so it can be reset "automatically"
@@ -333,35 +335,41 @@ class diffusion_fifo(fifo_size: Int) extends Module {
     
     
     // The current problem with signals being held for multiple clocks can be solved with a state machine. This is the current implementation
-    // ready, running, done; ready is checking the first statement, running will wait and reset some signals, done will output data and go to ready
+    // checkReady is checking the first statement, done will read out data from input queue and output data, then go to checkReady
     
-    // check if the in fifo is not empty and if the output fifo is not full
-    // if true, then start the diffusion
-
     val checkReady::done::Nil = Enum(2)
-    val current = RegInit(done)
+    val current = RegInit(checkReady)
     switch (current) {
+      // check if the in fifo is not empty and if the output fifo is not full
+      // if true, then start the diffusion
       is(checkReady) {
-        // init values (just in case)
-        out.io.enq.valid := false.B
-        in.io.deq.ready := false.B
-        single_diffusion.io.start := true.B
+        // // init/reset values (just in case)
+        // out.io.enq.valid := false.B
+        // in.io.deq.ready := false.B
+        // single_diffusion.io.start := false.B
+
         // if able to start (data in in fifo, output fifo not full), else wait
-        when (~in.io.deq.valid === true.B && ~out.io.enq.ready === true.B) {
-          in.io.deq.ready := true.B
+        // the statement below checks for valid data in the output of the in fifo (is it not empty) and if the output fifo can accept data (is it full)
+        when (in.io.deq.valid === true.B && out.io.enq.ready === true.B) {
+          // Seting in.io.ready to true here is wrong since it will discard the first value
           single_diffusion.io.start := true.B
+          // out.io.enq.valid := false.B
           current := done
         } .otherwise {
           current := checkReady
         }
       }
       is(done) {
-        // reset signals so they don't continually deq or enq
-        in.io.deq.ready := false.B
-        single_diffusion.io.start := false.B
-        // checks if diffusion is done and if so, sends to output fifo
+        // reset signals so they don't continually deq or enq (just in case)
+        // in.io.deq.ready := false.B
+        // out.io.enq.valid := false.B
+
+        // checks if diffusion is done and if so, read out data (consume data) and sends to output fifo
         when (single_diffusion.io.done) {
+          in.io.deq.ready := true.B
           out.io.enq.valid := true.B
+          // in.io.deq.ready := false.B
+          // single_diffusion.io.start := false.B
           current := checkReady
         } .otherwise {
           current := done
