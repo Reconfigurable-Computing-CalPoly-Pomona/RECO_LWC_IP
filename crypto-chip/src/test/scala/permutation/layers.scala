@@ -356,6 +356,37 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
         }
     }
 
+    "diffusion_fifo with 5 together" should "work" in {
+        test(new diffusion_layer_compat) { dut =>
+            println("done is: " + dut.io.done.peek())
+            println("x_out is: " + dut.io.x_out.peek())
+            dut.io.done.expect(true)
+            for (i <- 0 until 5) {
+                dut.io.x_in(i).poke(i)
+            }
+            dut.io.start.poke(1)
+            dut.clock.step()
+            dut.io.start.poke(0)
+            dut.clock.step()
+            println("done is: " + dut.io.done.peek())
+            dut.io.done.expect(false)
+            println("waiting to finish processing ")
+            // not sure how many clocks
+            for (i <- 0 until 20) {
+                dut.clock.step()
+                println("x_out is: " + dut.io.x_out.peek())
+                println("done is: " + dut.io.done.peek())
+            }
+            println("done is: " + dut.io.done.peek())
+            for (i <- 0 until 5) {
+                dut.io.done.expect(true)
+                // println("x_out at " + i + " is: " + dut.io.x_out(i))
+                println("x_out at " + i + " is: " + dut.io.x_out(i).peek())
+                dut.io.x_out(i).expect(singleDiffusion_i(i, i))
+            }
+        }
+    }
+
 }
 
 class queueTest extends AnyFlatSpec with ChiselScalatestTester {
@@ -387,6 +418,16 @@ class queueTest extends AnyFlatSpec with ChiselScalatestTester {
             }
             println("empty is: " + dut.io.empty.peek())
             println("full is: " + dut.io.full.peek())
+        }
+    }
+}
+class regTest extends AnyFlatSpec with ChiselScalatestTester {
+        "queue" should "work" in {
+        test(new reg_reset_test) { dut =>
+            for (i <- 0 until 6) {
+                println("Value in output is: " + dut.io.x_out.peek())
+                dut.clock.step()
+            }
         }
     }
 }

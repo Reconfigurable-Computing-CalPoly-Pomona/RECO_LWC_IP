@@ -14,6 +14,7 @@ object permutationMain extends App {
   emitVerilog(new rotateRight, Array("--target-dir", "generated"))
   emitVerilog(new diffusion_layer_single, Array("--target-dir", "generated"))
   emitVerilog(new diffusion_fifo(5), Array("--target-dir", "generated"))
+  emitVerilog(new diffusion_layer_compat(), Array("--target-dir", "generated"))
   // emitVerilog(new xor_test, Array("--target-dir", "generated"))
   
 }

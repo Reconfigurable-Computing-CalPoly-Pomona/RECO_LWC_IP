@@ -208,6 +208,123 @@ class diffusion_layer extends Module {
     io.x_out(3) := io.x_in(3) ^ Cat(io.x_in(3)(9,0),io.x_in(3)(63,10)) ^ Cat(io.x_in(3)(16,0),io.x_in(3)(63,17))
     io.x_out(4) := io.x_in(4) ^ Cat(io.x_in(4)(6,0),io.x_in(4)(63,7)) ^ Cat(io.x_in(4)(40,0),io.x_in(4)(63,41))
 }
+class x_val extends Bundle {
+  val data = UInt(64.W)
+  val i = UInt(3.W)
+}
+
+class reg_reset_test extends Module {
+  val io = IO(new Bundle {
+    val x_out = Output(Vec(5, UInt(64.W)))
+  })
+  // val reg = VecInit(Seq.fill(2)(RegInit(10.U(64.W))))
+  // val reg = Vec(5,RegInit(0.U(64.W)))
+  val reg = RegInit(VecInit(Seq.fill(5)(10.U(64.W))))
+  // val reg0 = RegInit(10.U(64.W))
+  // val reg1 = RegInit(10.U(64.W))
+  // val reg2 = RegInit(10.U(64.W))
+  // val reg3 = RegInit(10.U(64.W))
+  // val reg4 = RegInit(10.U(64.W))
+  val counter = RegInit(0.U(3.W))
+  reg(counter) := counter
+    when (counter < 5.U) {
+      counter := counter + 1.U
+      // when(counter === 0.U)
+      // {
+      //   reg0 := counter
+      // }.elsewhen(counter === 1.U){
+      //   reg1 := counter
+      // }.elsewhen(counter === 2.U){
+      //   reg2 := counter
+      // }.elsewhen(counter === 3.U){
+      //   reg3 := counter
+      // }.elsewhen(counter === 4.U){
+      //   reg4 := counter
+      // }
+    }
+  // io.x_out(0) := reg0
+  // io.x_out(1) := reg1
+  // io.x_out(2) := reg2
+  // io.x_out(3) := reg3
+  // io.x_out(4) := reg4
+  // for (i <- 0 until 5) {
+  //   io.x_out(i) := reg(i)
+  // }
+  io.x_out := reg
+}
+
+class diffusion_layer_compat extends Module {
+  val io = IO(new Bundle {
+    val start = Input(Bool())
+    val x_in        = Input(Vec(5, UInt(64.W)))
+    val x_out = Output(Vec(5, UInt(64.W)))
+    val done = Output(Bool())
+  })
+  
+  val diffusion = Module(new diffusion_fifo(5))
+
+  val counterIn = RegInit(0.U(3.W))
+  val counterOut = RegInit(0.U(3.W))
+  val transferring::done::Nil = Enum(2)
+  val currentState = RegInit(done)
+  // default assignment for when it's not set
+  diffusion.io.startInsert := false.B
+  diffusion.io.startOutput := false.B
+  //val x_out_reg = VecInit(Seq.fill(5)(RegInit(10.U(64.W))))
+  val x_out_reg = RegInit(VecInit(Seq.fill(5)(10.U(64.W))))
+  
+  diffusion.io.x_in.data := io.x_in(counterIn)
+  diffusion.io.x_in.i := counterIn
+  io.x_out := x_out_reg
+
+  when (currentState === done) {
+    io.done := true.B
+  } .otherwise {
+    io.done := false.B
+  }
+  switch (currentState) {
+    // this state allows reading and writing from the diffusion_fifo at the same time
+    is (transferring) { 
+      // handle writing 5 values to diffusion
+      when (diffusion.io.full === false.B && counterIn < 5.U) {
+        // diffusion.io.x_in.data := io.x_in(counterIn)
+        diffusion.io.startInsert := true.B
+        counterIn := counterIn + 1.U
+      }
+      // .otherwise {
+      //   currentState := transferring
+      // }
+      // handle reading 5 values from diffusion
+      when (diffusion.io.empty === false.B && counterOut < 5.U) {
+        x_out_reg(counterOut) := diffusion.io.x_out.data
+        diffusion.io.startOutput := true.B
+        counterOut := counterOut + 1.U
+      }
+      // .otherwise {
+      //   currentState := transferring
+      // }
+
+      when (counterOut === 5.U) {
+        currentState := done
+      }
+      .otherwise {
+        currentState := transferring
+      }
+
+    }
+    is (done) {
+      when (io.start) {
+        counterIn := 0.U
+        counterOut := 0.U
+        currentState := transferring
+      }
+      .otherwise {
+        currentState := done
+      }
+    }
+  }
+}
+
 
 class queue_test extends Module {
   val io = IO(new Bundle {
@@ -230,10 +347,7 @@ class queue_test extends Module {
   queue.io.deq.ready := io.start_out
 }
 
-class x_val extends Bundle {
-  val data = UInt(64.W)
-  val i = UInt(3.W)
-}
+
 
 // read from x_in and continually insert into fifo
 // also read from input fifo and write to output fifo
