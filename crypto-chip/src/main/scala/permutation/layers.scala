@@ -831,6 +831,7 @@ class diffusion_layer_single extends Module {
         temp := xor_temp
         // start second rotate
         reg_amount := io.amountSecond
+        barrel.io.start := true.B
         current := second
       } 
       .otherwise {

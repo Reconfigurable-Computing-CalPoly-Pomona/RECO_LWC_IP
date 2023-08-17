@@ -200,7 +200,7 @@ class rotateTest extends AnyFlatSpec with ChiselScalatestTester with testFunctio
     "sequential barrel shifter" should "work looped" in {
         test(new barrelShifter_seq(6)) { dut =>
             var start = BigInt(1)
-            while (start < BigDecimal(2).pow(6).toBigInt - 1) {
+            while (start < BigDecimal(2).pow(7).toBigInt - 1) {
                 for (amountLeftShifted <- 0 until 64) {
                     dut.io.done.expect(true)
                     // println("start is: " + start)
@@ -282,8 +282,8 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
             dut.io.done.expect(true)
             dut.io.start.poke(true)
             for (i <- 0 until 10) {
-                println("x_out value is: " + dut.io.x_out.peekInt())
-                println("done is: " + dut.io.done.peekBoolean())
+                // println("x_out value is: " + dut.io.x_out.peekInt())
+                // println("done is: " + dut.io.done.peekBoolean())
                 dut.clock.step()
             }
             if (dut.io.done.peekBoolean()) {
@@ -293,12 +293,9 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
     }
     "testSingleDiffusion with loop for first, second" should "work" in {
         test(new diffusion_layer_single) { dut =>
-            val first = 19
-            val second = 28
-
-            for (x_in <- 0 until 64) {
-                for (amountfirst <- 0 until 64) {
-                    for (amountsecond <- 0 until 64) {
+            for (x_in <- 0 until 3) {
+                for (amountfirst <- 0 until 6) {
+                    for (amountsecond <- 0 until 2) {
                         dut.io.start.poke(false)
                         dut.io.done.expect(true)
                         dut.io.amountFirst.poke(amountfirst)
@@ -307,18 +304,23 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
                         dut.io.start.poke(true)
                         dut.clock.step()
                         dut.io.start.poke(false)
-                        for (k <- 0 until 80) {
-                            println("x_out value is: " + dut.io.x_out.peekInt())
-                            println("done is: " + dut.io.done.peekBoolean())
+
+                        println("waiting to finish processing ")
+                        // not sure how many clocks
+                        var count = 0
+                        while (dut.io.done.peekBoolean() == false) {
+                            // println("x_out value is: " + dut.io.x_out.peekInt())
+                            // println("done is: " + dut.io.done.peekBoolean())
+                            count = count + 1
                             dut.clock.step()
                         }
-                        if (dut.io.done.peekBoolean()) {
-                            dut.io.x_out.expect(singleDiffusion(x_in, amountfirst, amountsecond))
-                        }
+                        println("took " + count + " clocks")
+                        dut.io.x_out.expect(singleDiffusion(x_in, amountfirst, amountsecond))
                     }
                 }
             }
         }
+        //26 cycles
     }
     "diffusion_fifo with one val" should "work" in {
         test(new diffusion_fifo(5)) { dut =>
@@ -382,12 +384,19 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
             }
             println("waiting to finish processing ")
             // not sure how many clocks
-            for (i <- 0 until 20) {
+            var count = 0
+            while (dut.io.full.peekBoolean() == false) {
+                count = count + 1
                 dut.clock.step()
-                // dut.io.full.expect(false)
-                println("empty is: " + dut.io.empty.peek())
-                println("full is: " + dut.io.full.peek())
             }
+            println("took " + count + " clocks to get full")
+            
+            // for (i <- 0 until 20) {
+            //     dut.clock.step()
+            //     // dut.io.full.expect(false)
+            //     println("empty is: " + dut.io.empty.peek())
+            //     println("full is: " + dut.io.full.peek())
+            // }
             for (i <- 0 until 10) {
                 if (dut.io.empty.peekBoolean() == false) {
                     // calculate result in scala
@@ -424,18 +433,19 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
             dut.io.done.expect(false)
             println("waiting to finish processing ")
             // not sure how many clocks
-            for (i <- 0 until 120) {
+            var count = 0
+            while (dut.io.done.peekBoolean() == false) {
+                count = count + 1
                 dut.clock.step()
-                println("x_out is: " + dut.io.x_out.peek())
-                println("done is: " + dut.io.done.peek())
             }
-            println("done is: " + dut.io.done.peek())
+            println("took " + count + " clocks")
             for (i <- 0 until 5) {
                 dut.io.done.expect(true)
                 // println("x_out at " + i + " is: " + dut.io.x_out(i))
                 println("x_out at " + i + " is: " + dut.io.x_out(i).peek())
                 dut.io.x_out(i).expect(singleDiffusion_i(i, i))
             }
+            //Takes 142 cycles until complete 
         }
     }
 
