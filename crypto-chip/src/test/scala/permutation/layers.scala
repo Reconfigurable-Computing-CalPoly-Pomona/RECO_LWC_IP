@@ -197,7 +197,31 @@ class rotateTest extends AnyFlatSpec with ChiselScalatestTester with testFunctio
             }
         }
     }
-    
+    "sequential barrel shifter" should "work looped" in {
+        test(new barrelShifter_seq(6)) { dut =>
+            var start = BigInt(1)
+            while (start < BigDecimal(2).pow(6).toBigInt - 1) {
+                for (amountLeftShifted <- 0 until 64) {
+                    dut.io.done.expect(true)
+                    // println("start is: " + start)
+                    // println("amount left shifted is: " + amountLeftShifted)
+                    dut.io.input.poke(rotateLeft(amountLeftShifted, start))
+                    dut.io.amount.poke(amountLeftShifted)
+                    dut.io.start.poke(1)
+                    dut.clock.step()
+                    dut.io.start.poke(0)
+                    // println("result of start shifted is: " + amountLeftShifted)
+                    for (i <- 0 until 20) {
+                        // println("output is: " + dut.io.output.peek() + " at clock cycle: " + i)
+                        dut.clock.step()
+                    }
+                    dut.io.output.expect(start)
+                }
+                start = start + BigInt(1)
+            }
+        }
+    }
+
 }
 // def singleDiffusion extends diffusion(xIn: BigInt, amountFirst: Int, amountSecond: Int) : BigInt = {
 //     val x_out = xIn ^ (rotateRight(amountFirst, xIn)) ^ (rotateRight(amountSecond, xIn))

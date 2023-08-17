@@ -213,11 +213,15 @@ class barrelShifter_seq(amountOfLayers: Int) extends Module {
   val currentLevel = RegInit(0.U((math.log(amountOfLayers)/math.log(2)).ceil.toInt.W))
   val mux_in_1 = RegInit(0.U(math.pow(2,amountOfLayers).toInt.W))
   val mux_select = RegInit(0.U(1.W))
-  val mux_out = VecInit(Seq.fill(math.pow(2,amountOfLayers).toInt)(Wire(UInt(1.W))))
-
-  for (i <- 0 until math.pow(2,amountOfLayers).toInt) {
-    mux_out(i) := Mux(mux_select.asBool,mux_in_1(i),shiftedNum(i))
-  }
+  // val mux_out = VecInit(Seq.fill(math.pow(2,amountOfLayers).toInt)(0.U(1.W)))
+  val mux_out = Wire(UInt(64.W))
+  // mux_out(0) := Mux(mux_select.asBool,mux_in_1(0),shiftedNum(0))
+  // mux_out(1) := Mux(mux_select.asBool,mux_in_1(1),shiftedNum(1))
+  // for (i <- 0 until math.pow(2,amountOfLayers).toInt) {
+  //   mux_out(i) := Mux(mux_select.asBool,mux_in_1(i),shiftedNum(i))
+  // }
+  mux_out := Mux(mux_select.asBool,mux_in_1,shiftedNum)
+  
 
   switch(currentState)
   {
@@ -225,24 +229,51 @@ class barrelShifter_seq(amountOfLayers: Int) extends Module {
         mux_select := io.amount(currentLevel)
         when(currentLevel === 0.U){
           mux_in_1 := Cat(shiftedNum(0),shiftedNum(63,1))
-        }.otherwise{
-          mux_in_1 := Cat(shiftedNum(math.pow(2,currentLevel.litValue().toInt).toInt-1,0),shiftedNum(63,math.pow(2,currentLevel.litValue().toInt).toInt))
         }
+        .elsewhen(currentLevel === 1.U){
+          mux_in_1 := Cat(shiftedNum(1,0),shiftedNum(63,2))
+        }
+        .elsewhen(currentLevel === 2.U){
+          mux_in_1 := Cat(shiftedNum(3,0),shiftedNum(63,4))
+        }
+        .elsewhen(currentLevel === 3.U){
+          mux_in_1 := Cat(shiftedNum(7,0),shiftedNum(63,8))
+        }
+        .elsewhen(currentLevel === 4.U){
+          mux_in_1 := Cat(shiftedNum(15,0),shiftedNum(63,16))
+        }
+        .elsewhen(currentLevel === 5.U){
+          mux_in_1 := Cat(shiftedNum(31,0),shiftedNum(63,32))
+        }
+        // .otherwise{
+        //   mux_in_1 := Cat(shiftedNum(currentLevel.litValue.pow(2)-1,0),shiftedNum(63,currentLevel.litValue.pow(2)))
+        // }
         currentLevel := currentLevel + 1.U
+        //shiftedNum := mux_out
+        // shiftedNum := Cat(
+        //   mux_out(0),mux_out(1),mux_out(2),mux_out(3),mux_out(4),mux_out(5),mux_out(6),mux_out(7),
+        //   mux_out(8),mux_out(9),mux_out(10),mux_out(11),mux_out(12),mux_out(13),mux_out(14),mux_out(15),
+        //   mux_out(16),mux_out(17),mux_out(18),mux_out(19),mux_out(20),mux_out(21),mux_out(22),mux_out(23),
+        //   mux_out(24),mux_out(25),mux_out(26),mux_out(27),mux_out(28),mux_out(29),mux_out(30),mux_out(31),
+        //   mux_out(32),mux_out(33),mux_out(34),mux_out(35),mux_out(36),mux_out(37),mux_out(38),mux_out(39),
+        //   mux_out(40),mux_out(41),mux_out(42),mux_out(43),mux_out(44),mux_out(45),mux_out(46),mux_out(47),
+        //   mux_out(48),mux_out(49),mux_out(50),mux_out(51),mux_out(52),mux_out(53),mux_out(54),mux_out(55),
+        //   mux_out(56),mux_out(57),mux_out(58),mux_out(59),mux_out(60),mux_out(61),mux_out(62),mux_out(63)
+        // )
         currentState := processing
     }
     is(processing){
-      //shiftedNum := mux_out
-      shiftedNum := Cat(
-        mux_out(0),mux_out(1),mux_out(2),mux_out(3),mux_out(4),mux_out(5),mux_out(6),mux_out(7),
-        mux_out(8),mux_out(9),mux_out(10),mux_out(11),mux_out(12),mux_out(13),mux_out(14),mux_out(15),
-        mux_out(16),mux_out(17),mux_out(18),mux_out(19),mux_out(20),mux_out(21),mux_out(22),mux_out(23),
-        mux_out(24),mux_out(25),mux_out(26),mux_out(27),mux_out(28),mux_out(29),mux_out(30),mux_out(31),
-        mux_out(32),mux_out(33),mux_out(34),mux_out(35),mux_out(36),mux_out(37),mux_out(38),mux_out(39),
-        mux_out(40),mux_out(41),mux_out(42),mux_out(43),mux_out(44),mux_out(45),mux_out(46),mux_out(47),
-        mux_out(48),mux_out(49),mux_out(50),mux_out(51),mux_out(52),mux_out(53),mux_out(54),mux_out(55),
-        mux_out(56),mux_out(57),mux_out(58),mux_out(59),mux_out(60),mux_out(61),mux_out(62),mux_out(63)
-      )
+      shiftedNum := mux_out
+      // shiftedNum := Cat(
+      //   mux_out(0),mux_out(1),mux_out(2),mux_out(3),mux_out(4),mux_out(5),mux_out(6),mux_out(7),
+      //   mux_out(8),mux_out(9),mux_out(10),mux_out(11),mux_out(12),mux_out(13),mux_out(14),mux_out(15),
+      //   mux_out(16),mux_out(17),mux_out(18),mux_out(19),mux_out(20),mux_out(21),mux_out(22),mux_out(23),
+      //   mux_out(24),mux_out(25),mux_out(26),mux_out(27),mux_out(28),mux_out(29),mux_out(30),mux_out(31),
+      //   mux_out(32),mux_out(33),mux_out(34),mux_out(35),mux_out(36),mux_out(37),mux_out(38),mux_out(39),
+      //   mux_out(40),mux_out(41),mux_out(42),mux_out(43),mux_out(44),mux_out(45),mux_out(46),mux_out(47),
+      //   mux_out(48),mux_out(49),mux_out(50),mux_out(51),mux_out(52),mux_out(53),mux_out(54),mux_out(55),
+      //   mux_out(56),mux_out(57),mux_out(58),mux_out(59),mux_out(60),mux_out(61),mux_out(62),mux_out(63)
+      // )
       when(currentLevel < amountOfLayers.U){
         currentState := shifting
       }.otherwise{
@@ -267,7 +298,7 @@ class barrelShifter_seq(amountOfLayers: Int) extends Module {
   }
 
   //io.output := Mux(io.done,shiftedNum,io.input)
-  io.output := io.input
+  io.output := shiftedNum
 }
 
 class diffusion_layer extends Module {
