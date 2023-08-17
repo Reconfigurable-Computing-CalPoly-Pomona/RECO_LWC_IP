@@ -291,6 +291,35 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
             }
         }
     }
+    "testSingleDiffusion with loop for first, second" should "work" in {
+        test(new diffusion_layer_single) { dut =>
+            val first = 19
+            val second = 28
+
+            for (x_in <- 0 until 64) {
+                for (amountfirst <- 0 until 64) {
+                    for (amountsecond <- 0 until 64) {
+                        dut.io.start.poke(false)
+                        dut.io.done.expect(true)
+                        dut.io.amountFirst.poke(amountfirst)
+                        dut.io.amountSecond.poke(amountsecond)
+                        dut.io.x_in.poke(x_in)
+                        dut.io.start.poke(true)
+                        dut.clock.step()
+                        dut.io.start.poke(false)
+                        for (k <- 0 until 80) {
+                            println("x_out value is: " + dut.io.x_out.peekInt())
+                            println("done is: " + dut.io.done.peekBoolean())
+                            dut.clock.step()
+                        }
+                        if (dut.io.done.peekBoolean()) {
+                            dut.io.x_out.expect(singleDiffusion(x_in, amountfirst, amountsecond))
+                        }
+                    }
+                }
+            }
+        }
+    }
     "diffusion_fifo with one val" should "work" in {
         test(new diffusion_fifo(5)) { dut =>
             println("inserting x")
@@ -309,7 +338,7 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
             dut.io.startInsert.poke(0)
             dut.clock.step()
             // not sure how many clocks
-            dut.clock.step(10)
+            dut.clock.step(40)
             // calculate result in scala
             val result = singleDiffusion_i(x_in, i)
             println("empty is: " + dut.io.empty.peek())
@@ -373,7 +402,6 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
                     dut.io.startOutput.poke(0)
                     dut.clock.step()
                 }
-                // dut.io.x_out.i.expect(i)
             }
             // println("empty is: " + dut.io.empty.peek())
             // println("full is: " + dut.io.full.peek())
@@ -396,7 +424,7 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
             dut.io.done.expect(false)
             println("waiting to finish processing ")
             // not sure how many clocks
-            for (i <- 0 until 20) {
+            for (i <- 0 until 120) {
                 dut.clock.step()
                 println("x_out is: " + dut.io.x_out.peek())
                 println("done is: " + dut.io.done.peek())
