@@ -196,6 +196,71 @@ class barrelShifter(amountOfLayers: Int) extends Module {
 }
 
 
+class barrelShifter_seq(amountOfLayers: Int) extends Module {
+  val io = IO(new Bundle {
+    val start = Input(Bool())
+    val input = Input(UInt(math.pow(2,amountOfLayers).toInt.W))
+    val amount = Input(UInt(amountOfLayers.W))
+    val output = Output(UInt(math.pow(2,amountOfLayers).toInt.W))
+    val done = Output(Bool())
+  })
+  val edge = Module(new posedge())
+  edge.io.in := io.start
+
+  val shifting::processing::done::Nil = Enum(3)
+  val currentState = RegInit(done)
+  val shiftedNum = RegInit(io.input)
+  val currentLevel = RegInit(0.U((math.log(amountOfLayers)/math.log(2)).ceil.toInt.W))
+  val mux_in_1 = RegInit(0.U(math.pow(2,amountOfLayers).toInt.W))
+  val mux_select = RegInit(0.U(1.W))
+  //val mux_out = RegInit(VecInit(Seq.fill(math.pow(2,amountOfLayers).toInt)(0.U(1.W))))
+  val mux_out = VecInit(Seq.fill(math.pow(2,amountOfLayers).toInt)(Wire(UInt(1.W))))
+
+  for (i <- 0 until math.pow(2,amountOfLayers).toInt) {
+    mux_out(i) := Mux(mux_select.asBool,mux_in_1(i),shiftedNum(i))
+  }
+
+  switch(currentState)
+  {
+    is(shifting){
+        mux_select := io.amount(currentLevel)
+        when(currentLevel === 0.U){
+          mux_in_1 := Cat(shiftedNum(0),shiftedNum(63,1))
+        }.otherwise{
+          mux_in_1 := Cat(shiftedNum(math.pow(2,amountOfLayers).toInt-1,0),shiftedNum(63,math.pow(2,amountOfLayers).toInt))
+        }
+        currentLevel := currentLevel + 1.U
+        currentState := processing
+    }
+    is(processing){
+      //I have to fix this assignment
+      shiftedNum := mux_out
+      when(currentLevel < amountOfLayers.U){
+        currentState := shifting
+      }.otherwise{
+        currentState := done
+      }
+    }
+    is(done){
+      when(edge.io.out){
+        shiftedNum := io.input
+        currentState := shifting
+        currentLevel := 0.U
+      }.otherwise{
+        currentState := done
+      }
+    }
+  }
+
+  when(currentState === done){
+    io.done := true.B
+  }.otherwise{
+    io.done := false.B
+  }
+
+  io.output := Mux(io.done,shiftedNum,io.input)
+}
+
 class diffusion_layer extends Module {
   val io = IO(new Bundle {
     val x_in        = Input(Vec(5, UInt(64.W)))
