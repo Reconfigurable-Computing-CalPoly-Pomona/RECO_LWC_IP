@@ -117,6 +117,7 @@ class ascon extends Module {
   permutation.io.round := Mux(stateReg===idle || ((stateReg===transit || stateReg===squeeze) && io.full && ~modeReg(2)) || ((stateReg===initial || stateReg===absorb) && io.empty && modeReg(2)), 12.U, bReg)
 
   // if [idle] or [(encrypt or decrypt) and (output fifo is full) and (if transit or squeeze)] or [hash/a and (if input fifo is empty) and (initial or absorb)], set round to 12 (default)
+  // TODO: ask Dr. Aly about automatically performing rounds
   // else set to bReg
   // when (stateReg===idle || ((stateReg===transit || stateReg===squeeze) && io.full && ~modeReg(2)) || ((stateReg===initial || stateReg===absorb) && io.empty && modeReg(2))) {
   //   permutation.io.round := 12.U

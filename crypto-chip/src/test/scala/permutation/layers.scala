@@ -39,6 +39,7 @@ import scala.math._
 //         return x_out
 //     }
 // }
+// TODO: show numbers and cycles to Dr. Aly. Also ask about verifying the results
 trait testFunctions {
     // rotate a max of 64 bit to left
     def rotateLeft(amount: Int, input: BigInt) : BigInt = {
