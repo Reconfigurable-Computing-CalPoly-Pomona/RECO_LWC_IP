@@ -131,7 +131,7 @@ class permutation_two extends Module {
     val current = RegInit(done)
     // val state = VecInit(Seq.fill(5)(RegInit(0.U(64.W))))
     // val state = Wire(Vec(5, UInt (64.W)))
-    val state = VecInit(Seq.fill(5)((0.U(64.W))))
+    val state = RegInit(VecInit(Seq.fill(5)(10.U(64.W))))
     addition.io.x2_in := io.x_in(2)
     addition.io.round_in := io.round_in
     substitution.io.x_in(0) := io.x_in(0)
@@ -158,7 +158,7 @@ class permutation_two extends Module {
       //   current := sub
       // }
       is(sub){
-        state := RegNext(substitution.io.x_out)
+        state := substitution.io.x_out
         diffusion.io.start := true.B
         // state := (substitution.io.x_out)
         // sub_state := state
@@ -166,7 +166,7 @@ class permutation_two extends Module {
       }
       is(diff){
         when (diffusion.io.done) {
-          state := RegNext(diffusion.io.x_out)
+          state := diffusion.io.x_out
           current := done
         }.otherwise {
           current := diff
@@ -263,6 +263,19 @@ class permutation_two_wrapper extends Module {
       io.s_out := Cat(single_round.io.x_out(0), single_round.io.x_out(1), single_round.io.x_out(2), single_round.io.x_out(3), single_round.io.x_out(4))
     }
   
+  // when (io.maxRound === 0.U) {
+  //   maxRound := 6.U
+  // }
+  // .elsewhen (io.maxRound === 1.U) {
+  //   maxRound := 8.U
+  // }
+  // .elsewhen (io.maxRound === 2.U) {
+  //   maxRound := 12.U
+  // }
+  // .otherwise {
+  //   // set unique round number to indicate invalid maxRound
+  //   maxRound := 0.U
+  // }
 }
 
 

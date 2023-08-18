@@ -25,6 +25,18 @@
         {
             "type": "scala",
             "request": "launch",
+            "name": "test ascon",
+            "testClass": "ascon.hashBehavior"
+        },
+        {
+            "type": "scala",
+            "request": "launch",
+            "name": "test wrapper",
+            "testClass": "ascon.wrappertest"
+        },
+        {
+            "type": "scala",
+            "request": "launch",
             "name": "main",
             "mainClass": "permutationEmit.permutationMain",
             "args": [],

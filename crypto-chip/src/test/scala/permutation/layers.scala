@@ -220,6 +220,8 @@ class rotateTest extends AnyFlatSpec with ChiselScalatestTester with testFunctio
                 start = start + BigInt(1)
             }
         }
+        // Vivado 2022.2: 204 LUT, 136 FF, 4.090ns Total Delay
+        // Vivado 2018.1: 206 LUT, 136 FF, 4.090ns Total Delay
     }
 
 }
@@ -321,6 +323,8 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
             }
         }
         //26 cycles
+        // Vivado 2018.1: 279 LUT, 209 FF, Total Delay 4.773ns
+        // Vivado 2022.2: 276 LUT, 209 FF, Total Delay 4.773ns
     }
     "diffusion_fifo with one val" should "work" in {
         test(new diffusion_fifo(5)) { dut =>
@@ -415,6 +419,8 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
             // println("empty is: " + dut.io.empty.peek())
             // println("full is: " + dut.io.full.peek())
         }
+        // Vivado 2018.1: 448 LUT, 224 FF, Total Delay 5.876ns
+        // Vivado 2022.2: 519 LUT, 224 FF, Total Delay 5.872ns
     }
 
     "diffusion_fifo with 5 together" should "work" in {
@@ -446,6 +452,8 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
                 dut.io.x_out(i).expect(singleDiffusion_i(i, i))
             }
             //Takes 142 cycles until complete 
+            // Vivado 2022.2: 665 LUT, 556 FF, 4.090ns Total Delay
+            // Vivado 2018.1: 591 LUT, 551 FF, 4.217ns Total Delay
         }
     }
 

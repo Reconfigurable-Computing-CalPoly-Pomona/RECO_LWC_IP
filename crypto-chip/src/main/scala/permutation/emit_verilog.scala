@@ -3,6 +3,7 @@ import chisel3._
 import chisel3.util._
 import permutation._
 import layers._
+import ascon._
 
 object permutationMain extends App {
   println("generating verilog")
@@ -16,6 +17,7 @@ object permutationMain extends App {
   emitVerilog(new diffusion_layer_single, Array("--target-dir", "generated"))
   emitVerilog(new diffusion_fifo(5), Array("--target-dir", "generated"))
   emitVerilog(new diffusion_layer_compat(), Array("--target-dir", "generated"))
+  emitVerilog(new ascon(), Array("--target-dir", "generated"))
   // emitVerilog(new xor_test, Array("--target-dir", "generated"))
   
 }
