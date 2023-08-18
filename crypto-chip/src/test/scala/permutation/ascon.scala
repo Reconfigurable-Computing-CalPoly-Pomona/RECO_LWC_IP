@@ -173,21 +173,26 @@ class wrappertest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.start.poke(true.B)
       dut.clock.step()
       dut.io.start.poke(false.B)
-      for (j <- 0 until 10+(pcycle-1)*12) {
+      var count = 0
+      while (dut.io.done.peekBoolean() == false) {
         dut.clock.step()
-        println("Done: " + (dut.io.done.peek()) + " Result is: " + (dut.io.s_out.peek()))
+        count = count + 1
+        println("Result is: " + (dut.io.s_out.peek()))
       }
-      println("finished processing first permutations")
+      println("finished processing first permutations and took " + count + " cycles")
       dut.clock.step()
       dut.io.s_in.poke("h00400c00000000000000000000000000000000000000000000000000000000000000000000000000".U)
       dut.io.start.poke(true.B)
       println("*Done: " + (dut.io.done.peek()) + " Result is: " + (dut.io.s_out.peek()))
       dut.clock.step()
       dut.io.start.poke(false.B)
-      for (j <- 0 until 11+(pcycle-1)*12) {
+      count = 0
+      while (dut.io.done.peekBoolean() == false) {
         dut.clock.step()
-        println("Done: " + (dut.io.done.peek()) + " Result is: " + (dut.io.s_out.peek()))
+        count = count + 1
+        println("Result is: " + (dut.io.s_out.peek()))
       }
+      println("finished processing first permutations and took " + count + " cycles")
     }
   }
 }

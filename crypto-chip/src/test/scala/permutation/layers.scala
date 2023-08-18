@@ -456,6 +456,42 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
             // Vivado 2018.1: 591 LUT, 551 FF, 4.217ns Total Delay
         }
     }
+    "diffusion_fifo with 5 together at 0" should "work" in {
+        test(new diffusion_layer_compat) { dut =>
+            println("done is: " + dut.io.done.peek())
+            println("x_out is: " + dut.io.x_out.peek())
+            dut.io.done.expect(true)
+            for (i <- 0 until 4) {
+                dut.io.x_in(i).poke(0)
+            }
+            dut.io.x_in(4).poke(4)
+            dut.io.start.poke(1)
+            dut.clock.step()
+            dut.io.start.poke(0)
+            dut.clock.step()
+            println("done is: " + dut.io.done.peek())
+            dut.io.done.expect(false)
+            println("waiting to finish processing ")
+            // not sure how many clocks
+            var count = 0
+            while (dut.io.done.peekBoolean() == false) {
+                count = count + 1
+                dut.clock.step()
+            }
+            println("took " + count + " clocks")
+            for (i <- 0 until 4) {
+                dut.io.done.expect(true)
+                // println("x_out at " + i + " is: " + dut.io.x_out(i))
+                println("x_out at " + i + " is: " + dut.io.x_out(i).peek())
+                dut.io.x_out(i).expect(singleDiffusion_i(0, i))
+            }
+                println("x_out at " + 4 + " is: " + dut.io.x_out(4).peek())
+            dut.io.x_out(4).expect(singleDiffusion_i(4, 4))
+            //Takes 142 cycles until complete 
+            // Vivado 2022.2: 665 LUT, 556 FF, 4.090ns Total Delay
+            // Vivado 2018.1: 591 LUT, 551 FF, 4.217ns Total Delay
+        }
+    }
 
 }
 

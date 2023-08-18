@@ -11,8 +11,6 @@ class permutation_one extends Module {
     val x_in        = Input(Vec(5, UInt(64.W)))
     val round_out = Output(UInt(8.W))
     val x_out = Output(Vec(5, UInt(64.W)))
-    val clk = Input(Clock())  //CT
-    val rst = Input(Bool())   //CT
   })
 
     val addition = Module(new addition_layer())
@@ -159,14 +157,14 @@ class permutation_two extends Module {
       // }
       is(sub){
         state := substitution.io.x_out
-        diffusion.io.start := true.B
         // state := (substitution.io.x_out)
         // sub_state := state
+        diffusion.io.start := true.B
         current := diff
       }
       is(diff){
         when (diffusion.io.done) {
-          state := diffusion.io.x_out
+          // state := diffusion.io.x_out
           current := done
         }.otherwise {
           current := diff
@@ -189,7 +187,8 @@ class permutation_two extends Module {
       io.done := false.B
     }
     
-    io.x_out := state
+    io.x_out := diffusion.io.x_out
+    // io.x_out := state
 }
 
 
@@ -210,7 +209,6 @@ class permutation_two_wrapper extends Module {
     val current_round = RegInit(0.U(8.W))
     val single_round = Module(new permutation_two())
     val run = RegInit(0.U(1.W))
-    val counter = RegInit(0.U(2.W))
 
     //Initialize
     when (run === 0.U) {
@@ -221,7 +219,7 @@ class permutation_two_wrapper extends Module {
       x4_Reg := io.s_in(63,0)
       current_round := 12.U - io.round
       run := io.start
-    }//Starts
+    }//Starts; turns off run when current_round is 11
     .elsewhen (run === 1.U) {
       run := Mux(current_round === 11.U, 0.U, 1.U)
     }
@@ -241,26 +239,17 @@ class permutation_two_wrapper extends Module {
     single_round.io.x_in(2) := x2_Reg
     single_round.io.x_in(3) := x3_Reg
     single_round.io.x_in(4) := x4_Reg
+    io.s_out := Cat(single_round.io.x_out(0), single_round.io.x_out(1), single_round.io.x_out(2), single_round.io.x_out(3), single_round.io.x_out(4))
 
-    when (run === 1.U && single_round.io.done === false.B) {
-        when (counter === 1.U) {
-          current_round := current_round + 1.U
-          counter := 0.U
-        }
-        .otherwise{
-          counter := counter + 1.U
-        }
+    when (run === 1.U && single_round.io.done === true.B) {
+      current_round := current_round + 1.U
     }
 
-
-    when (current_round === 11.U && counter === 1.U) {
-      counter := 0.U
+    when (current_round === 11.U) {
       io.done := true.B
-      io.s_out := Cat(single_round.io.x_out(0), single_round.io.x_out(1), single_round.io.x_out(2), single_round.io.x_out(3), single_round.io.x_out(4))
     }
     .otherwise {
       io.done := false.B;
-      io.s_out := Cat(single_round.io.x_out(0), single_round.io.x_out(1), single_round.io.x_out(2), single_round.io.x_out(3), single_round.io.x_out(4))
     }
   
   // when (io.maxRound === 0.U) {
