@@ -166,34 +166,156 @@ class hashBehavior extends AnyFlatSpec with ChiselScalatestTester {
 class wrappertest extends AnyFlatSpec with ChiselScalatestTester {
   "wrapper" should "work" in {
     test(new permutation_two_wrapper) { dut =>
-      var pcycle = 13
-      // poke(dut.io.s_in, "hfe9398aadb67f03d8bb21831c60f1002b48a92db98d5da6243189921b8f8e3e8348fa5c9d525e140".U)
-      dut.io.s_in.poke("h00400c00000000000000000000000000000000000000000000000000000000000000000000000000".U)
-      dut.io.round.poke(12.U)
-      dut.io.start.poke(true.B)
-      dut.clock.step()
-      dut.io.start.poke(false.B)
-      var count = 0
-      while (dut.io.done.peekBoolean() == false) {
+      // val dut1 = Module(new permutation_one_wrapper)
+      // test(new permutation_one_wrapper) { dut1 =>
+        // var pcycle = 13
+        // poke(dut.io.s_in, "hfe9398aadb67f03d8bb21831c60f1002b48a92db98d5da6243189921b8f8e3e8348fa5c9d525e140".U)
+        dut.clock.setTimeout(2000)
+        dut.io.s_in.poke("h00400c00000000000000000000000000000000000000000000000000000000000000000000000000".U)
+        dut.io.round.poke(12)
+        dut.io.start.poke(true)
         dut.clock.step()
-        count = count + 1
-        println("Result is: " + (dut.io.s_out.peek()))
-      }
-      println("finished processing first permutations and took " + count + " cycles")
-      dut.clock.step()
-      dut.io.s_in.poke("h00400c00000000000000000000000000000000000000000000000000000000000000000000000000".U)
-      dut.io.start.poke(true.B)
-      println("*Done: " + (dut.io.done.peek()) + " Result is: " + (dut.io.s_out.peek()))
-      dut.clock.step()
-      dut.io.start.poke(false.B)
-      count = 0
-      while (dut.io.done.peekBoolean() == false) {
-        dut.clock.step()
-        count = count + 1
-        println("Result is: " + (dut.io.s_out.peek()))
-      }
-      println("finished processing first permutations and took " + count + " cycles")
+        dut.io.start.poke(false)
+        // dut1:
+        // dut1.io.s_in.poke("h00400c00000000000000000000000000000000000000000000000000000000000000000000000000".U)
+        // dut1.io.round.poke(12.U)
+        // dut1.io.start.poke(true.B)
+        // dut1.clock.step()
+        // dut1.io.start.poke(false.B)
+        var count = 0
+        while (dut.io.done.peekBoolean() == false) {
+          println("Result is: " + (dut.io.s_out.peek()))
+          dut.clock.step()
+          count = count + 1
+        }
+        println("Final result is: " + (dut.io.s_out.peek()))
+        // println("Result from dut1 is: " + (dut1.io.s_out.peek()))
+        
+        println("finished processing first permutations and took " + count + " cycles")
+      //   dut.clock.step()
+
+      //   dut.io.s_in.poke("h00400c00000000000000000000000000000000000000000000000000000000000000000000000000".U)
+      //   dut.io.start.poke(true.B)
+      //   dut.clock.step()
+      //   dut.io.start.poke(false.B)
+      //   // dut1:
+      //   // dut1.io.s_in.poke("h00400c00000000000000000000000000000000000000000000000000000000000000000000000000".U)
+      //   // dut1.io.start.poke(true.B)
+      //   // dut1.clock.step()
+      //   // dut1.io.start.poke(false.B)
+
+      //   count = 0
+      //   while (dut.io.done.peekBoolean() == false) {
+      //     dut.clock.step()
+      //     count = count + 1
+      //     println("Result is: " + (dut.io.s_out.peek()))
+      //   }
+      //   // println("Result from dut1 is: " + (dut1.io.s_out.peek()))
+      //   println("finished processing first permutations and took " + count + " cycles")
+      // // }
     }
+
+  }
+  "onewrapper" should "work" in {
+    test(new permutation_one_wrapper) { dut =>
+      // val dut1 = Module(new permutation_one_wrapper)
+      // test(new permutation_one_wrapper) { dut1 =>
+        // var pcycle = 13
+        // poke(dut.io.s_in, "hfe9398aadb67f03d8bb21831c60f1002b48a92db98d5da6243189921b8f8e3e8348fa5c9d525e140".U)
+        dut.io.s_in.poke("h00400c00000000000000000000000000000000000000000000000000000000000000000000000000".U)
+        dut.io.round.poke(12.U)
+        dut.io.start.poke(true.B)
+        dut.clock.step()
+        dut.io.start.poke(false.B)
+        // dut1:
+        // dut1.io.s_in.poke("h00400c00000000000000000000000000000000000000000000000000000000000000000000000000".U)
+        // dut1.io.round.poke(12.U)
+        // dut1.io.start.poke(true.B)
+        // dut1.clock.step()
+        // dut1.io.start.poke(false.B)
+        var count = 0
+        while (dut.io.done.peekBoolean() == false) {
+          println("Result is: " + (dut.io.s_out.peek()))
+          dut.clock.step()
+          count = count + 1
+        }
+        // println("Result from dut1 is: " + (dut1.io.s_out.peek()))
+        println("Final result is: " + (dut.io.s_out.peek()))
+        println("finished processing first permutations and took " + count + " cycles")
+      //   dut.clock.step()
+
+      //   dut.io.s_in.poke("h00400c00000000000000000000000000000000000000000000000000000000000000000000000000".U)
+      //   dut.io.start.poke(true.B)
+      //   dut.clock.step()
+      //   dut.io.start.poke(false.B)
+      //   // dut1:
+      //   // dut1.io.s_in.poke("h00400c00000000000000000000000000000000000000000000000000000000000000000000000000".U)
+      //   // dut1.io.start.poke(true.B)
+      //   // dut1.clock.step()
+      //   // dut1.io.start.poke(false.B)
+
+      //   count = 0
+      //   while (dut.io.done.peekBoolean() == false) {
+      //     dut.clock.step()
+      //     count = count + 1
+      //     println("Result is: " + (dut.io.s_out.peek()))
+      //   }
+      //   // println("Result from dut1 is: " + (dut1.io.s_out.peek()))
+      //   println("finished processing first permutations and took " + count + " cycles")
+      // // }
+    }
+
+  }
+  "threewrapper" should "work" in {
+    test(new permutation_three_wrapper) { dut =>
+      // val dut1 = Module(new permutation_one_wrapper)
+      // test(new permutation_one_wrapper) { dut1 =>
+        // var pcycle = 13
+        // poke(dut.io.s_in, "hfe9398aadb67f03d8bb21831c60f1002b48a92db98d5da6243189921b8f8e3e8348fa5c9d525e140".U)
+        dut.io.s_in.poke("h00400c00000000000000000000000000000000000000000000000000000000000000000000000000".U)
+        dut.io.round.poke(12.U)
+        dut.io.start.poke(true.B)
+        dut.clock.step()
+        dut.io.start.poke(false.B)
+        // dut1:
+        // dut1.io.s_in.poke("h00400c00000000000000000000000000000000000000000000000000000000000000000000000000".U)
+        // dut1.io.round.poke(12.U)
+        // dut1.io.start.poke(true.B)
+        // dut1.clock.step()
+        // dut1.io.start.poke(false.B)
+        var count = 0
+        while (dut.io.done.peekBoolean() == false) {
+          println("Result is: " + (dut.io.s_out.peek()))
+          dut.clock.step()
+          count = count + 1
+        }
+        println("Final result is: " + (dut.io.s_out.peek()))
+        // println("Result from dut1 is: " + (dut1.io.s_out.peek()))
+        
+        println("finished processing first permutations and took " + count + " cycles")
+      //   dut.clock.step()
+
+      //   dut.io.s_in.poke("h00400c00000000000000000000000000000000000000000000000000000000000000000000000000".U)
+      //   dut.io.start.poke(true.B)
+      //   dut.clock.step()
+      //   dut.io.start.poke(false.B)
+      //   // dut1:
+      //   // dut1.io.s_in.poke("h00400c00000000000000000000000000000000000000000000000000000000000000000000000000".U)
+      //   // dut1.io.start.poke(true.B)
+      //   // dut1.clock.step()
+      //   // dut1.io.start.poke(false.B)
+
+      //   count = 0
+      //   while (dut.io.done.peekBoolean() == false) {
+      //     dut.clock.step()
+      //     count = count + 1
+      //     println("Result is: " + (dut.io.s_out.peek()))
+      //   }
+      //   // println("Result from dut1 is: " + (dut1.io.s_out.peek()))
+      //   println("finished processing first permutations and took " + count + " cycles")
+      // // }
+    }
+
   }
 }
 

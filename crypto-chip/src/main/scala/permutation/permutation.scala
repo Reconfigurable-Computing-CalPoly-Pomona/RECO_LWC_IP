@@ -45,8 +45,8 @@ class permutation_one extends Module {
 class permutation_one_wrapper extends Module {
   val io = IO(new Bundle {
     val s_in        = Input(UInt(320.W))
-    val start        = Input(Bool())
     val round        = Input(UInt(4.W))
+    val start        = Input(Bool())
     val done        = Output(Bool())
     val s_out = Output(UInt(320.W))
   })
@@ -75,8 +75,8 @@ class permutation_one_wrapper extends Module {
       x2_Reg := single_round.io.x_out(2)
       x3_Reg := single_round.io.x_out(3)
       x4_Reg := single_round.io.x_out(4)
-      current_round := single_round.io.round_out
       run := Mux(current_round === 10.U, 0.U, 1.U)
+      current_round := single_round.io.round_out
     }
 
     single_round.io.round_in := current_round
@@ -87,13 +87,12 @@ class permutation_one_wrapper extends Module {
     single_round.io.x_in(4) := x4_Reg
 
 
+    io.s_out := Cat(single_round.io.x_out(0), single_round.io.x_out(1), single_round.io.x_out(2), single_round.io.x_out(3), single_round.io.x_out(4))
     when (current_round === 11.U) {
       io.done := true.B
-      io.s_out := Cat(single_round.io.x_out(0), single_round.io.x_out(1), single_round.io.x_out(2), single_round.io.x_out(3), single_round.io.x_out(4))
     }
     .otherwise {
-      io.done := false.B;
-      io.s_out := 0.U
+      io.done := false.B
     }
   
 }
@@ -108,7 +107,7 @@ class posedge() extends Module {
   temp_reg := io.in
   io.out := io.in & ~temp_reg
 }
-
+// edge detector shall be removed here to maintain compatibility with wrapper
 class permutation_two extends Module {
   val io = IO(new Bundle {
     val start = Input(Bool())
@@ -123,8 +122,8 @@ class permutation_two extends Module {
     val addition = Module(new addition_layer())
     val substitution = Module(new substitution_layer())
     val diffusion= Module(new diffusion_layer_compat())
-    val posedge = Module(new posedge())
-    posedge.io.in := io.start
+    // val posedge = Module(new posedge())
+    // posedge.io.in := io.start
     val start::add::sub::diff::done::Nil = Enum(5)
     val current = RegInit(done)
     // val state = VecInit(Seq.fill(5)(RegInit(0.U(64.W))))
@@ -171,8 +170,7 @@ class permutation_two extends Module {
         }
       }
       is(done){
-        // io.done := true.B
-        when (posedge.io.out) {
+        when (io.start) {
           state(2) := addition.io.x2_out
           current := sub
         }.otherwise {
@@ -201,56 +199,109 @@ class permutation_two_wrapper extends Module {
     val done        = Output(Bool())
     val s_out = Output(UInt(320.W))
   })
-    val x0_Reg = RegInit(0.U(64.W))
-    val x1_Reg = RegInit(0.U(64.W))
-    val x2_Reg = RegInit(0.U(64.W))
-    val x3_Reg = RegInit(0.U(64.W))
-    val x4_Reg = RegInit(0.U(64.W))
-    val current_round = RegInit(0.U(8.W))
-    val single_round = Module(new permutation_two())
-    val run = RegInit(0.U(1.W))
-
-    //Initialize
-    when (run === 0.U) {
-      x0_Reg := io.s_in(319,256)
-      x1_Reg := io.s_in(255,192)
-      x2_Reg := io.s_in(191,128)
-      x3_Reg := io.s_in(127,64)
-      x4_Reg := io.s_in(63,0)
-      current_round := 12.U - io.round
-      run := io.start
-    }//Starts; turns off run when current_round is 11
-    .elsewhen (run === 1.U) {
-      run := Mux(current_round === 11.U, 0.U, 1.U)
-    }
-    
-    when (single_round.io.done) {
-      x0_Reg := single_round.io.x_out(0)
-      x1_Reg := single_round.io.x_out(1)
-      x2_Reg := single_round.io.x_out(2)
-      x3_Reg := single_round.io.x_out(3)
-      x4_Reg := single_round.io.x_out(4)
-    } 
-    single_round.io.start := run.asBool
-    single_round.io.round_in := current_round
+  val x0_Reg = RegInit(10.U(64.W))
+  val x1_Reg = RegInit(10.U(64.W))
+  val x2_Reg = RegInit(10.U(64.W))
+  val x3_Reg = RegInit(10.U(64.W))
+  val x4_Reg = RegInit(10.U(64.W))
+  val current_round = RegInit(10.U(8.W))
+  val single_round = Module(new permutation_two())
 
     single_round.io.x_in(0) := x0_Reg
     single_round.io.x_in(1) := x1_Reg
     single_round.io.x_in(2) := x2_Reg
     single_round.io.x_in(3) := x3_Reg
     single_round.io.x_in(4) := x4_Reg
+
+    single_round.io.round_in := current_round
+    single_round.io.start := false.B
+    
     io.s_out := Cat(single_round.io.x_out(0), single_round.io.x_out(1), single_round.io.x_out(2), single_round.io.x_out(3), single_round.io.x_out(4))
-
-    when (run === 1.U && single_round.io.done === true.B) {
-      current_round := current_round + 1.U
+    
+    val checkSingleDone::checkRound::startSingle::done::Nil = Enum(4)
+    val currentState = RegInit(done)
+    switch (currentState) {
+      is (startSingle) {
+        single_round.io.start := true.B
+        currentState := checkSingleDone
+      }
+      is (checkSingleDone) {
+        when (single_round.io.done) {
+          x0_Reg := single_round.io.x_out(0)
+          x1_Reg := single_round.io.x_out(1)
+          x2_Reg := single_round.io.x_out(2)
+          x3_Reg := single_round.io.x_out(3)
+          x4_Reg := single_round.io.x_out(4)
+          current_round := current_round + 1.U
+          currentState := checkRound
+        }
+        .otherwise {
+          currentState := checkSingleDone
+        }
+      }
+      is (checkRound) {
+        when(current_round < 12.U) {
+          single_round.io.start := true.B
+          currentState := checkSingleDone
+        }
+        .otherwise {
+          currentState := done
+        }
+      }
+      is (done) {
+        when (io.start) {
+          current_round := 12.U - io.round
+          // only init once here; other times will input from xn_reg
+          x0_Reg := io.s_in(319,256)
+          x1_Reg := io.s_in(255,192)
+          x2_Reg := io.s_in(191,128)
+          x3_Reg := io.s_in(127,64)
+          x4_Reg := io.s_in(63,0)
+          currentState := startSingle
+        }
+        .otherwise {
+          currentState := done
+        }
+      }
     }
-
-    when (current_round === 11.U) {
+    
+    when (currentState === done) {
       io.done := true.B
     }
     .otherwise {
-      io.done := false.B;
+      io.done := false.B
     }
+    // //Initialize
+    // when (run === 0.U) {
+    //   x0_Reg := io.s_in(319,256)
+    //   x1_Reg := io.s_in(255,192)
+    //   x2_Reg := io.s_in(191,128)
+    //   x3_Reg := io.s_in(127,64)
+    //   x4_Reg := io.s_in(63,0)
+    //   current_round := 12.U - io.round
+    //   run := io.start
+    // }//Starts; turns off run when current_round is 11
+    // .elsewhen (run === 1.U) {
+    //   run := Mux(current_round === 11.U, 0.U, 1.U)
+    // }
+    // // might hold invalid data at start
+    // when (single_round.io.done) {
+    //   x0_Reg := single_round.io.x_out(0)
+    //   x1_Reg := single_round.io.x_out(1)
+    //   x2_Reg := single_round.io.x_out(2)
+    //   x3_Reg := single_round.io.x_out(3)
+    //   x4_Reg := single_round.io.x_out(4)
+    // } 
+    // single_round.io.start := run.asBool
+    // single_round.io.round_in := current_round
+
+
+    // io.s_out := Cat(single_round.io.x_out(0), single_round.io.x_out(1), single_round.io.x_out(2), single_round.io.x_out(3), single_round.io.x_out(4))
+
+    // when (run === 1.U && single_round.io.done === true.B) {
+    //   current_round := current_round + 1.U
+    // }
+
   
   // when (io.maxRound === 0.U) {
   //   maxRound := 6.U
@@ -266,10 +317,6 @@ class permutation_two_wrapper extends Module {
   //   maxRound := 0.U
   // }
 }
-
-
-
-
 
 class permutation_three extends Module {
   val io = IO(new Bundle {
