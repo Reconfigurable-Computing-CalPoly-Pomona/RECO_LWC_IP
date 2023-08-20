@@ -192,6 +192,7 @@ class wrappertest extends AnyFlatSpec with ChiselScalatestTester {
         // println("Result from dut1 is: " + (dut1.io.s_out.peek()))
         
         println("finished processing first permutations and took " + count + " cycles")
+        // Vivado 2022.2: 1048 LUT, 1209 FF, 4.762ns
       //   dut.clock.step()
 
       //   dut.io.s_in.poke("h00400c00000000000000000000000000000000000000000000000000000000000000000000000000".U)

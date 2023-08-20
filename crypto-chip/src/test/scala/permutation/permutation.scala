@@ -38,6 +38,7 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
         println("finished processing first permutations and took " + count + " cycles")
       }
     }
+    // Vivado 2022.2: 870 LUT, 879 FF, 4.090ns
   }
   "permutation original" should "work" in {
     test(new permutation_one()) { dut =>

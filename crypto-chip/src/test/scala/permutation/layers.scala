@@ -197,6 +197,7 @@ class rotateTest extends AnyFlatSpec with ChiselScalatestTester with testFunctio
                 // println(dut.io.output.peek())
             }
         }
+        // Vivado 2022.2: 192 LUT, 7.095ns
     }
     "sequential barrel shifter" should "work looped" in {
         test(new barrelShifter_seq(6)) { dut =>
