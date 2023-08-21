@@ -223,6 +223,7 @@ class rotateTest extends AnyFlatSpec with ChiselScalatestTester with testFunctio
             }
         }
         // Vivado 2022.2: 204 LUT, 136 FF, 4.090ns Total Delay
+        // 4.090ns/1cycle*1765 cycles; 1765*4.090ns total time vs 11cycles*(6.501ns)=total time
         // Vivado 2018.1: 206 LUT, 136 FF, 4.090ns Total Delay
     }
 
