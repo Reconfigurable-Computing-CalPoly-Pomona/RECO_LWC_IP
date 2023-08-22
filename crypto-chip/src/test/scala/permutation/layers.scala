@@ -226,6 +226,96 @@ class rotateTest extends AnyFlatSpec with ChiselScalatestTester with testFunctio
         // 4.090ns/1cycle*1765 cycles; 1765*4.090ns total time vs 11cycles*(6.501ns)=total time
         // Vivado 2018.1: 206 LUT, 136 FF, 4.090ns Total Delay
     }
+    "param sequential barrel shifter" should "work" in {
+        test(new barrelShifter_seq_param(6, 2)) { dut =>
+            var start = BigInt(1)
+            // while (start < BigDecimal(2).pow(7).toBigInt - 1) {
+                // for (amountLeftShifted <- 0 until 64) {
+                    // println("start is: " + start)
+                    // println("amount left shifted is: " + amountLeftShifted)
+                    dut.io.input.poke(rotateLeft(0, start))
+                    dut.io.amount.poke(0)
+                    println("result of start shifted is: " + rotateLeft(0, start))
+                    for (i <- 0 until 2) {
+                        println("output is: " + dut.io.output.peek() + " at clock cycle: " + i)
+                        dut.clock.step()
+                    }
+                    println("output is: " + dut.io.output.peek())
+                    dut.io.output.expect(start)
+                // }
+                // start = start + BigInt(1)
+            // }
+        }
+    }
+    "param sequential barrel shifter" should "work looped" in {
+        test(new barrelShifter_seq_param(6, 2)) { dut =>
+            var start = BigInt(1)
+            while (start < BigDecimal(2).pow(3).toBigInt - 1) {
+                for (amountLeftShifted <- 0 until 64) {
+                    println("start is: " + start)
+                    println("amount left shifted is: " + amountLeftShifted)
+                    dut.io.input.poke(rotateLeft(amountLeftShifted, start))
+                    dut.io.amount.poke(amountLeftShifted)
+                    println("result of start shifted is: " + rotateLeft(amountLeftShifted, start))
+                    // wait two cycles
+                    for (i <- 0 until 2) {
+                        println("output is: " + dut.io.output.peek() + " at clock cycle: " + i)
+                        dut.clock.step()
+                    }
+                    println("output is: " + dut.io.output.peek())
+                    dut.io.output.expect(start)
+                }
+                start = start + BigInt(1)
+            }
+        }
+        // Vivado 2022.2: 192 LUT, 128 FF, 5.199 Total Delay
+        // Vivado 2018.1: 192 LUT, 128 FF, 5.335 Total Delay
+    }
+    "param sequential barrel shifter" should "work looped and pipelined" in {
+        test(new barrelShifter_seq_param(6, 2)) { dut =>
+            var start = BigInt(1)
+            var amountLeftShifted = 0
+            // while (start < BigDecimal(2).pow(3).toBigInt - 1) {
+            //     for (amountLeftShifted <- 0 until 64) {
+                    println("start is: " + start)
+                    println("amount left shifted is: " + amountLeftShifted)
+                    dut.io.input.poke(rotateLeft(amountLeftShifted, start))
+                    dut.io.amount.poke(amountLeftShifted)
+                    println("result of start shifted is: " + rotateLeft(amountLeftShifted, start))
+                    dut.clock.step()
+                    amountLeftShifted = 1
+                    println("start is: " + start)
+                    println("amount left shifted is: " + amountLeftShifted)
+                    dut.io.input.poke(rotateLeft(amountLeftShifted, start))
+                    dut.io.amount.poke(amountLeftShifted)
+                    println("result of start shifted is: " + rotateLeft(amountLeftShifted, start))
+                    println("output is: " + dut.io.output.peek())
+                    dut.clock.step()
+                    amountLeftShifted = 2
+                    println("start is: " + start)
+                    println("amount left shifted is: " + amountLeftShifted)
+                    dut.io.input.poke(rotateLeft(amountLeftShifted, start))
+                    dut.io.amount.poke(amountLeftShifted)
+                    println("result of start shifted is: " + rotateLeft(amountLeftShifted, start))
+                    println("output is: " + dut.io.output.peek())
+                    dut.io.output.expect(start)
+                    dut.clock.step()
+                    println("output is: " + dut.io.output.peek())
+                    dut.io.output.expect(start)
+                    // // wait two cycles
+                    // for (i <- 0 until 2) {
+                    //     println("output is: " + dut.io.output.peek() + " at clock cycle: " + i)
+                    //     dut.clock.step()
+                    // }
+                    
+            //     }
+            //     start = start + BigInt(1)
+            // }
+        }
+        // Vivado 2022.2: 204 LUT, 136 FF, 4.090ns Total Delay
+        // 4.090ns/1cycle*1765 cycles; 1765*4.090ns total time vs 11cycles*(6.501ns)=total time
+        // Vivado 2018.1: 206 LUT, 136 FF, 4.090ns Total Delay
+    }
 
 }
 // def singleDiffusion extends diffusion(xIn: BigInt, amountFirst: Int, amountSecond: Int) : BigInt = {

@@ -81,7 +81,66 @@ class substitution_layer extends Module {
     io.x_out(j) := Cat(temp(63)(4-j), temp(62)(4-j), temp(61)(4-j), temp(60)(4-j), temp(59)(4-j), temp(58)(4-j), temp(57)(4-j), temp(56)(4-j), temp(55)(4-j), temp(54)(4-j), temp(53)(4-j), temp(52)(4-j), temp(51)(4-j), temp(50)(4-j), temp(49)(4-j), temp(48)(4-j), temp(47)(4-j), temp(46)(4-j), temp(45)(4-j), temp(44)(4-j), temp(43)(4-j), temp(42)(4-j), temp(41)(4-j), temp(40)(4-j), temp(39)(4-j), temp(38)(4-j), temp(37)(4-j), temp(36)(4-j), temp(35)(4-j), temp(34)(4-j), temp(33)(4-j), temp(32)(4-j), temp(31)(4-j), temp(30)(4-j), temp(29)(4-j), temp(28)(4-j), temp(27)(4-j), temp(26)(4-j), temp(25)(4-j), temp(24)(4-j), temp(23)(4-j), temp(22)(4-j), temp(21)(4-j), temp(20)(4-j), temp(19)(4-j), temp(18)(4-j), temp(17)(4-j), temp(16)(4-j), temp(15)(4-j), temp(14)(4-j), temp(13)(4-j), temp(12)(4-j), temp(11)(4-j), temp(10)(4-j), temp(9)(4-j), temp(8)(4-j), temp(7)(4-j), temp(6)(4-j), temp(5)(4-j), temp(4)(4-j), temp(3)(4-j), temp(2)(4-j), temp(1)(4-j), temp(0)(4-j))
   }
 }
+class muxRotateLevel(currentLevel: Int, width: Int) extends Module {
+  val io = IO(new Bundle {
+    val select = Input(UInt(1.W))
+    val input = Input(UInt(width.W))
+    val output = Output(UInt(width.W))
+  })
+  
+  val tmp = VecInit(Seq.fill(width)(0.U(1.W)))
 
+  for (i <- 0 until width) {
+    tmp(i) := Mux(io.select.asBool, io.input((i + math.pow(2, currentLevel)).toInt % width), io.input(i))
+  }
+  // val tmp1 = UInt(64.W)
+  // for (i <- 0 until width) {
+  //   tmp(i + 1) ## tmp(i)
+  // }
+  
+
+  io.output := tmp.asUInt
+}
+
+class barrelShifter_seq_param(amountOfLayers: Int, numberOfRegisters: Int) extends Module {
+  val muxWidth = math.pow(2,amountOfLayers).toInt
+  val io = IO(new Bundle {
+    val input = Input(UInt(muxWidth.W))
+    val amount = Input(UInt(amountOfLayers.W))
+    val output = Output(UInt(muxWidth.W))
+  })
+  class single_layer_io extends Bundle {
+    val input = UInt(muxWidth.W)
+    val output = UInt(muxWidth.W)
+  }
+  val layer_IO = Wire(Vec(amountOfLayers, new single_layer_io()))
+  val tempReg = RegInit(VecInit(Seq.fill(numberOfRegisters)(10.U(muxWidth.W))))
+  
+  for (currentLayer <- 0 until amountOfLayers) {
+    // Vec(amountOfLayers,Module(new muxRotateLevel(currentLayer, muxWidth)).io)
+    val level = Module(new muxRotateLevel(currentLayer, muxWidth)).io
+    level.input := layer_IO(currentLayer).input
+    layer_IO(currentLayer).output := level.output
+    level.select := io.amount(currentLayer)
+  }
+  layer_IO(0).input := io.input
+  for (currentLayer <- 0 until amountOfLayers - 1) {
+    // figure out assignments here:
+    // assuming 2 registers: input to 2 layers, then register, 2 layers, then register, 2 layers, then output
+    // 1.output/2.input, 3.output/4.input
+    if (currentLayer % 2 == (2-1)) {
+      tempReg(currentLayer / 2) := layer_IO(currentLayer).output
+      layer_IO(currentLayer + 1).input := tempReg(currentLayer / 2)
+    }
+    else {
+      // if currentLayer is 5, 6 is invalid
+      layer_IO(currentLayer + 1).input := layer_IO(currentLayer).output
+    }
+  }
+  // assign the 5th output to io.output (assuming 6 layers)
+  io.output := layer_IO(amountOfLayers - 1).output
+
+}
 class barrelShifter(amountOfLayers: Int) extends Module {
   val io = IO(new Bundle {
     val input = Input(UInt(math.pow(2,amountOfLayers).toInt.W))
@@ -197,11 +256,12 @@ class barrelShifter(amountOfLayers: Int) extends Module {
 
 
 class barrelShifter_seq(amountOfLayers: Int) extends Module {
+  val muxAmount = math.pow(2,amountOfLayers).toInt.W
   val io = IO(new Bundle {
     val start = Input(Bool())
-    val input = Input(UInt(math.pow(2,amountOfLayers).toInt.W))
+    val input = Input(UInt(muxAmount))
     val amount = Input(UInt(amountOfLayers.W))
-    val output = Output(UInt(math.pow(2,amountOfLayers).toInt.W))
+    val output = Output(UInt(muxAmount))
     val done = Output(Bool())
   })
   val edge = Module(new posedge())
@@ -211,7 +271,7 @@ class barrelShifter_seq(amountOfLayers: Int) extends Module {
   val currentState = RegInit(done)
   val shiftedNum = RegInit(io.input)
   val currentLevel = RegInit(0.U((math.log(amountOfLayers)/math.log(2)).ceil.toInt.W))
-  val mux_in_1 = RegInit(0.U(math.pow(2,amountOfLayers).toInt.W))
+  val mux_in_1 = RegInit(0.U(muxAmount))
   val mux_select = RegInit(0.U(1.W))
   // val mux_out = VecInit(Seq.fill(math.pow(2,amountOfLayers).toInt)(0.U(1.W)))
   val mux_out = Wire(UInt(64.W))
