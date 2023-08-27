@@ -81,6 +81,18 @@ class substitution_layer extends Module {
     io.x_out(j) := Cat(temp(63)(4-j), temp(62)(4-j), temp(61)(4-j), temp(60)(4-j), temp(59)(4-j), temp(58)(4-j), temp(57)(4-j), temp(56)(4-j), temp(55)(4-j), temp(54)(4-j), temp(53)(4-j), temp(52)(4-j), temp(51)(4-j), temp(50)(4-j), temp(49)(4-j), temp(48)(4-j), temp(47)(4-j), temp(46)(4-j), temp(45)(4-j), temp(44)(4-j), temp(43)(4-j), temp(42)(4-j), temp(41)(4-j), temp(40)(4-j), temp(39)(4-j), temp(38)(4-j), temp(37)(4-j), temp(36)(4-j), temp(35)(4-j), temp(34)(4-j), temp(33)(4-j), temp(32)(4-j), temp(31)(4-j), temp(30)(4-j), temp(29)(4-j), temp(28)(4-j), temp(27)(4-j), temp(26)(4-j), temp(25)(4-j), temp(24)(4-j), temp(23)(4-j), temp(22)(4-j), temp(21)(4-j), temp(20)(4-j), temp(19)(4-j), temp(18)(4-j), temp(17)(4-j), temp(16)(4-j), temp(15)(4-j), temp(14)(4-j), temp(13)(4-j), temp(12)(4-j), temp(11)(4-j), temp(10)(4-j), temp(9)(4-j), temp(8)(4-j), temp(7)(4-j), temp(6)(4-j), temp(5)(4-j), temp(4)(4-j), temp(3)(4-j), temp(2)(4-j), temp(1)(4-j), temp(0)(4-j))
   }
 }
+// have a module to prevent an input to rotate
+// for 2 registers, a max of 2 can be in at any time
+// class layer_delay extends Module {
+//   val io = IO(new Bundle {
+//     val ready = Output(Bool())
+//     val start = Input(Bool())
+//     val input = Input(UInt(muxWidth.W))
+//     val amount = Input(UInt(amountOfLayers.W))
+//     val output = Output(UInt(muxWidth.W))
+//   })
+// }
+
 class muxRotateLevel(currentLevel: Int, width: Int) extends Module {
   val io = IO(new Bundle {
     val select = Input(UInt(1.W))
@@ -101,7 +113,7 @@ class muxRotateLevel(currentLevel: Int, width: Int) extends Module {
 
   io.output := tmp.asUInt
 }
-
+// TODO: ask about making parametrized and control design
 class barrelShifter_seq_param(amountOfLayers: Int, numberOfRegisters: Int) extends Module {
   val muxWidth = math.pow(2,amountOfLayers).toInt
   val io = IO(new Bundle {
