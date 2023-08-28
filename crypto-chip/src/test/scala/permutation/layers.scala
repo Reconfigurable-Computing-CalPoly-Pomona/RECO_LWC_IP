@@ -302,21 +302,31 @@ class rotateTest extends AnyFlatSpec with ChiselScalatestTester with testFunctio
                     dut.clock.step()
                     println("output is: " + dut.io.output.peek())
                     dut.io.output.expect(start)
-                    // // wait two cycles
-                    // for (i <- 0 until 2) {
-                    //     println("output is: " + dut.io.output.peek() + " at clock cycle: " + i)
-                    //     dut.clock.step()
-                    // }
-                    
-            //     }
-            //     start = start + BigInt(1)
-            // }
         }
-        // Vivado 2022.2: 204 LUT, 136 FF, 4.090ns Total Delay
-        // 4.090ns/1cycle*1765 cycles; 1765*4.090ns total time vs 11cycles*(6.501ns)=total time
-        // Vivado 2018.1: 206 LUT, 136 FF, 4.090ns Total Delay
     }
-
+    "sequential barrel shifter pipe test" should "work pipelined" in {
+        test(new barrelShifter_seq_param(6)) { dut =>
+            var start = BigInt(1)
+            var amountLeftShifted = BigInt(19)
+            var amountLeftShifted1 = BigInt(28)
+            var amountLeftShifted2 = BigInt(17)
+            var maskbot4 = 48
+            var masktop2 = 15
+            dut.io.input.poke(start)
+            dut.io.amount.poke(amountLeftShifted & masktop2)
+            dut.clock.step()
+            println("out is: " + dut.io.output.peekInt())
+            dut.io.amount.poke(amountLeftShifted1 & masktop2 | (amountLeftShifted & maskbot4))
+            dut.clock.step()
+            println("after rotating left: " + rotateLeft(amountLeftShifted.toInt, dut.io.output.peekInt()))
+            println("out is: " + dut.io.output.peekInt())
+            dut.io.amount.poke(amountLeftShifted2 & masktop2 | (amountLeftShifted1 & maskbot4))
+            dut.clock.step()
+            println("out is: " + dut.io.output.peekInt())
+            dut.io.amount.poke(amountLeftShifted2 & masktop2 | (amountLeftShifted2 & maskbot4))
+            println("out is: " + dut.io.output.peekInt())
+        }
+    }
 }
 // def singleDiffusion extends diffusion(xIn: BigInt, amountFirst: Int, amountSecond: Int) : BigInt = {
 //     val x_out = xIn ^ (rotateRight(amountFirst, xIn)) ^ (rotateRight(amountSecond, xIn))

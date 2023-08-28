@@ -439,26 +439,27 @@ val io = IO(new Bundle {
 
   barrel.io.input := temp(tempSelect)
 
-  
-  // after 3 cycles, switch barrel shifter input to other temp register
-  when (count === 0.U) {
-    tempSelect := tempSelect + 1.U
-  }
-  .elsewhen(count === 1.U) {
-    barrel.io.amount := tempAmount(tempSelect + 1.U).tempAmountSecond(5,4) ## amountFirst(3,0)
-  }
-  .elsewhen(count === 2.U) {
-    temp(tempSelect) := barrel.io.output ^ temp(tempSelect)
-    tempAmount(tempSelect).tempAmountFirst := amountFirst
-    tempAmount(tempSelect).tempAmountSecond := amountSecond
-    barrel.io.amount := tempAmount(tempSelect).tempAmountFirst(5,4) ## tempAmount(tempSelect).tempAmountSecond(3,0)
+  when (count === 2.U) {
     io.ready := true.B
   }
-  .elsewhen(count === 3.U) {
-    barrel.io.amount := amountSecond(5,4) ## tempAmount(tempSelect + 1.U).tempAmountFirst(3,0)
-    temp(tempSelect) := barrel.io.output ^ temp(tempSelect)
+  tempSelect := io.x_in.i % 2.U
+
+  // every 2 cycles, do the steps below:
+  when (count % 2.U === 0.U) {
+    tempSelect := tempSelect + 1.U
   }
-  
+  when (count === 2.U || count === 3.U) {
+    
+  }
+  // next cycle:
+  barrel.io.amount := tempAmount(tempSelect + 1.U).tempAmountSecond(5,4) ## amountFirst(3,0)
+  // next cycle
+  temp(tempSelect) := barrel.io.output ^ temp(tempSelect)
+  tempAmount(tempSelect).tempAmountFirst := amountFirst
+  tempAmount(tempSelect).tempAmountSecond := amountSecond
+  barrel.io.amount := tempAmount(tempSelect).tempAmountFirst(5,4) ## tempAmount(tempSelect).tempAmountSecond(3,0)
+  // next cycle
+  barrel.io.amount := amountSecond(5,4) ## tempAmount(tempSelect + 1.U).tempAmountFirst(3,0)
 }
 
 class diffusion_layer extends Module {
