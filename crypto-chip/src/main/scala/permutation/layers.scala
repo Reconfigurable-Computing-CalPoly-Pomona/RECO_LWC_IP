@@ -114,7 +114,7 @@ class muxRotateLevel(currentLevel: Int, width: Int) extends Module {
   io.output := tmp.asUInt
 }
 // TODO: ask about making parametrized and control design
-class barrelShifter_seq_param(amountOfLayers: Int, numberOfRegisters: Int) extends Module {
+class barrelShifter_seq_param(amountOfLayers: Int) extends Module {
   val muxWidth = math.pow(2,amountOfLayers).toInt
   val io = IO(new Bundle {
     val input = Input(UInt(muxWidth.W))
@@ -126,7 +126,7 @@ class barrelShifter_seq_param(amountOfLayers: Int, numberOfRegisters: Int) exten
     val output = UInt(muxWidth.W)
   }
   val layer_IO = Wire(Vec(amountOfLayers, new single_layer_io()))
-  val tempReg = RegInit(VecInit(Seq.fill(numberOfRegisters)(10.U(muxWidth.W))))
+  val tempReg = RegInit(VecInit(Seq.fill(2)(10.U(muxWidth.W))))
   
   for (currentLayer <- 0 until amountOfLayers) {
     // Vec(amountOfLayers,Module(new muxRotateLevel(currentLayer, muxWidth)).io)
@@ -371,6 +371,92 @@ class barrelShifter_seq(amountOfLayers: Int) extends Module {
 
   //io.output := Mux(io.done,shiftedNum,io.input)
   io.output := shiftedNum
+}
+
+class double_pipe_diff extends Module {
+val io = IO(new Bundle {
+    val x_in        = Input(new x_val())
+    val x_out = Output(UInt(64.W))
+    val ready = Output(Bool())
+  })
+  io.ready := false.B
+
+  val barrel = Module(new barrelShifter_seq_param(6))
+  // count the number of cycles for changing rotate values and ready signal
+  val count = RegInit(2.U(2.W))
+
+  val temp = RegInit(VecInit(Seq.fill(2)(10.U(64.W))))
+  // keep assigned to input for init value
+  temp(0) := io.x_in.data
+  temp(1) := io.x_in.data
+
+  val tempSelect = RegInit(0.U(1.W))
+
+  // decode i value to first and second
+  val amountFirst = Wire(UInt(64.W))
+  val amountSecond = Wire(UInt(64.W))
+
+  when(io.x_in.i === 0.U)
+  {
+    amountFirst := 19.U
+    amountSecond := 28.U
+  }
+  .elsewhen(io.x_in.i === 1.U)
+  {
+    amountFirst := 61.U
+    amountSecond := 39.U
+  }
+  .elsewhen(io.x_in.i === 2.U)
+  {
+    amountFirst := 1.U
+    amountSecond := 6.U
+  }
+  .elsewhen(io.x_in.i === 3.U)
+  {
+    amountFirst := 10.U
+    amountSecond := 17.U
+  }
+  .elsewhen(io.x_in.i === 4.U)
+  {
+    amountFirst := 7.U
+    amountSecond := 41.U
+  }
+  .otherwise
+  {
+    amountFirst := 0.U
+    amountSecond := 0.U
+  }
+
+  count := count + 1.U
+
+  when (tempSelect === 0.U) {
+    barrel.io.input := temp(0)
+  }
+  .otherwise {
+    barrel.io.input := temp(1)
+  }
+  
+  // after 3 cycles, swich barrel shifter input to other temp register
+  when (count === 0.U) {
+    tempSelect := tempSelect + 1.U
+  }
+  .elsewhen(count === 1.U) {
+
+  }
+  .elsewhen(count === 2.U) {
+    when (tempSelect === 0.U) {
+      temp := barrel.io.output ^ temp(0)
+    }
+    .otherwise {
+      temp := barrel.io.output ^ temp(0)
+    }
+    barrel.io.amount := amountSecond
+    io.ready := true.B
+  }
+  .elsewhen(count === 3.U) {
+    
+  }
+  
 }
 
 class diffusion_layer extends Module {
