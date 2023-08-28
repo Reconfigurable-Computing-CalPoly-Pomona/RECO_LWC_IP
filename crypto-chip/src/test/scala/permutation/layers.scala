@@ -248,7 +248,7 @@ class rotateTest extends AnyFlatSpec with ChiselScalatestTester with testFunctio
         }
     }
     "param sequential barrel shifter" should "work looped" in {
-        test(new barrelShifter_seq_param(6, 2)) { dut =>
+        test(new barrelShifter_seq_param(6)) { dut =>
             var start = BigInt(1)
             while (start < BigDecimal(2).pow(3).toBigInt - 1) {
                 for (amountLeftShifted <- 0 until 64) {
@@ -272,7 +272,7 @@ class rotateTest extends AnyFlatSpec with ChiselScalatestTester with testFunctio
         // Vivado 2018.1: 192 LUT, 128 FF, 5.335 Total Delay
     }
     "param sequential barrel shifter" should "work looped and pipelined" in {
-        test(new barrelShifter_seq_param(6, 2)) { dut =>
+        test(new barrelShifter_seq_param(6)) { dut =>
             var start = BigInt(1)
             var amountLeftShifted = 0
             // while (start < BigDecimal(2).pow(3).toBigInt - 1) {
