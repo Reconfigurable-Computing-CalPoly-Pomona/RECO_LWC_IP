@@ -383,23 +383,16 @@ val io = IO(new Bundle {
 
   val barrel = Module(new barrelShifter_seq_param(6))
 
-  
   barrel.io.amount := 0.U
   // count the number of cycles for changing rotate values and ready signal
   val count = RegInit(2.U(2.W))
   
   val temp = RegInit(VecInit(Seq.fill(2)(10.U(64.W))))
-  temp(0) := io.x_in.data
-  temp(1) := io.x_in.data
-  class amounts extends Bundle {
-    val tempAmountFirst = RegInit(0.U(6.W))
-    val tempAmountSecond = RegInit(0.U(6.W))
-  }
-
-  val tempAmount = (Vec(2, new amounts()))
-  
   val tempSelect = RegInit(0.U(1.W))
-
+  // temp(0) := io.x_in.data
+  // temp(1) := io.x_in.data
+  temp(tempSelect) := io.x_in.data
+  
   // decode i value to first and second
   val amountFirst = Wire(UInt(6.W))
   val amountSecond = Wire(UInt(6.W))
@@ -436,30 +429,49 @@ val io = IO(new Bundle {
   }
 
   count := count + 1.U
-
   barrel.io.input := temp(tempSelect)
 
-  when (count === 2.U) {
-    io.ready := true.B
-  }
-  tempSelect := io.x_in.i % 2.U
-
-  // every 2 cycles, do the steps below:
+  // every 2 cycles (count 1 and 3), do the steps below:
   when (count % 2.U === 0.U) {
     tempSelect := tempSelect + 1.U
+    io.ready := true.B
   }
-  when (count === 2.U || count === 3.U) {
+  val prevTop = RegInit(0.U(4.W))
+
+  //count 0,2
+  when (count % 2.U === 0.U) {
+    // next:
+    barrel.io.amount := amountFirst(5,2) ## amountSecond(1,0)
+  }
+  //count 1,3
+  .otherwise {
+    // when at first value, prevTop is uninitialized, so invalid, after second value, it's valid
+    prevTop := amountSecond(5,2)
+    // next: after previous rotation, find a way to keep amountSecond; new amount first here
+    barrel.io.amount := prevTop ## amountFirst(1,0)
+  }
+  // this assignment prevents starting at count=0
+  temp(tempSelect + 1.U) := barrel.io.output ^ temp(tempSelect + 1.U)
+  io.x_out := barrel.io.output ^ temp(tempSelect + 1.U)
+
+  /*
+  Things to Keep in Mind
+  when count = 0
     
-  }
-  // next cycle:
-  barrel.io.amount := tempAmount(tempSelect + 1.U).tempAmountSecond(5,4) ## amountFirst(3,0)
-  // next cycle
-  temp(tempSelect) := barrel.io.output ^ temp(tempSelect)
-  tempAmount(tempSelect).tempAmountFirst := amountFirst
-  tempAmount(tempSelect).tempAmountSecond := amountSecond
-  barrel.io.amount := tempAmount(tempSelect).tempAmountFirst(5,4) ## tempAmount(tempSelect).tempAmountSecond(3,0)
-  // next cycle
-  barrel.io.amount := amountSecond(5,4) ## tempAmount(tempSelect + 1.U).tempAmountFirst(3,0)
+  when count = 1
+    Top = prevSecond(5,2), Bot = amountFirst(1,0)
+  when count = 2
+    ready is true
+    Top := amountFirst(5,2), Bot := amountSecond(1,0) (current amountFirst not needed anymore)
+    prevSecond = amountSecond
+    amountFirst and amountSecond is updated in respects to i (amountFirst and amountSecond are new now)
+  when count = 3
+    Top = prevSecond(5,2), Bot = amountFirst(1,0)  
+  */
+
+
+
+
 }
 
 class diffusion_layer extends Module {

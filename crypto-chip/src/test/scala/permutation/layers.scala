@@ -250,7 +250,7 @@ class rotateTest extends AnyFlatSpec with ChiselScalatestTester with testFunctio
     "param sequential barrel shifter" should "work looped" in {
         test(new barrelShifter_seq_param(6)) { dut =>
             var start = BigInt(1)
-            while (start < BigDecimal(2).pow(3).toBigInt - 1) {
+            while (start < BigDecimal(2).pow(4).toBigInt - 1) {
                 for (amountLeftShifted <- 0 until 64) {
                     println("start is: " + start)
                     println("amount left shifted is: " + amountLeftShifted)
@@ -307,24 +307,38 @@ class rotateTest extends AnyFlatSpec with ChiselScalatestTester with testFunctio
     "sequential barrel shifter pipe test" should "work pipelined" in {
         test(new barrelShifter_seq_param(6)) { dut =>
             var start = BigInt(1)
-            var amountLeftShifted = BigInt(19)
-            var amountLeftShifted1 = BigInt(28)
-            var amountLeftShifted2 = BigInt(17)
-            var maskbot4 = 48
-            var masktop2 = 15
+            var amountLeftShifted = 19
+            var amountLeftShifted1 = 28
+            var amountLeftShifted2 = 17
+            var maskoutbot4 = 48
+            var maskouttop2 = 15
+            var maskouttop4 = 3
+            var maskoutbot2 = 60
+            // rotate to right, then rotate left to find original
+            // rotate with bits 3..0
             dut.io.input.poke(start)
-            dut.io.amount.poke(amountLeftShifted & masktop2)
+            println("out at start is: " + dut.io.output.peekInt())
+            // Learned: put in 2 lower bits first before inserting, then next cycle will include the next 4 bits
+            dut.io.amount.poke(amountLeftShifted & maskouttop4)
+            println("out after poking amount is: " + dut.io.output.peekInt())
             dut.clock.step()
-            println("out is: " + dut.io.output.peekInt())
-            dut.io.amount.poke(amountLeftShifted1 & masktop2 | (amountLeftShifted & maskbot4))
+            println("out after clock is: " + dut.io.output.peekInt())
+            dut.io.amount.poke((amountLeftShifted1 & maskouttop4) | (amountLeftShifted & maskoutbot2))
+            println("out after poking amount is: " + dut.io.output.peekInt())
             dut.clock.step()
-            println("after rotating left: " + rotateLeft(amountLeftShifted.toInt, dut.io.output.peekInt()))
-            println("out is: " + dut.io.output.peekInt())
-            dut.io.amount.poke(amountLeftShifted2 & masktop2 | (amountLeftShifted1 & maskbot4))
+            // output should be valid
+            println("now valid out after clock is: " + dut.io.output.peekInt())
+            dut.io.output.expect(rotateRight(amountLeftShifted, start))
+            dut.io.amount.poke((amountLeftShifted2 & maskouttop4) | (amountLeftShifted1 & maskoutbot2))
+            println("out after poking amount is: " + dut.io.output.peekInt())
             dut.clock.step()
-            println("out is: " + dut.io.output.peekInt())
-            dut.io.amount.poke(amountLeftShifted2 & masktop2 | (amountLeftShifted2 & maskbot4))
-            println("out is: " + dut.io.output.peekInt())
+            println("out after clock is: " + dut.io.output.peekInt())
+            dut.io.output.expect(rotateRight(amountLeftShifted1, start))
+            dut.io.amount.poke((amountLeftShifted2 & maskouttop4) | (amountLeftShifted2 & maskoutbot2))
+            println("out after poking amount is: " + dut.io.output.peekInt())
+            dut.clock.step()
+            println("out after clock is: " + dut.io.output.peekInt())
+            dut.io.output.expect(rotateRight(amountLeftShifted2, start))
         }
     }
 }
