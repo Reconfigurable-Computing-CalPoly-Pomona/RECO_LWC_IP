@@ -71,9 +71,39 @@ trait testFunctions {
         val x_out = xIn ^ (rotateRight(amountFirst, xIn)) ^ (rotateRight(amountSecond, xIn))
     return x_out
     }
+    class amount(var first: Int, var second: Int) 
+    def decode_i(i: Int) : amount = {
+        var amountFirst = 0
+        var amountSecond = 0
+        if (i == 0) {
+            amountFirst = 19
+            amountSecond = 28
+        }
+        else if(i == 1) {
+            amountFirst = 61
+            amountSecond = 39
+        }
+        else if(i == 2) {
+            amountFirst = 1
+            amountSecond = 6
+        }
+        else if(i == 3) {
+            amountFirst = 10
+            amountSecond = 17
+        }
+        else if(i == 4) {
+            amountFirst = 7
+            amountSecond = 41
+        }
+        else {
+            amountFirst = 0
+            amountSecond = 0
+        }
+        return new amount(amountFirst, amountSecond)
+    }
     def singleDiffusion_i(xIn: BigInt, i: Int) : BigInt = {
-        var amountFirst = 0;
-        var amountSecond = 0;
+        var amountFirst = 0
+        var amountSecond = 0
         if (i == 0) {
             amountFirst = 19
             amountSecond = 28
@@ -442,6 +472,27 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
         //26 cycles
         // Vivado 2018.1: 279 LUT, 209 FF, Total Delay 4.773ns
         // Vivado 2022.2: 276 LUT, 209 FF, Total Delay 4.773ns
+    }
+    "amount_pipelined" should "work" in {
+        test(new decode_and_assign_amount_segments_every_2_clocks) { dut =>
+            var maskoutbot4 = 48
+            var maskouttop2 = 15
+            var maskouttop4 = 3
+            var maskoutbot2 = 60
+            for (i <- 0 until 6) {
+                    println("i is: " + i)
+                    dut.io.i.poke(i)
+                    for (j <- 0 until 2) {
+                        println("outBot before clock is: " + (dut.io.amount.peekInt() & maskouttop4))
+                        println("outTop before clock is: " + (dut.io.amount.peekInt() & maskoutbot2))
+                        // println("amount should be: " + decode_i(i))
+                        dut.clock.step()
+                        println("outBot after clock is: " + (dut.io.amount.peekInt() & maskouttop4))
+                        println("outTop after clock is: " + (dut.io.amount.peekInt() & maskoutbot2))
+                    }
+                    // dut.io.x_out.expect(singleDiffusion_i(x_in, i))
+            }
+        }
     }
     "diffusion pipelined" should "work" in {
         test(new double_pipe_diff) { dut =>

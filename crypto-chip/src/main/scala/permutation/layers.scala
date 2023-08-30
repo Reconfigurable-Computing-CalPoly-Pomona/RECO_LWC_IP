@@ -372,12 +372,12 @@ class barrelShifter_seq(amountOfLayers: Int) extends Module {
   //io.output := Mux(io.done,shiftedNum,io.input)
   io.output := shiftedNum
 }
-class decode_and_assign_amount_segments extends Module {
+class decode_and_assign_amount_segments_every_2_clocks extends Module {
 val io = IO(new Bundle {
     val i        = Input(UInt(3.W))
     val amount = Output(UInt(6.W))
   })
-  val temp = RegInit(0.U(4.W))
+  val temp = RegInit(10.U(4.W))
   val count = RegInit(0.U(1.W))
   val amountFirst = Wire(UInt(6.W))
   val amountSecond = Wire(UInt(6.W))
@@ -414,11 +414,11 @@ val io = IO(new Bundle {
     amountSecond := 0.U
   }
   when (count === 0.U) {
-    io.amount := amountFirst(5,2) ## amountSecond(1,0)
-  }
-  .otherwise {
     temp := amountSecond(5,2)
     io.amount := temp ## amountFirst(1,0)
+  }
+  .otherwise {
+    io.amount := amountFirst(5,2) ## amountSecond(1,0)
   }
 }
 class double_pipe_diff extends Module {
@@ -441,41 +441,6 @@ val io = IO(new Bundle {
   // temp(1) := io.x_in.data
   temp(tempSelect) := io.x_in.data
   
-  // decode i value to first and second
-  val amountFirst = Wire(UInt(6.W))
-  val amountSecond = Wire(UInt(6.W))
-
-  when(io.x_in.i === 0.U)
-  {
-    amountFirst := 19.U
-    amountSecond := 28.U
-  }
-  .elsewhen(io.x_in.i === 1.U)
-  {
-    amountFirst := 61.U
-    amountSecond := 39.U
-  }
-  .elsewhen(io.x_in.i === 2.U)
-  {
-    amountFirst := 1.U
-    amountSecond := 6.U
-  }
-  .elsewhen(io.x_in.i === 3.U)
-  {
-    amountFirst := 10.U
-    amountSecond := 17.U
-  }
-  .elsewhen(io.x_in.i === 4.U)
-  {
-    amountFirst := 7.U
-    amountSecond := 41.U
-  }
-  .otherwise
-  {
-    amountFirst := 0.U
-    amountSecond := 0.U
-  }
-
   count := count + 1.U
   barrel.io.input := temp(tempSelect)
 
@@ -485,19 +450,9 @@ val io = IO(new Bundle {
     io.ready := true.B
   }
   val prevTop = RegInit(0.U(4.W))
-
-  //count 0,2
-  when (count % 2.U === 0.U) {
-    // next:
-    barrel.io.amount := amountFirst(5,2) ## amountSecond(1,0)
-  }
-  //count 1,3
-  .otherwise {
-    // when at first value, prevTop is uninitialized, so invalid, after second value, it's valid
-    prevTop := amountSecond(5,2)
-    // next: after previous rotation, find a way to keep amountSecond; new amount first here
-    barrel.io.amount := prevTop ## amountFirst(1,0)
-  }
+  val decodeAmount = Module(new decode_and_assign_amount_segments_every_2_clocks())
+  barrel.io.amount := decodeAmount.io.amount
+  decodeAmount.io.i := io.x_in.i
   // this assignment prevents starting at count=0
   temp(tempSelect + 1.U) := barrel.io.output ^ temp(tempSelect + 1.U)
   io.x_out := barrel.io.output ^ temp(tempSelect + 1.U)
