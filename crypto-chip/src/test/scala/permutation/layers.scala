@@ -443,6 +443,28 @@ class diffusionTest extends AnyFlatSpec with ChiselScalatestTester with testFunc
         // Vivado 2018.1: 279 LUT, 209 FF, Total Delay 4.773ns
         // Vivado 2022.2: 276 LUT, 209 FF, Total Delay 4.773ns
     }
+    "diffusion pipelined" should "work" in {
+        test(new double_pipe_diff) { dut =>
+            for (x_in <- 0 until 3) {
+                for (i <- 0 until 6) {
+                        println("i is: " + i + ", x_in is: " + x_in)
+                        dut.io.ready.expect(true)
+                        dut.io.x_in.data.poke(x_in)
+                        dut.io.x_in.i.poke(i)
+                        for (j <- 0 until 4) {
+                            println("out is: " + dut.io.x_out.peekInt())
+                            dut.clock.step()
+                        }
+                        println("done processing, result should be: " + singleDiffusion_i(x_in, i))
+                        println("done processing, result is: " + dut.io.x_out.peekInt())
+                        // dut.io.x_out.expect(singleDiffusion_i(x_in, i))
+                }
+            }
+        }
+        //26 cycles
+        // Vivado 2018.1: 279 LUT, 209 FF, Total Delay 4.773ns
+        // Vivado 2022.2: 276 LUT, 209 FF, Total Delay 4.773ns
+    }
     "diffusion_fifo with one val" should "work" in {
         test(new diffusion_fifo(5)) { dut =>
             println("inserting x")

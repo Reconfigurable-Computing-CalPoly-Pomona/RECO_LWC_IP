@@ -372,7 +372,55 @@ class barrelShifter_seq(amountOfLayers: Int) extends Module {
   //io.output := Mux(io.done,shiftedNum,io.input)
   io.output := shiftedNum
 }
+class decode_and_assign_amount_segments extends Module {
+val io = IO(new Bundle {
+    val i        = Input(UInt(3.W))
+    val amount = Output(UInt(6.W))
+  })
+  val temp = RegInit(0.U(4.W))
+  val count = RegInit(0.U(1.W))
+  val amountFirst = Wire(UInt(6.W))
+  val amountSecond = Wire(UInt(6.W))
+  count := count + 1.U
 
+  when(io.i === 0.U)
+  {
+    amountFirst := 19.U
+    amountSecond := 28.U
+  }
+  .elsewhen(io.i === 1.U)
+  {
+    amountFirst := 61.U
+    amountSecond := 39.U
+  }
+  .elsewhen(io.i === 2.U)
+  {
+    amountFirst := 1.U
+    amountSecond := 6.U
+  }
+  .elsewhen(io.i === 3.U)
+  {
+    amountFirst := 10.U
+    amountSecond := 17.U
+  }
+  .elsewhen(io.i === 4.U)
+  {
+    amountFirst := 7.U
+    amountSecond := 41.U
+  }
+  .otherwise
+  {
+    amountFirst := 0.U
+    amountSecond := 0.U
+  }
+  when (count === 0.U) {
+    io.amount := amountFirst(5,2) ## amountSecond(1,0)
+  }
+  .otherwise {
+    temp := amountSecond(5,2)
+    io.amount := temp ## amountFirst(1,0)
+  }
+}
 class double_pipe_diff extends Module {
 val io = IO(new Bundle {
     val x_in        = Input(new x_val())
@@ -385,9 +433,9 @@ val io = IO(new Bundle {
 
   barrel.io.amount := 0.U
   // count the number of cycles for changing rotate values and ready signal
-  val count = RegInit(2.U(2.W))
+  val count = RegInit(0.U(2.W))
   
-  val temp = RegInit(VecInit(Seq.fill(2)(10.U(64.W))))
+  val temp = RegInit(VecInit(Seq.fill(2)(0.U(64.W))))
   val tempSelect = RegInit(0.U(1.W))
   // temp(0) := io.x_in.data
   // temp(1) := io.x_in.data
