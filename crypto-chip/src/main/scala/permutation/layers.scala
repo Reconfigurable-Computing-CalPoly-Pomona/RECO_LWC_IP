@@ -113,7 +113,6 @@ class muxRotateLevel(currentLevel: Int, width: Int) extends Module {
 
   io.output := tmp.asUInt
 }
-// TODO: ask about making parametrized and control design
 class barrelShifter_seq_param(amountOfLayers: Int) extends Module {
   val muxWidth = math.pow(2,amountOfLayers).toInt
   val io = IO(new Bundle {
@@ -126,7 +125,7 @@ class barrelShifter_seq_param(amountOfLayers: Int) extends Module {
     val output = UInt(muxWidth.W)
   }
   val layer_IO = Wire(Vec(amountOfLayers, new single_layer_io()))
-  val tempReg = RegInit(VecInit(Seq.fill(2)(10.U(muxWidth.W))))
+  val tempReg = RegInit(VecInit(Seq.fill(2)(0.U(muxWidth.W))))
   
   for (currentLayer <- 0 until amountOfLayers) {
     // Vec(amountOfLayers,Module(new muxRotateLevel(currentLayer, muxWidth)).io)
@@ -377,7 +376,7 @@ val io = IO(new Bundle {
     val i        = Input(UInt(3.W))
     val amount = Output(UInt(6.W))
   })
-  val temp = RegInit(10.U(4.W))
+  val temp = RegInit(0.U(4.W))
   val count = RegInit(0.U(1.W))
   val amountFirst = Wire(UInt(6.W))
   val amountSecond = Wire(UInt(6.W))
@@ -427,11 +426,9 @@ val io = IO(new Bundle {
     val x_out = Output(UInt(64.W))
     val ready = Output(Bool())
   })
-  io.ready := false.B
 
   val barrel = Module(new barrelShifter_seq_param(6))
 
-  barrel.io.amount := 0.U
   // count the number of cycles for changing rotate values and ready signal
   val count = RegInit(0.U(2.W))
   
@@ -444,16 +441,22 @@ val io = IO(new Bundle {
   count := count + 1.U
   barrel.io.input := temp(tempSelect)
 
-  // every 2 cycles (count 1 and 3), do the steps below:
-  when (count % 2.U === 0.U) {
+  // every 2 cycles do the steps below:
+  when (count % 2.U === 1.U) {
     tempSelect := tempSelect + 1.U
+    // move data to other register to make space for next cycle
+    // temp(tempSelect + 1.U) := temp(tempSelect)
+    // ready inverted because ready should be at cycle 0 and 2
+    io.ready := false.B
+  }
+  .otherwise {
     io.ready := true.B
   }
-  val prevTop = RegInit(0.U(4.W))
   val decodeAmount = Module(new decode_and_assign_amount_segments_every_2_clocks())
   barrel.io.amount := decodeAmount.io.amount
   decodeAmount.io.i := io.x_in.i
   // this assignment prevents starting at count=0
+  // perform xor with previous values (most recent value in current, older value at + 1.U)
   temp(tempSelect + 1.U) := barrel.io.output ^ temp(tempSelect + 1.U)
   io.x_out := barrel.io.output ^ temp(tempSelect + 1.U)
 
