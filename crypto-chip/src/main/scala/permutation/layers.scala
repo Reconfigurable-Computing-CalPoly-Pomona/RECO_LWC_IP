@@ -371,7 +371,7 @@ class barrelShifter_seq(amountOfLayers: Int) extends Module {
   //io.output := Mux(io.done,shiftedNum,io.input)
   io.output := shiftedNum
 }
-class decode_and_assign_amount_segments_every_2_clocks extends Module {
+class decode_and_assign_amount_segments_every_cycle extends Module {
 val io = IO(new Bundle {
     val i        = Input(UInt(3.W))
     val amount = Output(UInt(6.W))
@@ -429,36 +429,36 @@ val io = IO(new Bundle {
 
   val barrel = Module(new barrelShifter_seq_param(6))
 
-  // count the number of cycles for changing rotate values and ready signal
-  val count = RegInit(0.U(2.W))
-  
-  val temp = RegInit(VecInit(Seq.fill(2)(0.U(64.W))))
-  val tempSelect = RegInit(0.U(1.W))
+  // count the number of cycles for ready signal
+  val count = RegInit(0.U(1.W))
+  count := count + 1.U
+  val temp = RegInit(0.U(64.W))
+  val temp1 = RegInit(0.U(64.W))
+  val temp_i = RegInit(0.U(3.W))
+  temp := io.x_in.data
+  temp_i := io.x_in.i
+
   // temp(0) := io.x_in.data
   // temp(1) := io.x_in.data
-  temp(tempSelect) := io.x_in.data
+  // temp := io.x_in.data
   
-  count := count + 1.U
-  barrel.io.input := temp(tempSelect)
+  barrel.io.input := temp
 
-  // every 2 cycles do the steps below:
-  when (count % 2.U === 1.U) {
-    tempSelect := tempSelect + 1.U
-    // move data to other register to make space for next cycle
-    // temp(tempSelect + 1.U) := temp(tempSelect)
-    // ready inverted because ready should be at cycle 0 and 2
+  // every 2 cycles do the steps below: store first temp value somewhere to continue xor
+  when (count === 1.U) {
+    temp1 := temp
     io.ready := false.B
   }
   .otherwise {
     io.ready := true.B
   }
-  val decodeAmount = Module(new decode_and_assign_amount_segments_every_2_clocks())
+  // should become off by one after temp assignment; fixed with temp_i register
+  val decodeAmount = Module(new decode_and_assign_amount_segments_every_cycle())
   barrel.io.amount := decodeAmount.io.amount
-  decodeAmount.io.i := io.x_in.i
+  decodeAmount.io.i := io.x_in.data
   // this assignment prevents starting at count=0
-  // perform xor with previous values (most recent value in current, older value at + 1.U)
-  temp(tempSelect + 1.U) := barrel.io.output ^ temp(tempSelect + 1.U)
-  io.x_out := barrel.io.output ^ temp(tempSelect + 1.U)
+  temp1 := barrel.io.output ^ temp1
+  io.x_out := barrel.io.output ^ temp1
 
   /*
   Things to Keep in Mind

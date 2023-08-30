@@ -496,7 +496,7 @@ class diffusionTest
     // Vivado 2022.2: 276 LUT, 209 FF, Total Delay 4.773ns
   }
   "amount_pipelined" should "work" in {
-    test(new decode_and_assign_amount_segments_every_2_clocks) { dut =>
+    test(new decode_and_assign_amount_segments_every_cycle) { dut =>
       var maskoutbot4 = 48
       var maskouttop2 = 15
       var maskouttop4 = 3
@@ -504,7 +504,9 @@ class diffusionTest
       for (i <- 0 until 6) {
         println("i is: " + i)
         dut.io.i.poke(i)
-        for (j <- 0 until 2) {
+        decode_i(i).first
+        // for (j <- 0 until 2) {
+          var first_first = dut.io.amount.peekInt() & maskouttop4
           println(
             "outBot before clock is: " + (dut.io.amount.peekInt() & maskouttop4)
           )
@@ -513,14 +515,36 @@ class diffusionTest
           )
           // println("amount should be: " + decode_i(i))
           dut.clock.step()
+          var first_second = dut.io.amount.peekInt() & maskoutbot2
           println(
             "outBot after clock is: " + (dut.io.amount.peekInt() & maskouttop4)
           )
           println(
             "outTop after clock is: " + (dut.io.amount.peekInt() & maskoutbot2)
           )
-        }
-        // dut.io.x_out.expect(singleDiffusion_i(x_in, i))
+          println("result is: " + (first_first + first_second))
+          assert(decode_i(i).first == (first_first + first_second))
+
+          first_first = dut.io.amount.peekInt() & maskouttop4
+          println(
+            "outBot before clock is: " + (dut.io.amount.peekInt() & maskouttop4)
+          )
+          println(
+            "outTop before clock is: " + (dut.io.amount.peekInt() & maskoutbot2)
+          )
+          // println("amount should be: " + decode_i(i))
+          dut.clock.step()
+          first_second = dut.io.amount.peekInt() & maskoutbot2
+          println(
+            "outBot after clock is: " + (dut.io.amount.peekInt() & maskouttop4)
+          )
+          println(
+            "outTop after clock is: " + (dut.io.amount.peekInt() & maskoutbot2)
+          )
+          println("result is: " + (first_first + first_second))
+          assert(decode_i(i).second == (first_first + first_second))
+
+        // }
       }
     }
   }
@@ -533,13 +557,18 @@ class diffusionTest
           dut.io.x_in.data.poke(x_in)
           dut.io.x_in.i.poke(i)
           for (j <- 0 until 2) {
-              dut.clock.step()
-              println("out is: " + dut.io.x_out.peekInt())
+            dut.clock.step()
+            println("out is: " + dut.io.x_out.peekInt())
           }
           println(
-            "done processing, previous result should be: " + singleDiffusion_i(x_in, i)
+            "done processing, previous result should be: " + singleDiffusion_i(
+              x_in,
+              i
+            )
           )
-          println("done processing, current result is: " + dut.io.x_out.peekInt())
+          println(
+            "done processing, current result is: " + dut.io.x_out.peekInt()
+          )
           // dut.io.x_out.expect(singleDiffusion_i(x_in, i))
         }
       }
