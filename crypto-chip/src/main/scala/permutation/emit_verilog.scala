@@ -19,6 +19,7 @@ object permutationMain extends App {
   emitVerilog(new diffusion_layer_compat(), Array("--target-dir", "generated"))
   emitVerilog(new permutation_two_wrapper(), Array("--target-dir", "generated"))
   emitVerilog(new diffusion_layer(), Array("--target-dir", "generated"))
+  emitVerilog(new single_diff_pipe(), Array("--target-dir", "generated"))
   emitVerilog(new barrelShifter_seq_param(6), Array("--target-dir", "generated"))
   emitVerilog(new double_pipe_diff(), Array("--target-dir", "generated"))
   emitVerilog(new ascon(), Array("--target-dir", "generated"))

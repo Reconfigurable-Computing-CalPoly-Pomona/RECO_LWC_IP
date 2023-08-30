@@ -265,6 +265,138 @@ class barrelShifter(amountOfLayers: Int) extends Module {
 
 }
 
+class barrelShifter_2reg() extends Module {
+  val io = IO(new Bundle {
+    val input = Input(UInt(64.W))
+    val amount = Input(UInt(6.W))
+    val output = Output(UInt(64.W))
+  })
+  val muxOut = VecInit(Seq.fill(6)(VecInit(Seq.fill(64)(0.U(1.W)))))
+  
+  val reg0 = RegInit(0.U(64.W))
+  val reg1 = RegInit(0.U(64.W))
+  
+  //First three layers (0,1,2)
+  for(level <- 0 until 3)
+  {
+    if(level != 0)
+    {
+      for (i <- 0 until 64) {
+        muxOut(level)(i) := Mux(io.amount(level),muxOut(level-1)((i+(math.pow(2,level).toInt))%64),muxOut(level-1)(i))
+      }
+    } 
+    else
+    {
+      muxOut(0)(63) := Mux(io.amount(0),io.input(0),io.input(63))
+      for (i <- 0 until 63) {
+        muxOut(0)(i) := Mux(io.amount(0),io.input(i+1),io.input(i))
+      }
+    }
+  }
+
+  //First Register
+  reg0 := muxOut(2).asUInt
+
+  //Next three layers (3,4,5)
+  for(level <- 3 until 6)
+  {
+    if(level != 3)
+    {
+      for (i <- 0 until 64) {
+        muxOut(level)(i) := Mux(io.amount(level),muxOut(level-1)((i+(math.pow(2,level).toInt))%64),muxOut(level-1)(i))
+      }
+    } 
+    else
+    {
+      for (i <- 0 until 64) {
+        muxOut(3)(i) := Mux(io.amount(3),reg0((i+(math.pow(2,3).toInt))%64),reg0(i))
+      }
+    }
+  }
+
+  //Second Register
+  reg1 := muxOut(5).asUInt
+
+  //Output
+  io.output := reg1
+}
+
+class amount_decoder extends Module {
+val io = IO(new Bundle {
+    val i        = Input(UInt(3.W))
+    val count = Input(UInt(1.W))
+    val amount = Output(UInt(6.W))
+  })
+  val temp = RegInit(0.U(4.W))
+  val amountFirst = Wire(UInt(6.W))
+  val amountSecond = Wire(UInt(6.W))
+
+  when(io.i === 0.U)
+  {
+    amountFirst := 19.U
+    amountSecond := 28.U
+  }
+  .elsewhen(io.i === 1.U)
+  {
+    amountFirst := 61.U
+    amountSecond := 39.U
+  }
+  .elsewhen(io.i === 2.U)
+  {
+    amountFirst := 1.U
+    amountSecond := 6.U
+  }
+  .elsewhen(io.i === 3.U)
+  {
+    amountFirst := 10.U
+    amountSecond := 17.U
+  }
+  .elsewhen(io.i === 4.U)
+  {
+    amountFirst := 7.U
+    amountSecond := 41.U
+  }
+  .otherwise
+  {
+    amountFirst := 0.U
+    amountSecond := 0.U
+  }
+
+  when (io.count === 0.U) {
+    temp := amountSecond(5,3)
+    io.amount := temp ## amountFirst(2,0)
+  }
+  .otherwise {
+    io.amount := amountFirst(5,3) ## amountSecond(2,0)
+  }
+}
+
+class single_diff_pipe() extends Module {
+  val io = IO(new Bundle {
+    val x_in = Input(UInt(64.W))
+    val i = Input(UInt(3.W))
+    val count = Input(UInt(1.W))
+    val x_out = Output(UInt(64.W))
+  })
+  val temp0 = RegInit(0.U(64.W))
+  val temp1 = RegInit(0.U(64.W))
+
+  val amount_dec = Module(new amount_decoder).io 
+  amount_dec.i := io.i
+  amount_dec.count := io.count
+
+  val barrelShift = Module(new barrelShifter_2reg).io 
+  barrelShift.input := temp0
+  barrelShift.amount := amount_dec.amount
+
+  when(io.count === 0.U){
+    temp1 := temp0
+    temp0 := io.x_in
+  }.otherwise{
+    temp1 := temp1 ^ barrelShift.output
+  }
+  io.x_out := temp1 ^ barrelShift.output
+}
 
 class barrelShifter_seq(amountOfLayers: Int) extends Module {
   val muxAmount = math.pow(2,amountOfLayers).toInt.W

@@ -388,6 +388,120 @@ class rotateTest
       dut.io.output.expect(rotateRight(amountLeftShifted2, start))
     }
   }
+  "barrel shifter with 2 register" should "work" in {
+    test(new barrelShifter_2reg()) { dut =>
+        var start = BigInt(1)
+        // while (start < BigDecimal(2).pow(7).toBigInt - 1) {
+            // for (amountLeftShifted <- 0 until 64) {
+                // println("start is: " + start)
+                // println("amount left shifted is: " + amountLeftShifted)
+                dut.io.input.poke(rotateLeft(0, start))
+                dut.io.amount.poke(0)
+                println("result of start shifted is: " + rotateLeft(0, start))
+                for (i <- 0 until 2) {
+                    println("output is: " + dut.io.output.peek() + " at clock cycle: " + i)
+                    dut.clock.step()
+                }
+                println("output is: " + dut.io.output.peek())
+                dut.io.output.expect(start)
+            // }
+            // start = start + BigInt(1)
+        // }
+        }
+    }
+    "barrel shifter with 2 register" should "work looped" in {
+        test(new barrelShifter_2reg()) { dut =>
+            var start = BigInt(1)
+            while (start < BigDecimal(2).pow(4).toBigInt - 1) {
+                for (amountLeftShifted <- 0 until 64) {
+                    println("start is: " + start)
+                    println("amount left shifted is: " + amountLeftShifted)
+                    dut.io.input.poke(rotateLeft(amountLeftShifted, start))
+                    dut.io.amount.poke(amountLeftShifted)
+                    println("result of start shifted is: " + rotateLeft(amountLeftShifted, start))
+                    // wait two cycles
+                    for (i <- 0 until 2) {
+                        println("output is: " + dut.io.output.peek() + " at clock cycle: " + i)
+                        dut.clock.step()
+                    }
+                    println("output is: " + dut.io.output.peek())
+                    dut.io.output.expect(start)
+                }
+                start = start + BigInt(1)
+            }
+        }
+        // Resources Undetermined
+    }
+    "barrel shifter with 2 register" should "work looped and pipelined" in {
+        test(new barrelShifter_2reg()) { dut =>
+            var start = BigInt(1)
+            var amountLeftShifted = 0
+            while (start < BigDecimal(2).pow(3).toBigInt - 1) {
+                for (amountLeftShifted <- 0 until 64) {
+                    println("start is: " + start)
+                    println("amount left shifted is: " + amountLeftShifted)
+                    dut.io.input.poke(rotateLeft(amountLeftShifted, start))
+                    dut.io.amount.poke(amountLeftShifted)
+                    println("result of start shifted is: " + rotateLeft(amountLeftShifted, start))
+                    dut.clock.step()
+                    //amountLeftShifted = 1
+                    println("start is: " + start)
+                    println("amount left shifted is: " + amountLeftShifted)
+                    dut.io.input.poke(rotateLeft(amountLeftShifted, start))
+                    dut.io.amount.poke(amountLeftShifted)
+                    println("result of start shifted is: " + rotateLeft(amountLeftShifted, start))
+                    println("output is: " + dut.io.output.peek())
+                    dut.clock.step()
+                    //amountLeftShifted = 2
+                    println("start is: " + start)
+                    println("amount left shifted is: " + amountLeftShifted)
+                    dut.io.input.poke(rotateLeft(amountLeftShifted, start))
+                    dut.io.amount.poke(amountLeftShifted)
+                    println("result of start shifted is: " + rotateLeft(amountLeftShifted, start))
+                    println("output is: " + dut.io.output.peek())
+                    dut.io.output.expect(start)
+                    dut.clock.step()
+                    println("output is: " + dut.io.output.peek())
+                    dut.io.output.expect(start)
+                }
+            }
+        }
+    }
+    "barrel shifter with 2 register" should "work pipelined" in {
+        test(new barrelShifter_2reg()) { dut =>
+            var start = BigInt(1)
+            var amountLeftShifted = 19
+            var amountLeftShifted1 = 28
+            var amountLeftShifted2 = 17
+            //Retain Least Significant 3 bits
+            var maskouttop = 7
+            //Retain Most Significant 3 bits
+            var maskoutbot = 56  
+            // rotate to right, then rotate left to find original
+            dut.io.input.poke(start)
+            println("out at start is: " + dut.io.output.peekInt())
+            dut.io.amount.poke(amountLeftShifted & maskouttop)
+            println("out after poking amount is: " + dut.io.output.peekInt())
+            dut.clock.step()
+            println("out after clock is: " + dut.io.output.peekInt())
+            dut.io.amount.poke((amountLeftShifted1 & maskouttop) | (amountLeftShifted & maskoutbot))
+            println("out after poking amount is: " + dut.io.output.peekInt())
+            dut.clock.step()
+            // output should be valid
+            println("now valid out after clock is: " + dut.io.output.peekInt())
+            dut.io.output.expect(rotateRight(amountLeftShifted, start))
+            dut.io.amount.poke((amountLeftShifted2 & maskouttop) | (amountLeftShifted1 & maskoutbot))
+            println("out after poking amount is: " + dut.io.output.peekInt())
+            dut.clock.step()
+            println("out after clock is: " + dut.io.output.peekInt())
+            dut.io.output.expect(rotateRight(amountLeftShifted1, start))
+            dut.io.amount.poke((amountLeftShifted2 & maskouttop) | (amountLeftShifted2 & maskoutbot))
+            println("out after poking amount is: " + dut.io.output.peekInt())
+            dut.clock.step()
+            println("out after clock is: " + dut.io.output.peekInt())
+            dut.io.output.expect(rotateRight(amountLeftShifted2, start))
+        }
+    }
 }
 // def singleDiffusion extends diffusion(xIn: BigInt, amountFirst: Int, amountSecond: Int) : BigInt = {
 //     val x_out = xIn ^ (rotateRight(amountFirst, xIn)) ^ (rotateRight(amountSecond, xIn))
@@ -397,6 +511,65 @@ class diffusionTest
     extends AnyFlatSpec
     with ChiselScalatestTester
     with testFunctions {
+    "single diffusion pipeline" should "work" in {
+        test(new single_diff_pipe()) { dut =>
+            var start = BigInt(1)
+            var index = 1
+            dut.io.i.poke(index)
+            dut.io.x_in.poke(start)
+            for(i <- 0 until 5){
+                dut.io.count.poke(i%2)
+                println("i is: " + i)
+                println("x_out value is: " + dut.io.x_out.peekInt())
+                if(i == 4){
+                    dut.io.x_out.expect(singleDiffusion_i(start,index))
+                }
+                dut.clock.step()
+            }
+        }
+    }
+    "single diffusion pipeline" should "work looped" in {
+        test(new single_diff_pipe()) { dut =>
+            var start = BigInt(1)
+            var index = 1
+            dut.io.i.poke(index)
+            while (start < BigDecimal(2).pow(8).toBigInt - 1) {
+                dut.io.x_in.poke(start)
+                for(i <- 0 until 5){
+                    dut.io.count.poke(i%2)
+                    //println("i is: " + i)
+                    //println("x_out value is: " + dut.io.x_out.peekInt())
+                    if(i == 4) {
+                        //println("x_out value is: " + dut.io.x_out.peekInt())
+                        dut.io.x_out.expect(singleDiffusion_i(start,index))
+                    }
+                    else {
+                        dut.clock.step()
+                    }
+                }
+                start = start + BigInt(1)
+            }
+        }
+    }
+    //not working
+    "single diffusion pipeline with 2 val" should "work" in {
+        test(new single_diff_pipe()) { dut =>
+            var start = BigInt(2)
+            var index = 1
+            dut.io.x_in.poke(start)
+            for(i <- 0 until 8){
+                dut.io.i.poke(index)
+                dut.io.count.poke(i%2)
+                println("i is: " + i)
+                if((i == 4) | (i == 6)){
+                    println("x_out value is: " + dut.io.x_out.peekInt())
+                    dut.io.x_out.expect(singleDiffusion_i(start,index))
+                    index = index + 1
+                }
+                dut.clock.step()
+            }
+        }
+    }
   "testAssign" should "work" in {
     test(new regAssign) { dut =>
       // val xIn = 0
