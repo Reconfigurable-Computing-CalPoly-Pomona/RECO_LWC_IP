@@ -25,6 +25,12 @@
         {
             "type": "scala",
             "request": "launch",
+            "name": "test pipelined diffusion",
+            "testClass": "layers.diffusionPipeTest"
+        },
+        {
+            "type": "scala",
+            "request": "launch",
             "name": "test ascon",
             "testClass": "ascon.hashBehavior"
         },
