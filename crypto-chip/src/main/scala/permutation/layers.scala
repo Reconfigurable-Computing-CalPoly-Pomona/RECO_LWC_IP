@@ -320,7 +320,8 @@ class barrelShifter_2reg() extends Module {
   //Output
   io.output := reg1
 }
-
+// when i is provided, the output is immediately set to the current amount value
+// inputs should only happen on the first cycle, not the second cycle: (i % 2) cycles
 class amount_decoder extends Module {
 val io = IO(new Bundle {
     val i        = Input(UInt(3.W))
@@ -380,6 +381,7 @@ class single_diff_pipe() extends Module {
   })
   val temp0 = RegInit(0.U(64.W))
   val temp1 = RegInit(0.U(64.W))
+  val amountTempBuffer = RegInit(0.U(6.W))
 
   val amount_dec = Module(new amount_decoder).io 
   amount_dec.i := io.i
@@ -387,7 +389,9 @@ class single_diff_pipe() extends Module {
 
   val barrelShift = Module(new barrelShifter_2reg).io 
   barrelShift.input := temp0
-  barrelShift.amount := amount_dec.amount
+  // delay by one cycle to allow starting cycle at 0
+  amountTempBuffer := amount_dec.amount
+  barrelShift.amount := amountTempBuffer
 
   when(io.count === 0.U){
     temp1 := temp0

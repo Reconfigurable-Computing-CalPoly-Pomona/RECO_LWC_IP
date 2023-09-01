@@ -580,30 +580,35 @@ class diffusionPipeTest
   }
   // not working
   "single diffusion pipeline with 2 val" should "work" in {
-    test(new single_diff_pipe()).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      var start = BigInt(2)
-      var index = 1
-      var oldIndex = 1
-      dut.io.x_in.poke(start)
-      for (i <- 0 until 8) {
-        dut.io.count.poke(i % 2)
-        println("i is: " + i)
-        println("x_out value is: " + dut.io.x_out.peekInt())
-        if (i%2 == 0){
-          if(i != 0){
+    test(new single_diff_pipe()).withAnnotations(Seq(WriteVcdAnnotation)) {
+      dut =>
+        var start = BigInt(2)
+        var index = 0
+        var oldIndex = 0
+        dut.io.x_in.poke(start)
+        for (i <- 0 until 8) {
+          // poke count to start; should be offset by one when starting
+          dut.io.count.poke(i % 2)
+          println("i is: " + i)
+          println("x_out value is: " + dut.io.x_out.peekInt())
+          if (i % 2 == 0) {
+            println("poking index with: " + index)
+            dut.io.i.poke(index)
+            if (i >= 4) {
+              // println("x_out value is: " + dut.io.x_out.peekInt())
+              println(
+                "x_out should be: " + singleDiffusion_i(
+                  start,
+                  oldIndex
+                ) + " based on index: " + oldIndex
+              )
+              dut.io.x_out.expect(singleDiffusion_i(start, oldIndex))
+              oldIndex = oldIndex + 1
+            }
             index = index + 1
           }
-          println("poking index with: " + index)
-          dut.io.i.poke(index)
-          if(i >= 4){
-            //println("x_out value is: " + dut.io.x_out.peekInt())
-            println("x_out should be: " + singleDiffusion_i(start, oldIndex) + " based on index: " + oldIndex)
-            dut.io.x_out.expect(singleDiffusion_i(start, oldIndex))
-            oldIndex = oldIndex + 1
-          }
+          dut.clock.step()
         }
-        dut.clock.step()
-      }
     }
   }
 }
