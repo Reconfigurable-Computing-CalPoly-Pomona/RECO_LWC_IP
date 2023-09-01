@@ -585,15 +585,18 @@ class diffusionPipeTest
         var start = BigInt(2)
         var index = 0
         var oldIndex = 0
+        // give a single start value to work with
         dut.io.x_in.poke(start)
-        for (i <- 0 until 8) {
+        for (i <- 0 until 12) {
           // poke count to start; should be offset by one when starting
           dut.io.count.poke(i % 2)
           println("i is: " + i)
           println("x_out value is: " + dut.io.x_out.peekInt())
+          // every two cycles, poke index value
           if (i % 2 == 0) {
             println("poking index with: " + index)
             dut.io.i.poke(index)
+            // offset the result by the number of cycles (4) to finish one value
             if (i >= 4) {
               // println("x_out value is: " + dut.io.x_out.peekInt())
               println(
