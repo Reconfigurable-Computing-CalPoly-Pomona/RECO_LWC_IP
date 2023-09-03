@@ -530,6 +530,7 @@ class rotateTest
       dut.io.output.expect(rotateRight(amountLeftShifted2, start))
     }
   }
+  // Vivado 2022.2: 192 LUT, 128 FF, 4.090ns Total Delay
 }
 // def singleDiffusion extends diffusion(xIn: BigInt, amountFirst: Int, amountSecond: Int) : BigInt = {
 //     val x_out = xIn ^ (rotateRight(amountFirst, xIn)) ^ (rotateRight(amountSecond, xIn))
@@ -613,6 +614,7 @@ class diffusionPipeTest
           dut.clock.step()
         }
     }
+    // Vivado 2022.2: 326 LUT, 259 FF, 4.691ns Total Delay
   }
 }
 class diffusionTest
