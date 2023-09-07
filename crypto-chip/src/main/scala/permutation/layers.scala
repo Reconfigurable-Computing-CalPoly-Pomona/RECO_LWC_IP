@@ -325,7 +325,7 @@ class barrelShifter_2reg() extends Module {
 class amount_decoder extends Module {
 val io = IO(new Bundle {
     val i        = Input(UInt(3.W))
-    // val count = Input(UInt(1.W))
+    val count = Input(UInt(1.W))
     val amount = Output(UInt(6.W))
   })
   val temp = RegInit(0.U(4.W))
@@ -363,9 +363,9 @@ val io = IO(new Bundle {
     amountFirst := 0.U
     amountSecond := 0.U
   }
-  count := count + 1.U
+  // count := count + 1.U
 
-  when (count === 0.U) {
+  when (io.count === 0.U) {
     temp := amountSecond(5,3)
     io.amount := temp ## amountFirst(2,0)
   }
@@ -378,16 +378,17 @@ class single_diff_pipe() extends Module {
   val io = IO(new Bundle {
     val x_in = Input(UInt(64.W))
     val i = Input(UInt(3.W))
-    val count = Input(UInt(1.W))
     val x_out = Output(UInt(64.W))
   })
   val temp0 = RegInit(0.U(64.W))
   val temp1 = RegInit(0.U(64.W))
   val amountTempBuffer = RegInit(0.U(6.W))
+  val count = RegInit(0.U(1.W))
+  count := count + 1.U
 
   val amount_dec = Module(new amount_decoder).io
   amount_dec.i := io.i
-  // amount_dec.count := io.count
+  amount_dec.count := count
 
   val barrelShift = Module(new barrelShifter_2reg).io 
   barrelShift.input := temp0
@@ -395,7 +396,7 @@ class single_diff_pipe() extends Module {
   amountTempBuffer := amount_dec.amount
   barrelShift.amount := amountTempBuffer
 
-  when(io.count === 0.U){
+  when(count === 0.U){
     temp1 := temp0
     temp0 := io.x_in
   }.otherwise{
@@ -773,6 +774,9 @@ class queue_test extends Module {
 
 // read from x_in and continually insert into fifo
 // also read from input fifo and write to output fifo
+// Note: Make sure that the input doesn't make the output full or data will be lost
+  // This will depend on the size of the fifos and how many stages the pipeline has
+  // pull data out of the output fifo before the stages are complete (before the 4th cycle in this case)
 class diffusion_fifo(fifo_size: Int) extends Module {
   val io = IO(new Bundle {
     val x_in        = Input(new x_val())
@@ -828,32 +832,64 @@ class diffusion_fifo(fifo_size: Int) extends Module {
     single_diffusion.io.x_in := in.io.deq.bits.data
     single_diffusion.io.i := in.io.deq.bits.i
     out.io.enq.bits.data := single_diffusion.io.x_out
-    // TODO: move to state machine
-    // also add the i value from the input fifo; note there's no differentiation between x_0 and y_0, so no mixing between multiple state registers. This can be easily added through the x_val struct but with extra bits
-    // this might be off by one since this might get the next value after in.io.deq happens; basic test shows this is not a problem
-    out.io.enq.bits.i := in.io.deq.bits.i
-        
-    val start::io_state::wait_state::Nil = Enum(3)
-    val current = RegInit(start)
+
+    
+    
+    val start_input::io_state::wait_state::Nil = Enum(3)
+    val current = RegInit(io_state)
+    val state_wait_counter = RegInit(0.U(3.W))
+    val temp_i_val = RegInit(VecInit(Seq.fill(2)(6.U(3.W))))
+    val temp_index_i_val = RegInit(0.U(1.W))
+
+    // temp values for holding onto i values
+    temp_i_val(temp_index_i_val) := in.io.enq.bits.i
+    out.io.enq.bits.i := temp_i_val(temp_index_i_val - 1.U)
+
     switch (current) {
       // check if the in fifo is not empty and if the output fifo is not full
       // if true, then start the diffusion
-      is(start) {
+      is(start_input) {
+        // write first value at cycle 0, 2, but don't read yet
+        when (in.io.deq.valid === true.B && ((state_wait_counter + 1.U) % 2.U)(1)) {
+          in.io.deq.ready := true.B
+          temp_index_i_val := temp_index_i_val + 1.U
+        }
+        .otherwise {
+          in.io.deq.ready := false.B
+        }
+
+        when(state_wait_counter === 3.U) {
+          state_wait_counter := 0.U
+          current := io_state
+        }
+        .otherwise {
+          state_wait_counter := state_wait_counter + 1.U
+        }
         // // init/reset values (just in case)
         // out.io.enq.valid := false.B
         // in.io.deq.ready := false.B
-        // single_diffusion.io.start := false.B
 
         // if able to start (data in in fifo, output fifo not full), else wait
         // the statement below checks for valid data in the output of the in fifo (is it not empty) and if the output fifo can accept data (is it full)
-        when (in.io.deq.valid === true.B && out.io.enq.ready === true.B) {
-          // out.io.enq.valid := false.B
-          current := io
-        } .otherwise {
-          current := start
-        }
       }
       is(io_state) {
+        // here by cycle 4 after start_input
+        // try writing in
+        when (in.io.deq.valid === true.B) {
+          in.io.deq.ready := true.B
+          temp_index_i_val := temp_index_i_val + 1.U
+        }
+        .otherwise {
+          in.io.deq.ready := false.B
+        }
+        // try reading out
+        when (out.io.enq.ready === true.B) {
+          out.io.enq.valid := true.B
+          temp_index_i_val := temp_index_i_val + 1.U
+        }
+        .otherwise {
+          out.io.enq.valid := false.B
+        }
         // reset signals so they don't continually deq or enq (just in case)
         // in.io.deq.ready := false.B
         // out.io.enq.valid := false.B
@@ -868,8 +904,12 @@ class diffusion_fifo(fifo_size: Int) extends Module {
         // } .otherwise {
         //   current := done
         // }
+        // immediately go to next cycle
+        current := wait_state
       }
       is(wait_state) {
+        // wait until next read/write cycle (two cycle wait)
+        current := io_state
         // reset signals so they don't continually deq or enq (just in case)
         // in.io.deq.ready := false.B
         // out.io.enq.valid := false.B

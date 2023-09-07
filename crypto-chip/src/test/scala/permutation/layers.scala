@@ -547,7 +547,7 @@ class diffusionPipeTest
       dut.io.i.poke(index)
       dut.io.x_in.poke(start)
       for (i <- 0 until 5) {
-        dut.io.count.poke(i % 2)
+        // dut.io.count.poke(i % 2)
         println("i is: " + i)
         println("x_out value is: " + dut.io.x_out.peekInt())
         if (i == 4) {
@@ -565,7 +565,7 @@ class diffusionPipeTest
       while (start < BigDecimal(2).pow(1).toBigInt - 1) {
         dut.io.x_in.poke(start)
         for (i <- 0 until 5) {
-          dut.io.count.poke(i % 2)
+          // dut.io.count.poke(i % 2)
           // println("i is: " + i)
           // println("x_out value is: " + dut.io.x_out.peekInt())
           if (i == 4) {
@@ -590,7 +590,7 @@ class diffusionPipeTest
         dut.io.x_in.poke(start)
         for (i <- 0 until 12) {
           // poke count to start; should be offset by one when starting
-          dut.io.count.poke(i % 2)
+          // dut.io.count.poke(i % 2)
           println("i is: " + i)
           println("x_out value is: " + dut.io.x_out.peekInt())
           // every two cycles, poke index value
@@ -726,10 +726,11 @@ class diffusionTest
       // var maskouttop2 = 15
       var maskouttop3 = 7
       var maskoutbot3 = 56
+      var count = 0
       for (i <- 0 until 6) {
         println("i is: " + i)
         dut.io.i.poke(i)
-        // for (j <- 0 until 2) {
+        dut.io.count.poke(count & 1)
         var first_first = dut.io.amount.peekInt() & maskouttop3
         println(
           "outBot before clock is: " + (dut.io.amount.peekInt() & maskouttop3)
@@ -738,6 +739,8 @@ class diffusionTest
           "outTop before clock is: " + (dut.io.amount.peekInt() & maskoutbot3)
         )
         dut.clock.step()
+        count = ~count
+        dut.io.count.poke(count & 1)
         var first_second = dut.io.amount.peekInt() & maskoutbot3
         println(
           "outBot after clock is: " + (dut.io.amount.peekInt() & maskouttop3)
@@ -757,6 +760,8 @@ class diffusionTest
         )
         // println("amount should be: " + decode_i(i))
         dut.clock.step()
+        count = ~count
+        dut.io.count.poke(count & 1)
         first_second = dut.io.amount.peekInt() & maskoutbot3
         println(
           "outBot after clock is: " + (dut.io.amount.peekInt() & maskouttop3)
@@ -766,8 +771,6 @@ class diffusionTest
         )
         println("result is: " + (first_first + first_second))
         assert(decode_i(i).second == (first_first + first_second))
-
-        // }
       }
     }
   }
