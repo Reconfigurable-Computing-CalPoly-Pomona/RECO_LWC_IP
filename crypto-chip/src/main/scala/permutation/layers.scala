@@ -325,12 +325,13 @@ class barrelShifter_2reg() extends Module {
 class amount_decoder extends Module {
 val io = IO(new Bundle {
     val i        = Input(UInt(3.W))
-    val count = Input(UInt(1.W))
+    // val count = Input(UInt(1.W))
     val amount = Output(UInt(6.W))
   })
   val temp = RegInit(0.U(4.W))
   val amountFirst = Wire(UInt(6.W))
   val amountSecond = Wire(UInt(6.W))
+  val count = RegInit(0.U(1.W))
 
   when(io.i === 0.U)
   {
@@ -362,8 +363,9 @@ val io = IO(new Bundle {
     amountFirst := 0.U
     amountSecond := 0.U
   }
+  count := count + 1.U
 
-  when (io.count === 0.U) {
+  when (count === 0.U) {
     temp := amountSecond(5,3)
     io.amount := temp ## amountFirst(2,0)
   }
@@ -385,7 +387,7 @@ class single_diff_pipe() extends Module {
 
   val amount_dec = Module(new amount_decoder).io
   amount_dec.i := io.i
-  amount_dec.count := io.count
+  // amount_dec.count := io.count
 
   val barrelShift = Module(new barrelShifter_2reg).io 
   barrelShift.input := temp0
@@ -815,33 +817,28 @@ class diffusion_fifo(fifo_size: Int) extends Module {
   //   out.io.deq.ready := false.B
   // }
 
-  single_diffusion.io.i := io.x_in.i 
   // The next section below handles the "inner" fifo connections (in.io.deq, out.io.enq, single_diffusion.io)
   
-  // testing default wire connection for inserting, reading flags; not sure if this works properly. The behavior works, however it may not be best practice to have a "default" value to rely on
+    // testing default wire connection for inserting, reading flags; not sure if this works properly. The behavior works, however it may not be best practice to have a "default" value to rely on
     in.io.deq.ready := false.B
     out.io.enq.valid := false.B
     
     // keep input fifo's output to single_diffusion
     // keep diffusion's output going to the output fifo
     single_diffusion.io.x_in := in.io.deq.bits.data
+    single_diffusion.io.i := in.io.deq.bits.i
     out.io.enq.bits.data := single_diffusion.io.x_out
+    // TODO: move to state machine
     // also add the i value from the input fifo; note there's no differentiation between x_0 and y_0, so no mixing between multiple state registers. This can be easily added through the x_val struct but with extra bits
     // this might be off by one since this might get the next value after in.io.deq happens; basic test shows this is not a problem
     out.io.enq.bits.i := in.io.deq.bits.i
-    
-    // below are when statements that enable or disable start signals since everything is already connected
-    
-    
-    // The current problem with signals being held for multiple clocks can be solved with a state machine. This is the current implementation
-    // checkReady is checking the first statement, done will read out data from input queue and output data, then go to checkReady
-    
-    val checkReady::done::Nil = Enum(2)
-    val current = RegInit(checkReady)
+        
+    val start::io_state::wait_state::Nil = Enum(3)
+    val current = RegInit(start)
     switch (current) {
       // check if the in fifo is not empty and if the output fifo is not full
       // if true, then start the diffusion
-      is(checkReady) {
+      is(start) {
         // // init/reset values (just in case)
         // out.io.enq.valid := false.B
         // in.io.deq.ready := false.B
@@ -851,12 +848,28 @@ class diffusion_fifo(fifo_size: Int) extends Module {
         // the statement below checks for valid data in the output of the in fifo (is it not empty) and if the output fifo can accept data (is it full)
         when (in.io.deq.valid === true.B && out.io.enq.ready === true.B) {
           // out.io.enq.valid := false.B
-          current := done
+          current := io
         } .otherwise {
-          current := checkReady
+          current := start
         }
       }
-      is(done) {
+      is(io_state) {
+        // reset signals so they don't continually deq or enq (just in case)
+        // in.io.deq.ready := false.B
+        // out.io.enq.valid := false.B
+
+        // checks if diffusion is done and if so, read out data (consume data) and sends to output fifo
+        // when (single_diffusion.io.done) {
+        //   in.io.deq.ready := true.B
+        //   out.io.enq.valid := true.B
+        //   // in.io.deq.ready := false.B
+        //   // single_diffusion.io.start := false.B
+        //   current := checkReady
+        // } .otherwise {
+        //   current := done
+        // }
+      }
+      is(wait_state) {
         // reset signals so they don't continually deq or enq (just in case)
         // in.io.deq.ready := false.B
         // out.io.enq.valid := false.B

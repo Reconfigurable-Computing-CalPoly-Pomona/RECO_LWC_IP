@@ -721,50 +721,48 @@ class diffusionTest
     // Vivado 2022.2: 276 LUT, 209 FF, Total Delay 4.773ns
   }
   "amount_pipelined" should "work" in {
-    test(new decode_and_assign_amount_segments_every_cycle) { dut =>
-      var maskoutbot4 = 48
-      var maskouttop2 = 15
-      var maskouttop4 = 3
-      var maskoutbot2 = 60
+    test(new amount_decoder) { dut =>
+      // var maskoutbot4 = 48
+      // var maskouttop2 = 15
+      var maskouttop3 = 7
+      var maskoutbot3 = 56
       for (i <- 0 until 6) {
         println("i is: " + i)
         dut.io.i.poke(i)
-        decode_i(i).first
         // for (j <- 0 until 2) {
-        var first_first = dut.io.amount.peekInt() & maskouttop4
+        var first_first = dut.io.amount.peekInt() & maskouttop3
         println(
-          "outBot before clock is: " + (dut.io.amount.peekInt() & maskouttop4)
+          "outBot before clock is: " + (dut.io.amount.peekInt() & maskouttop3)
         )
         println(
-          "outTop before clock is: " + (dut.io.amount.peekInt() & maskoutbot2)
+          "outTop before clock is: " + (dut.io.amount.peekInt() & maskoutbot3)
         )
-        // println("amount should be: " + decode_i(i))
         dut.clock.step()
-        var first_second = dut.io.amount.peekInt() & maskoutbot2
+        var first_second = dut.io.amount.peekInt() & maskoutbot3
         println(
-          "outBot after clock is: " + (dut.io.amount.peekInt() & maskouttop4)
+          "outBot after clock is: " + (dut.io.amount.peekInt() & maskouttop3)
         )
         println(
-          "outTop after clock is: " + (dut.io.amount.peekInt() & maskoutbot2)
+          "outTop after clock is: " + (dut.io.amount.peekInt() & maskoutbot3)
         )
         println("result is: " + (first_first + first_second))
         assert(decode_i(i).first == (first_first + first_second))
 
-        first_first = dut.io.amount.peekInt() & maskouttop4
+        first_first = dut.io.amount.peekInt() & maskouttop3
         println(
-          "outBot before clock is: " + (dut.io.amount.peekInt() & maskouttop4)
+          "outBot before clock is: " + (dut.io.amount.peekInt() & maskouttop3)
         )
         println(
-          "outTop before clock is: " + (dut.io.amount.peekInt() & maskoutbot2)
+          "outTop before clock is: " + (dut.io.amount.peekInt() & maskoutbot3)
         )
         // println("amount should be: " + decode_i(i))
         dut.clock.step()
-        first_second = dut.io.amount.peekInt() & maskoutbot2
+        first_second = dut.io.amount.peekInt() & maskoutbot3
         println(
-          "outBot after clock is: " + (dut.io.amount.peekInt() & maskouttop4)
+          "outBot after clock is: " + (dut.io.amount.peekInt() & maskouttop3)
         )
         println(
-          "outTop after clock is: " + (dut.io.amount.peekInt() & maskoutbot2)
+          "outTop after clock is: " + (dut.io.amount.peekInt() & maskoutbot3)
         )
         println("result is: " + (first_first + first_second))
         assert(decode_i(i).second == (first_first + first_second))
