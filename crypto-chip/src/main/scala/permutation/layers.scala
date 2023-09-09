@@ -835,95 +835,68 @@ class diffusion_fifo(fifo_size: Int) extends Module {
 
     
     
-    val start_input::io_state::wait_state::Nil = Enum(3)
-    val current = RegInit(io_state)
-    val state_wait_counter = RegInit(0.U(3.W))
-    val temp_i_val = RegInit(VecInit(Seq.fill(2)(6.U(3.W))))
-    val temp_index_i_val = RegInit(0.U(1.W))
-
-    // temp values for holding onto i values
-    temp_i_val(temp_index_i_val) := in.io.enq.bits.i
-    out.io.enq.bits.i := temp_i_val(temp_index_i_val - 1.U)
-
+    val write_check1::write_check0::wait1::wait2::wait0::wait3::read_write_check1::read_write_check0::Nil = Enum(8)
+    val current = RegInit(write_check0)
+    // TODO: figure out better design for i values
     switch (current) {
-      // check if the in fifo is not empty and if the output fifo is not full
-      // if true, then start the diffusion
-      is(start_input) {
-        // write first value at cycle 0, 2, but don't read yet
-        when (in.io.deq.valid === true.B && ((state_wait_counter + 1.U) % 2.U)(1)) {
+      // starting write
+      is(write_check0) {
+        when (in.io.deq.valid) {
           in.io.deq.ready := true.B
-          temp_index_i_val := temp_index_i_val + 1.U
+          current := wait1
         }
         .otherwise {
-          in.io.deq.ready := false.B
+          current := wait0
         }
-
-        when(state_wait_counter === 3.U) {
-          state_wait_counter := 0.U
-          current := io_state
-        }
-        .otherwise {
-          state_wait_counter := state_wait_counter + 1.U
-        }
-        // // init/reset values (just in case)
-        // out.io.enq.valid := false.B
-        // in.io.deq.ready := false.B
-
-        // if able to start (data in in fifo, output fifo not full), else wait
-        // the statement below checks for valid data in the output of the in fifo (is it not empty) and if the output fifo can accept data (is it full)
       }
-      is(io_state) {
-        // here by cycle 4 after start_input
-        // try writing in
-        when (in.io.deq.valid === true.B) {
+      is(wait0) {
+        current := write_check0
+      }
+      is(wait1) {
+        current := write_check1
+      }
+      // if there's another write, go to consecutive writes "mode" (read every two cycles)
+      // if not, go read the last and see if there's a new value to be written
+      is(write_check1) {
+        when (in.io.deq.valid) {
           in.io.deq.ready := true.B
-          temp_index_i_val := temp_index_i_val + 1.U
+          current := wait2
         }
         .otherwise {
-          in.io.deq.ready := false.B
+          current := wait3
         }
-        // try reading out
-        when (out.io.enq.ready === true.B) {
+      }
+      is(wait3) {
+        current := read_write_check0
+      }
+      // perform single read and check if there's another write. If there's a write, go to single write "mode". If not, go to starting wait condition
+      is(read_write_check0) {
+        when (out.io.enq.ready) {
           out.io.enq.valid := true.B
-          temp_index_i_val := temp_index_i_val + 1.U
+        }
+        when (in.io.deq.valid) {
+          in.io.deq.ready := true.B
+          current := wait1
         }
         .otherwise {
-          out.io.enq.valid := false.B
+          current := wait0
         }
-        // reset signals so they don't continually deq or enq (just in case)
-        // in.io.deq.ready := false.B
-        // out.io.enq.valid := false.B
-
-        // checks if diffusion is done and if so, read out data (consume data) and sends to output fifo
-        // when (single_diffusion.io.done) {
-        //   in.io.deq.ready := true.B
-        //   out.io.enq.valid := true.B
-        //   // in.io.deq.ready := false.B
-        //   // single_diffusion.io.start := false.B
-        //   current := checkReady
-        // } .otherwise {
-        //   current := done
-        // }
-        // immediately go to next cycle
-        current := wait_state
       }
-      is(wait_state) {
-        // wait until next read/write cycle (two cycle wait)
-        current := io_state
-        // reset signals so they don't continually deq or enq (just in case)
-        // in.io.deq.ready := false.B
-        // out.io.enq.valid := false.B
-
-        // checks if diffusion is done and if so, read out data (consume data) and sends to output fifo
-        // when (single_diffusion.io.done) {
-        //   in.io.deq.ready := true.B
-        //   out.io.enq.valid := true.B
-        //   // in.io.deq.ready := false.B
-        //   // single_diffusion.io.start := false.B
-        //   current := checkReady
-        // } .otherwise {
-        //   current := done
-        // }
+      // during consecutive writes, cycle between wait and read write check. If there's a write, continue, else go to perform the last read
+      is(read_write_check1) {
+        when (out.io.enq.ready) {
+          out.io.enq.valid := true.B
+        }
+        when (in.io.deq.valid) {
+          in.io.deq.ready := true.B
+          current := wait2
+        }
+        .otherwise {
+          current := wait3
+        }
+      }
+      is(wait2) {
+        current := read_write_check1
       }
     }
 }
