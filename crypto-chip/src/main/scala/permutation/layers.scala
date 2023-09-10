@@ -790,6 +790,17 @@ class diffusion_fifo(fifo_size: Int) extends Module {
   val out = Module(new Queue(new x_val(), fifo_size))
   val single_diffusion = Module(new single_diff_pipe())
   
+  // class read_val extends Bundle {
+  //   val read = false.B
+  //   val i = 0.U(3.W)
+  // }
+  
+
+  //val readMarker = RegInit(VecInit(Seq.fill(6)(new read_val())))
+  val readMarker = RegInit(VecInit(Seq.fill(6)(false.B)))
+  val read_i = RegInit(VecInit(Seq.fill(6)(0.U(3.W))))
+
+  //prev code -> Wire(Vec(amountOfLayers, new single_layer_io()))
   // below connects the "outer" incoming and outgoing signals (in.io.enq, out.io.deq)
     // also implements inserting and reading
   
@@ -832,73 +843,24 @@ class diffusion_fifo(fifo_size: Int) extends Module {
     single_diffusion.io.x_in := in.io.deq.bits.data
     single_diffusion.io.i := in.io.deq.bits.i
     out.io.enq.bits.data := single_diffusion.io.x_out
-
     
-    
-    val write_check1::write_check0::wait1::wait2::wait0::wait3::read_write_check1::read_write_check0::Nil = Enum(8)
-    val current = RegInit(write_check0)
-    // TODO: figure out better design for i values
-    out.io.enq.bits.i := 6.U
-    switch (current) {
-      // starting write
-      is(write_check0) {
-        when (in.io.deq.valid) {
-          in.io.deq.ready := true.B
-          current := wait1
-        }
-        .otherwise {
-          current := wait0
-        }
-      }
-      is(wait0) {
-        current := write_check0
-      }
-      is(wait1) {
-        current := write_check1
-      }
-      // if there's another write, go to consecutive writes "mode" (read every two cycles)
-      // if not, go read the last and see if there's a new value to be written
-      is(write_check1) {
-        when (in.io.deq.valid) {
-          in.io.deq.ready := true.B
-          current := wait2
-        }
-        .otherwise {
-          current := wait3
-        }
-      }
-      is(wait3) {
-        current := read_write_check0
-      }
-      // perform single read and check if there's another write. If there's a write, go to single write "mode". If not, go to starting wait condition
-      is(read_write_check0) {
-        when (out.io.enq.ready) {
-          out.io.enq.valid := true.B
-        }
-        when (in.io.deq.valid) {
-          in.io.deq.ready := true.B
-          current := wait1
-        }
-        .otherwise {
-          current := wait0
-        }
-      }
-      // during consecutive writes, cycle between wait and read write check. If there's a write, continue, else go to perform the last read
-      is(read_write_check1) {
-        when (out.io.enq.ready) {
-          out.io.enq.valid := true.B
-        }
-        when (in.io.deq.valid) {
-          in.io.deq.ready := true.B
-          current := wait2
-        }
-        .otherwise {
-          current := wait3
-        }
-      }
-      is(wait2) {
-        current := read_write_check1
-      }
+    val counter = RegInit(0.U(3.W))
+    when (counter === 5.U) {
+      counter := 0.U
+    }
+    .otherwise {
+      counter := counter + 1.U
+    }
+    out.io.enq.bits.i := read_i(counter)
+    // writing
+    when (in.io.deq.valid && (counter % 2.U === 0.U)) {
+      in.io.deq.ready := true.B
+      read_i((counter + 4.U) % 6.U) := in.io.deq.bits.i
+      readMarker((counter + 4.U) % 6.U) := true.B
+    }
+    when (readMarker(counter) && out.io.enq.ready) {
+      readMarker(counter) := false.B
+      out.io.enq.valid := true.B
     }
 }
 

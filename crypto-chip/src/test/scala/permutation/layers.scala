@@ -579,7 +579,6 @@ class diffusionPipeTest
       }
     }
   }
-  // not working
   "single diffusion pipeline with 2 val" should "work" in {
     test(new single_diff_pipe()).withAnnotations(Seq(WriteVcdAnnotation)) {
       dut =>
