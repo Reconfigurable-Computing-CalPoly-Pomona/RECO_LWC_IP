@@ -838,6 +838,7 @@ class diffusion_fifo(fifo_size: Int) extends Module {
     val write_check1::write_check0::wait1::wait2::wait0::wait3::read_write_check1::read_write_check0::Nil = Enum(8)
     val current = RegInit(write_check0)
     // TODO: figure out better design for i values
+    out.io.enq.bits.i := 6.U
     switch (current) {
       // starting write
       is(write_check0) {
