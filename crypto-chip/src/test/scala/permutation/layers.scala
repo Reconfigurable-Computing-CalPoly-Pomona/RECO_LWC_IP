@@ -851,26 +851,41 @@ class diffusionTest
       dut.io.full.expect(false)
       println("full is: " + dut.io.full.peek())
       println("empty is: " + dut.io.empty.peek())
-      for (i <- 0 until 5) {
+      // inserting 5 values
+      var i = 0
+      while (i < 5) {
+        // check if input fifo is full
         if (dut.io.full.peekBoolean() == false) {
-          dut.io.x_in.data.poke(i)
+          println("Writing at cycle: " + count)
+          // change to i + 1 to see if it starts at 0 or 1
+          dut.io.x_in.data.poke(i + 1)
           dut.io.x_in.i.poke(i)
           dut.io.startInsert.poke(1)
+          dut.clock.step()
+          count = count + 1
+          i = i + 1
+        }
+        else {
+          dut.io.startInsert.poke(0)
           dut.clock.step()
           count = count + 1
         }
         println("full is: " + dut.io.full.peek())
         println("empty is: " + dut.io.empty.peek())
       }
-      var i = 0
+      dut.io.startInsert.poke(0)
+
+      i = 0
       while (i < 5) {
         if (dut.io.empty.peekBoolean() == false) {
+          println("Reading at cycle: " + count)
           // calculate result in scala
           println("data is: " + dut.io.x_out.data.peek())
-          println("data should be: " + singleDiffusion_i(i, i))
+          // change to i + 1 to see if it starts at 0 or 1
+          println("data should be: " + singleDiffusion_i(i + 1, i))
           println("i is: " + dut.io.x_out.i.peek())
           println("i should be: " + i)
-          // dut.io.x_out.data.expect(singleDiffusion_i(i, i))
+          dut.io.x_out.data.expect(singleDiffusion_i(i + 1, i))
           dut.io.startOutput.poke(1)
           dut.clock.step()
           count = count + 1

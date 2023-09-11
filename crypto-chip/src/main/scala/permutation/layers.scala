@@ -6,36 +6,34 @@ import scala.math._
 import _root_.permutation.posedge
 import org.scalatest.run
 
-
 class addition_layer extends Module {
   val io = IO(new Bundle {
-    val round_in        = Input(UInt(8.W))
-    val x2_in        = Input(UInt(64.W))
+    val round_in = Input(UInt(8.W))
+    val x2_in = Input(UInt(64.W))
     val x2_out = Output(UInt(64.W))
   })
 
-    // Combinational
-    val array = Wire(Vec(12, UInt(64.W)))
-    array(0) := "hf0".U
-    array(1) := "he1".U
-    array(2) := "hd2".U
-    array(3) := "hc3".U
-    array(4) := "hb4".U
-    array(5) := "ha5".U
-    array(6) := "h96".U
-    array(7) := "h87".U
-    array(8) := "h78".U
-    array(9) := "h69".U
-    array(10) := "h5a".U
-    array(11) := "h4b".U
+  // Combinational
+  val array = Wire(Vec(12, UInt(64.W)))
+  array(0) := "hf0".U
+  array(1) := "he1".U
+  array(2) := "hd2".U
+  array(3) := "hc3".U
+  array(4) := "hb4".U
+  array(5) := "ha5".U
+  array(6) := "h96".U
+  array(7) := "h87".U
+  array(8) := "h78".U
+  array(9) := "h69".U
+  array(10) := "h5a".U
+  array(11) := "h4b".U
 
-    io.x2_out := io.x2_in ^ array(io.round_in)
+  io.x2_out := io.x2_in ^ array(io.round_in)
 }
-
 
 class substitution_layer extends Module {
   val io = IO(new Bundle {
-    val x_in        = Input(Vec(5, UInt(64.W)))
+    val x_in = Input(Vec(5, UInt(64.W)))
     val x_out = Output(Vec(5, UInt(64.W)))
   })
   val array = Wire(Vec(32, UInt(5.W)))
@@ -74,11 +72,84 @@ class substitution_layer extends Module {
   array(31) := "h17".U
 
   for (i <- 0 until 64) {
-    temp(i) := array(Cat(io.x_in(0)(i),io.x_in(1)(i),io.x_in(2)(i),io.x_in(3)(i),io.x_in(4)(i)))
+    temp(i) := array(
+      Cat(
+        io.x_in(0)(i),
+        io.x_in(1)(i),
+        io.x_in(2)(i),
+        io.x_in(3)(i),
+        io.x_in(4)(i)
+      )
+    )
   }
 
   for (j <- 0 until 5) {
-    io.x_out(j) := Cat(temp(63)(4-j), temp(62)(4-j), temp(61)(4-j), temp(60)(4-j), temp(59)(4-j), temp(58)(4-j), temp(57)(4-j), temp(56)(4-j), temp(55)(4-j), temp(54)(4-j), temp(53)(4-j), temp(52)(4-j), temp(51)(4-j), temp(50)(4-j), temp(49)(4-j), temp(48)(4-j), temp(47)(4-j), temp(46)(4-j), temp(45)(4-j), temp(44)(4-j), temp(43)(4-j), temp(42)(4-j), temp(41)(4-j), temp(40)(4-j), temp(39)(4-j), temp(38)(4-j), temp(37)(4-j), temp(36)(4-j), temp(35)(4-j), temp(34)(4-j), temp(33)(4-j), temp(32)(4-j), temp(31)(4-j), temp(30)(4-j), temp(29)(4-j), temp(28)(4-j), temp(27)(4-j), temp(26)(4-j), temp(25)(4-j), temp(24)(4-j), temp(23)(4-j), temp(22)(4-j), temp(21)(4-j), temp(20)(4-j), temp(19)(4-j), temp(18)(4-j), temp(17)(4-j), temp(16)(4-j), temp(15)(4-j), temp(14)(4-j), temp(13)(4-j), temp(12)(4-j), temp(11)(4-j), temp(10)(4-j), temp(9)(4-j), temp(8)(4-j), temp(7)(4-j), temp(6)(4-j), temp(5)(4-j), temp(4)(4-j), temp(3)(4-j), temp(2)(4-j), temp(1)(4-j), temp(0)(4-j))
+    io.x_out(j) := Cat(
+      temp(63)(4 - j),
+      temp(62)(4 - j),
+      temp(61)(4 - j),
+      temp(60)(4 - j),
+      temp(59)(4 - j),
+      temp(58)(4 - j),
+      temp(57)(4 - j),
+      temp(56)(4 - j),
+      temp(55)(4 - j),
+      temp(54)(4 - j),
+      temp(53)(4 - j),
+      temp(52)(4 - j),
+      temp(51)(4 - j),
+      temp(50)(4 - j),
+      temp(49)(4 - j),
+      temp(48)(4 - j),
+      temp(47)(4 - j),
+      temp(46)(4 - j),
+      temp(45)(4 - j),
+      temp(44)(4 - j),
+      temp(43)(4 - j),
+      temp(42)(4 - j),
+      temp(41)(4 - j),
+      temp(40)(4 - j),
+      temp(39)(4 - j),
+      temp(38)(4 - j),
+      temp(37)(4 - j),
+      temp(36)(4 - j),
+      temp(35)(4 - j),
+      temp(34)(4 - j),
+      temp(33)(4 - j),
+      temp(32)(4 - j),
+      temp(31)(4 - j),
+      temp(30)(4 - j),
+      temp(29)(4 - j),
+      temp(28)(4 - j),
+      temp(27)(4 - j),
+      temp(26)(4 - j),
+      temp(25)(4 - j),
+      temp(24)(4 - j),
+      temp(23)(4 - j),
+      temp(22)(4 - j),
+      temp(21)(4 - j),
+      temp(20)(4 - j),
+      temp(19)(4 - j),
+      temp(18)(4 - j),
+      temp(17)(4 - j),
+      temp(16)(4 - j),
+      temp(15)(4 - j),
+      temp(14)(4 - j),
+      temp(13)(4 - j),
+      temp(12)(4 - j),
+      temp(11)(4 - j),
+      temp(10)(4 - j),
+      temp(9)(4 - j),
+      temp(8)(4 - j),
+      temp(7)(4 - j),
+      temp(6)(4 - j),
+      temp(5)(4 - j),
+      temp(4)(4 - j),
+      temp(3)(4 - j),
+      temp(2)(4 - j),
+      temp(1)(4 - j),
+      temp(0)(4 - j)
+    )
   }
 }
 // have a module to prevent an input to rotate
@@ -99,22 +170,25 @@ class muxRotateLevel(currentLevel: Int, width: Int) extends Module {
     val input = Input(UInt(width.W))
     val output = Output(UInt(width.W))
   })
-  
+
   val tmp = VecInit(Seq.fill(width)(0.U(1.W)))
 
   for (i <- 0 until width) {
-    tmp(i) := Mux(io.select.asBool, io.input((i + math.pow(2, currentLevel)).toInt % width), io.input(i))
+    tmp(i) := Mux(
+      io.select.asBool,
+      io.input((i + math.pow(2, currentLevel)).toInt % width),
+      io.input(i)
+    )
   }
   // val tmp1 = UInt(64.W)
   // for (i <- 0 until width) {
   //   tmp(i + 1) ## tmp(i)
   // }
-  
 
   io.output := tmp.asUInt
 }
 class barrelShifter_seq_param(amountOfLayers: Int) extends Module {
-  val muxWidth = math.pow(2,amountOfLayers).toInt
+  val muxWidth = math.pow(2, amountOfLayers).toInt
   val io = IO(new Bundle {
     val input = Input(UInt(muxWidth.W))
     val amount = Input(UInt(amountOfLayers.W))
@@ -126,7 +200,7 @@ class barrelShifter_seq_param(amountOfLayers: Int) extends Module {
   }
   val layer_IO = Wire(Vec(amountOfLayers, new single_layer_io()))
   val tempReg = RegInit(VecInit(Seq.fill(2)(0.U(muxWidth.W))))
-  
+
   for (currentLayer <- 0 until amountOfLayers) {
     // Vec(amountOfLayers,Module(new muxRotateLevel(currentLayer, muxWidth)).io)
     val level = Module(new muxRotateLevel(currentLayer, muxWidth)).io
@@ -139,11 +213,10 @@ class barrelShifter_seq_param(amountOfLayers: Int) extends Module {
     // figure out assignments here:
     // assuming 2 registers: input to 2 layers, then register, 2 layers, then register, 2 layers, then output
     // 1.output/2.input, 3.output/4.input
-    if (currentLayer % 2 == (2-1)) {
+    if (currentLayer % 2 == (2 - 1)) {
       tempReg(currentLayer / 2) := layer_IO(currentLayer).output
       layer_IO(currentLayer + 1).input := tempReg(currentLayer / 2)
-    }
-    else {
+    } else {
       // if currentLayer is 5, 6 is invalid
       layer_IO(currentLayer + 1).input := layer_IO(currentLayer).output
     }
@@ -154,12 +227,11 @@ class barrelShifter_seq_param(amountOfLayers: Int) extends Module {
 }
 class barrelShifter(amountOfLayers: Int) extends Module {
   val io = IO(new Bundle {
-    val input = Input(UInt(math.pow(2,amountOfLayers).toInt.W))
+    val input = Input(UInt(math.pow(2, amountOfLayers).toInt.W))
     val amount = Input(UInt(amountOfLayers.W))
-    val output = Output(UInt(math.pow(2,amountOfLayers).toInt.W))
+    val output = Output(UInt(math.pow(2, amountOfLayers).toInt.W))
   })
 
-  
   // val muxOut0 = VecInit(Seq.fill(64)(0.U(1.W)))
   // val muxOut1 = VecInit(Seq.fill(64)(0.U(1.W)))
   // val muxOut2 = VecInit(Seq.fill(64)(0.U(1.W)))
@@ -173,32 +245,43 @@ class barrelShifter(amountOfLayers: Int) extends Module {
   // val muxOut4 = Wire(Vec(64,UInt(1.W)))
   // val muxOut5 = Wire(Vec(64,UInt(1.W)))
 
-  val muxOut = VecInit(Seq.fill(amountOfLayers)(VecInit(Seq.fill(math.pow(2,amountOfLayers).toInt)(0.U(1.W)))))
-  
-  for(level <- 0 until amountOfLayers)
-  {
-    if(level != 0)
-    {
-      //Shifted bits
-      for (i <- 0 until math.pow(2,amountOfLayers).toInt) {
+  val muxOut = VecInit(
+    Seq.fill(amountOfLayers)(
+      VecInit(Seq.fill(math.pow(2, amountOfLayers).toInt)(0.U(1.W)))
+    )
+  )
+
+  for (level <- 0 until amountOfLayers) {
+    if (level != 0) {
+      // Shifted bits
+      for (i <- 0 until math.pow(2, amountOfLayers).toInt) {
         // println("current mux is: " + i)
         // println("shift location is: " + (i+(math.pow(2,level).toInt))%(math.pow(2,amountOfLayers).toInt))
         // println("level is: " + level)
-        muxOut(level)(i) := Mux(io.amount(level),muxOut(level-1)((i+(math.pow(2,level).toInt))%(math.pow(2,amountOfLayers).toInt)),muxOut(level-1)(i))
+        muxOut(level)(i) := Mux(
+          io.amount(level),
+          muxOut(level - 1)(
+            (i + (math.pow(2, level).toInt)) % (math
+              .pow(2, amountOfLayers)
+              .toInt)
+          ),
+          muxOut(level - 1)(i)
+        )
       }
-    } 
-    else
-    {
-      //Bits that are rotated to the front
-      muxOut(0)(math.pow(2,amountOfLayers).toInt - 1) := Mux(io.amount(0),io.input(0),io.input(math.pow(2,amountOfLayers).toInt - 1))
-      //Shifted bits
-      for (i <- 0 until math.pow(2,amountOfLayers).toInt-1) {
-        muxOut(0)(i) := Mux(io.amount(0),io.input(i+1),io.input(i))
+    } else {
+      // Bits that are rotated to the front
+      muxOut(0)(math.pow(2, amountOfLayers).toInt - 1) := Mux(
+        io.amount(0),
+        io.input(0),
+        io.input(math.pow(2, amountOfLayers).toInt - 1)
+      )
+      // Shifted bits
+      for (i <- 0 until math.pow(2, amountOfLayers).toInt - 1) {
+        muxOut(0)(i) := Mux(io.amount(0), io.input(i + 1), io.input(i))
       }
     }
   }
-  io.output := muxOut(amountOfLayers-1).asUInt
-  
+  io.output := muxOut(amountOfLayers - 1).asUInt
 
   // // Level 0
   // // can combine loops together with a "when" statement
@@ -272,59 +355,63 @@ class barrelShifter_2reg() extends Module {
     val output = Output(UInt(64.W))
   })
   val muxOut = VecInit(Seq.fill(6)(VecInit(Seq.fill(64)(0.U(1.W)))))
-  
+
   val reg0 = RegInit(0.U(64.W))
   val reg1 = RegInit(0.U(64.W))
-  
-  //First three layers (0,1,2)
-  for(level <- 0 until 3)
-  {
-    if(level != 0)
-    {
+
+  // First three layers (0,1,2)
+  for (level <- 0 until 3) {
+    if (level != 0) {
       for (i <- 0 until 64) {
-        muxOut(level)(i) := Mux(io.amount(level),muxOut(level-1)((i+(math.pow(2,level).toInt))%64),muxOut(level-1)(i))
+        muxOut(level)(i) := Mux(
+          io.amount(level),
+          muxOut(level - 1)((i + (math.pow(2, level).toInt)) % 64),
+          muxOut(level - 1)(i)
+        )
       }
-    } 
-    else
-    {
-      muxOut(0)(63) := Mux(io.amount(0),io.input(0),io.input(63))
+    } else {
+      muxOut(0)(63) := Mux(io.amount(0), io.input(0), io.input(63))
       for (i <- 0 until 63) {
-        muxOut(0)(i) := Mux(io.amount(0),io.input(i+1),io.input(i))
+        muxOut(0)(i) := Mux(io.amount(0), io.input(i + 1), io.input(i))
       }
     }
   }
 
-  //First Register
+  // First Register
   reg0 := muxOut(2).asUInt
 
-  //Next three layers (3,4,5)
-  for(level <- 3 until 6)
-  {
-    if(level != 3)
-    {
+  // Next three layers (3,4,5)
+  for (level <- 3 until 6) {
+    if (level != 3) {
       for (i <- 0 until 64) {
-        muxOut(level)(i) := Mux(io.amount(level),muxOut(level-1)((i+(math.pow(2,level).toInt))%64),muxOut(level-1)(i))
+        muxOut(level)(i) := Mux(
+          io.amount(level),
+          muxOut(level - 1)((i + (math.pow(2, level).toInt)) % 64),
+          muxOut(level - 1)(i)
+        )
       }
-    } 
-    else
-    {
+    } else {
       for (i <- 0 until 64) {
-        muxOut(3)(i) := Mux(io.amount(3),reg0((i+(math.pow(2,3).toInt))%64),reg0(i))
+        muxOut(3)(i) := Mux(
+          io.amount(3),
+          reg0((i + (math.pow(2, 3).toInt)) % 64),
+          reg0(i)
+        )
       }
     }
   }
 
-  //Second Register
+  // Second Register
   reg1 := muxOut(5).asUInt
 
-  //Output
+  // Output
   io.output := reg1
 }
 // when i is provided, the output is immediately set to the current amount value
 // inputs should only happen on the first cycle, not the second cycle: (i % 2) cycles
 class amount_decoder extends Module {
-val io = IO(new Bundle {
-    val i        = Input(UInt(3.W))
+  val io = IO(new Bundle {
+    val i = Input(UInt(3.W))
     val count = Input(UInt(1.W))
     val amount = Output(UInt(6.W))
   })
@@ -333,45 +420,39 @@ val io = IO(new Bundle {
   val amountSecond = Wire(UInt(6.W))
   val count = RegInit(0.U(1.W))
 
-  when(io.i === 0.U)
-  {
+  when(io.i === 0.U) {
     amountFirst := 19.U
     amountSecond := 28.U
   }
-  .elsewhen(io.i === 1.U)
-  {
-    amountFirst := 61.U
-    amountSecond := 39.U
-  }
-  .elsewhen(io.i === 2.U)
-  {
-    amountFirst := 1.U
-    amountSecond := 6.U
-  }
-  .elsewhen(io.i === 3.U)
-  {
-    amountFirst := 10.U
-    amountSecond := 17.U
-  }
-  .elsewhen(io.i === 4.U)
-  {
-    amountFirst := 7.U
-    amountSecond := 41.U
-  }
-  .otherwise
-  {
-    amountFirst := 0.U
-    amountSecond := 0.U
-  }
+    .elsewhen(io.i === 1.U) {
+      amountFirst := 61.U
+      amountSecond := 39.U
+    }
+    .elsewhen(io.i === 2.U) {
+      amountFirst := 1.U
+      amountSecond := 6.U
+    }
+    .elsewhen(io.i === 3.U) {
+      amountFirst := 10.U
+      amountSecond := 17.U
+    }
+    .elsewhen(io.i === 4.U) {
+      amountFirst := 7.U
+      amountSecond := 41.U
+    }
+    .otherwise {
+      amountFirst := 0.U
+      amountSecond := 0.U
+    }
   // count := count + 1.U
 
-  when (io.count === 0.U) {
-    temp := amountSecond(5,3)
-    io.amount := temp ## amountFirst(2,0)
+  when(io.count === 0.U) {
+    temp := amountSecond(5, 3)
+    io.amount := temp ## amountFirst(2, 0)
   }
-  .otherwise {
-    io.amount := amountFirst(5,3) ## amountSecond(2,0)
-  }
+    .otherwise {
+      io.amount := amountFirst(5, 3) ## amountSecond(2, 0)
+    }
 }
 
 class single_diff_pipe() extends Module {
@@ -390,23 +471,23 @@ class single_diff_pipe() extends Module {
   amount_dec.i := io.i
   amount_dec.count := count
 
-  val barrelShift = Module(new barrelShifter_2reg).io 
+  val barrelShift = Module(new barrelShifter_2reg).io
   barrelShift.input := temp0
   // delay by one cycle to allow starting cycle at 0
   amountTempBuffer := amount_dec.amount
   barrelShift.amount := amountTempBuffer
 
-  when(count === 0.U){
+  when(count === 0.U) {
     temp1 := temp0
     temp0 := io.x_in
-  }.otherwise{
+  }.otherwise {
     temp1 := temp1 ^ barrelShift.output
   }
   io.x_out := temp1 ^ barrelShift.output
 }
 
 class barrelShifter_seq(amountOfLayers: Int) extends Module {
-  val muxAmount = math.pow(2,amountOfLayers).toInt.W
+  val muxAmount = math.pow(2, amountOfLayers).toInt.W
   val io = IO(new Bundle {
     val start = Input(Bool())
     val input = Input(UInt(muxAmount))
@@ -417,10 +498,12 @@ class barrelShifter_seq(amountOfLayers: Int) extends Module {
   val edge = Module(new posedge())
   edge.io.in := io.start
 
-  val shifting::processing::done::Nil = Enum(3)
+  val shifting :: processing :: done :: Nil = Enum(3)
   val currentState = RegInit(done)
   val shiftedNum = RegInit(io.input)
-  val currentLevel = RegInit(0.U((math.log(amountOfLayers)/math.log(2)).ceil.toInt.W))
+  val currentLevel = RegInit(
+    0.U((math.log(amountOfLayers) / math.log(2)).ceil.toInt.W)
+  )
   val mux_in_1 = RegInit(0.U(muxAmount))
   val mux_select = RegInit(0.U(1.W))
   // val mux_out = VecInit(Seq.fill(math.pow(2,amountOfLayers).toInt)(0.U(1.W)))
@@ -430,49 +513,47 @@ class barrelShifter_seq(amountOfLayers: Int) extends Module {
   // for (i <- 0 until math.pow(2,amountOfLayers).toInt) {
   //   mux_out(i) := Mux(mux_select.asBool,mux_in_1(i),shiftedNum(i))
   // }
-  mux_out := Mux(mux_select.asBool,mux_in_1,shiftedNum)
-  
+  mux_out := Mux(mux_select.asBool, mux_in_1, shiftedNum)
 
-  switch(currentState)
-  {
-    is(shifting){
-        mux_select := io.amount(currentLevel)
-        when(currentLevel === 0.U){
-          mux_in_1 := Cat(shiftedNum(0),shiftedNum(63,1))
+  switch(currentState) {
+    is(shifting) {
+      mux_select := io.amount(currentLevel)
+      when(currentLevel === 0.U) {
+        mux_in_1 := Cat(shiftedNum(0), shiftedNum(63, 1))
+      }
+        .elsewhen(currentLevel === 1.U) {
+          mux_in_1 := Cat(shiftedNum(1, 0), shiftedNum(63, 2))
         }
-        .elsewhen(currentLevel === 1.U){
-          mux_in_1 := Cat(shiftedNum(1,0),shiftedNum(63,2))
+        .elsewhen(currentLevel === 2.U) {
+          mux_in_1 := Cat(shiftedNum(3, 0), shiftedNum(63, 4))
         }
-        .elsewhen(currentLevel === 2.U){
-          mux_in_1 := Cat(shiftedNum(3,0),shiftedNum(63,4))
+        .elsewhen(currentLevel === 3.U) {
+          mux_in_1 := Cat(shiftedNum(7, 0), shiftedNum(63, 8))
         }
-        .elsewhen(currentLevel === 3.U){
-          mux_in_1 := Cat(shiftedNum(7,0),shiftedNum(63,8))
+        .elsewhen(currentLevel === 4.U) {
+          mux_in_1 := Cat(shiftedNum(15, 0), shiftedNum(63, 16))
         }
-        .elsewhen(currentLevel === 4.U){
-          mux_in_1 := Cat(shiftedNum(15,0),shiftedNum(63,16))
+        .elsewhen(currentLevel === 5.U) {
+          mux_in_1 := Cat(shiftedNum(31, 0), shiftedNum(63, 32))
         }
-        .elsewhen(currentLevel === 5.U){
-          mux_in_1 := Cat(shiftedNum(31,0),shiftedNum(63,32))
-        }
-        // .otherwise{
-        //   mux_in_1 := Cat(shiftedNum(currentLevel.litValue.pow(2)-1,0),shiftedNum(63,currentLevel.litValue.pow(2)))
-        // }
-        currentLevel := currentLevel + 1.U
-        //shiftedNum := mux_out
-        // shiftedNum := Cat(
-        //   mux_out(0),mux_out(1),mux_out(2),mux_out(3),mux_out(4),mux_out(5),mux_out(6),mux_out(7),
-        //   mux_out(8),mux_out(9),mux_out(10),mux_out(11),mux_out(12),mux_out(13),mux_out(14),mux_out(15),
-        //   mux_out(16),mux_out(17),mux_out(18),mux_out(19),mux_out(20),mux_out(21),mux_out(22),mux_out(23),
-        //   mux_out(24),mux_out(25),mux_out(26),mux_out(27),mux_out(28),mux_out(29),mux_out(30),mux_out(31),
-        //   mux_out(32),mux_out(33),mux_out(34),mux_out(35),mux_out(36),mux_out(37),mux_out(38),mux_out(39),
-        //   mux_out(40),mux_out(41),mux_out(42),mux_out(43),mux_out(44),mux_out(45),mux_out(46),mux_out(47),
-        //   mux_out(48),mux_out(49),mux_out(50),mux_out(51),mux_out(52),mux_out(53),mux_out(54),mux_out(55),
-        //   mux_out(56),mux_out(57),mux_out(58),mux_out(59),mux_out(60),mux_out(61),mux_out(62),mux_out(63)
-        // )
-        currentState := processing
+      // .otherwise{
+      //   mux_in_1 := Cat(shiftedNum(currentLevel.litValue.pow(2)-1,0),shiftedNum(63,currentLevel.litValue.pow(2)))
+      // }
+      currentLevel := currentLevel + 1.U
+      // shiftedNum := mux_out
+      // shiftedNum := Cat(
+      //   mux_out(0),mux_out(1),mux_out(2),mux_out(3),mux_out(4),mux_out(5),mux_out(6),mux_out(7),
+      //   mux_out(8),mux_out(9),mux_out(10),mux_out(11),mux_out(12),mux_out(13),mux_out(14),mux_out(15),
+      //   mux_out(16),mux_out(17),mux_out(18),mux_out(19),mux_out(20),mux_out(21),mux_out(22),mux_out(23),
+      //   mux_out(24),mux_out(25),mux_out(26),mux_out(27),mux_out(28),mux_out(29),mux_out(30),mux_out(31),
+      //   mux_out(32),mux_out(33),mux_out(34),mux_out(35),mux_out(36),mux_out(37),mux_out(38),mux_out(39),
+      //   mux_out(40),mux_out(41),mux_out(42),mux_out(43),mux_out(44),mux_out(45),mux_out(46),mux_out(47),
+      //   mux_out(48),mux_out(49),mux_out(50),mux_out(51),mux_out(52),mux_out(53),mux_out(54),mux_out(55),
+      //   mux_out(56),mux_out(57),mux_out(58),mux_out(59),mux_out(60),mux_out(61),mux_out(62),mux_out(63)
+      // )
+      currentState := processing
     }
-    is(processing){
+    is(processing) {
       shiftedNum := mux_out
       // shiftedNum := Cat(
       //   mux_out(0),mux_out(1),mux_out(2),mux_out(3),mux_out(4),mux_out(5),mux_out(6),mux_out(7),
@@ -484,35 +565,35 @@ class barrelShifter_seq(amountOfLayers: Int) extends Module {
       //   mux_out(48),mux_out(49),mux_out(50),mux_out(51),mux_out(52),mux_out(53),mux_out(54),mux_out(55),
       //   mux_out(56),mux_out(57),mux_out(58),mux_out(59),mux_out(60),mux_out(61),mux_out(62),mux_out(63)
       // )
-      when(currentLevel < amountOfLayers.U){
+      when(currentLevel < amountOfLayers.U) {
         currentState := shifting
-      }.otherwise{
+      }.otherwise {
         currentState := done
       }
     }
-    is(done){
-      when(edge.io.out){
+    is(done) {
+      when(edge.io.out) {
         shiftedNum := io.input
         currentState := shifting
         currentLevel := 0.U
-      }.otherwise{
+      }.otherwise {
         currentState := done
       }
     }
   }
 
-  when(currentState === done){
+  when(currentState === done) {
     io.done := true.B
-  }.otherwise{
+  }.otherwise {
     io.done := false.B
   }
 
-  //io.output := Mux(io.done,shiftedNum,io.input)
+  // io.output := Mux(io.done,shiftedNum,io.input)
   io.output := shiftedNum
 }
 class decode_and_assign_amount_segments_every_cycle extends Module {
-val io = IO(new Bundle {
-    val i        = Input(UInt(3.W))
+  val io = IO(new Bundle {
+    val i = Input(UInt(3.W))
     val amount = Output(UInt(6.W))
   })
   val temp = RegInit(0.U(4.W))
@@ -521,47 +602,41 @@ val io = IO(new Bundle {
   val amountSecond = Wire(UInt(6.W))
   count := count + 1.U
 
-  when(io.i === 0.U)
-  {
+  when(io.i === 0.U) {
     amountFirst := 19.U
     amountSecond := 28.U
   }
-  .elsewhen(io.i === 1.U)
-  {
-    amountFirst := 61.U
-    amountSecond := 39.U
+    .elsewhen(io.i === 1.U) {
+      amountFirst := 61.U
+      amountSecond := 39.U
+    }
+    .elsewhen(io.i === 2.U) {
+      amountFirst := 1.U
+      amountSecond := 6.U
+    }
+    .elsewhen(io.i === 3.U) {
+      amountFirst := 10.U
+      amountSecond := 17.U
+    }
+    .elsewhen(io.i === 4.U) {
+      amountFirst := 7.U
+      amountSecond := 41.U
+    }
+    .otherwise {
+      amountFirst := 0.U
+      amountSecond := 0.U
+    }
+  when(count === 0.U) {
+    temp := amountSecond(5, 2)
+    io.amount := temp ## amountFirst(1, 0)
   }
-  .elsewhen(io.i === 2.U)
-  {
-    amountFirst := 1.U
-    amountSecond := 6.U
-  }
-  .elsewhen(io.i === 3.U)
-  {
-    amountFirst := 10.U
-    amountSecond := 17.U
-  }
-  .elsewhen(io.i === 4.U)
-  {
-    amountFirst := 7.U
-    amountSecond := 41.U
-  }
-  .otherwise
-  {
-    amountFirst := 0.U
-    amountSecond := 0.U
-  }
-  when (count === 0.U) {
-    temp := amountSecond(5,2)
-    io.amount := temp ## amountFirst(1,0)
-  }
-  .otherwise {
-    io.amount := amountFirst(5,2) ## amountSecond(1,0)
-  }
+    .otherwise {
+      io.amount := amountFirst(5, 2) ## amountSecond(1, 0)
+    }
 }
 class double_pipe_diff extends Module {
-val io = IO(new Bundle {
-    val x_in        = Input(new x_val())
+  val io = IO(new Bundle {
+    val x_in = Input(new x_val())
     val x_out = Output(UInt(64.W))
     val ready = Output(Bool())
   })
@@ -580,17 +655,17 @@ val io = IO(new Bundle {
   // temp(0) := io.x_in.data
   // temp(1) := io.x_in.data
   // temp := io.x_in.data
-  
+
   barrel.io.input := temp
 
   // every 2 cycles do the steps below: store first temp value somewhere to continue xor
-  when (count === 1.U) {
+  when(count === 1.U) {
     temp1 := temp
     io.ready := false.B
   }
-  .otherwise {
-    io.ready := true.B
-  }
+    .otherwise {
+      io.ready := true.B
+    }
   // should become off by one after temp assignment; fixed with temp_i register
   val decodeAmount = Module(new decode_and_assign_amount_segments_every_cycle())
   barrel.io.amount := decodeAmount.io.amount
@@ -602,7 +677,7 @@ val io = IO(new Bundle {
   /*
   Things to Keep in Mind
   when count = 0
-    
+
   when count = 1
     Top = prevSecond(5,2), Bot = amountFirst(1,0)
   when count = 2
@@ -611,25 +686,37 @@ val io = IO(new Bundle {
     prevSecond = amountSecond
     amountFirst and amountSecond is updated in respects to i (amountFirst and amountSecond are new now)
   when count = 3
-    Top = prevSecond(5,2), Bot = amountFirst(1,0)  
-  */
-
-
-
+    Top = prevSecond(5,2), Bot = amountFirst(1,0)
+   */
 
 }
 
 class diffusion_layer extends Module {
   val io = IO(new Bundle {
-    val x_in        = Input(Vec(5, UInt(64.W)))
+    val x_in = Input(Vec(5, UInt(64.W)))
     val x_out = Output(Vec(5, UInt(64.W)))
   })
-    
-    io.x_out(0) := io.x_in(0) ^ Cat(io.x_in(0)(18,0),io.x_in(0)(63,19)) ^ Cat(io.x_in(0)(27,0),io.x_in(0)(63,28))
-    io.x_out(1) := io.x_in(1) ^ Cat(io.x_in(1)(60,0),io.x_in(1)(63,61)) ^ Cat(io.x_in(1)(38,0),io.x_in(1)(63,39))
-    io.x_out(2) := io.x_in(2) ^ Cat(io.x_in(2)(0,0),io.x_in(2)(63,1)) ^ Cat(io.x_in(2)(5,0),io.x_in(2)(63,6))
-    io.x_out(3) := io.x_in(3) ^ Cat(io.x_in(3)(9,0),io.x_in(3)(63,10)) ^ Cat(io.x_in(3)(16,0),io.x_in(3)(63,17))
-    io.x_out(4) := io.x_in(4) ^ Cat(io.x_in(4)(6,0),io.x_in(4)(63,7)) ^ Cat(io.x_in(4)(40,0),io.x_in(4)(63,41))
+
+  io.x_out(0) := io.x_in(0) ^ Cat(io.x_in(0)(18, 0), io.x_in(0)(63, 19)) ^ Cat(
+    io.x_in(0)(27, 0),
+    io.x_in(0)(63, 28)
+  )
+  io.x_out(1) := io.x_in(1) ^ Cat(io.x_in(1)(60, 0), io.x_in(1)(63, 61)) ^ Cat(
+    io.x_in(1)(38, 0),
+    io.x_in(1)(63, 39)
+  )
+  io.x_out(2) := io.x_in(2) ^ Cat(io.x_in(2)(0, 0), io.x_in(2)(63, 1)) ^ Cat(
+    io.x_in(2)(5, 0),
+    io.x_in(2)(63, 6)
+  )
+  io.x_out(3) := io.x_in(3) ^ Cat(io.x_in(3)(9, 0), io.x_in(3)(63, 10)) ^ Cat(
+    io.x_in(3)(16, 0),
+    io.x_in(3)(63, 17)
+  )
+  io.x_out(4) := io.x_in(4) ^ Cat(io.x_in(4)(6, 0), io.x_in(4)(63, 7)) ^ Cat(
+    io.x_in(4)(40, 0),
+    io.x_in(4)(63, 41)
+  )
 }
 class x_val extends Bundle {
   val data = UInt(64.W)
@@ -650,21 +737,21 @@ class reg_reset_test extends Module {
   // val reg4 = RegInit(10.U(64.W))
   val counter = RegInit(0.U(3.W))
   reg(counter) := counter
-    when (counter < 5.U) {
-      counter := counter + 1.U
-      // when(counter === 0.U)
-      // {
-      //   reg0 := counter
-      // }.elsewhen(counter === 1.U){
-      //   reg1 := counter
-      // }.elsewhen(counter === 2.U){
-      //   reg2 := counter
-      // }.elsewhen(counter === 3.U){
-      //   reg3 := counter
-      // }.elsewhen(counter === 4.U){
-      //   reg4 := counter
-      // }
-    }
+  when(counter < 5.U) {
+    counter := counter + 1.U
+    // when(counter === 0.U)
+    // {
+    //   reg0 := counter
+    // }.elsewhen(counter === 1.U){
+    //   reg1 := counter
+    // }.elsewhen(counter === 2.U){
+    //   reg2 := counter
+    // }.elsewhen(counter === 3.U){
+    //   reg3 := counter
+    // }.elsewhen(counter === 4.U){
+    //   reg4 := counter
+    // }
+  }
   // io.x_out(0) := reg0
   // io.x_out(1) := reg1
   // io.x_out(2) := reg2
@@ -679,37 +766,37 @@ class reg_reset_test extends Module {
 class diffusion_layer_compat extends Module {
   val io = IO(new Bundle {
     val start = Input(Bool())
-    val x_in        = Input(Vec(5, UInt(64.W)))
+    val x_in = Input(Vec(5, UInt(64.W)))
     val x_out = Output(Vec(5, UInt(64.W)))
     val done = Output(Bool())
   })
-  
+
   val diffusion = Module(new diffusion_fifo(5))
 
   val counterIn = RegInit(0.U(3.W))
   val counterOut = RegInit(0.U(3.W))
-  val transferring::done::Nil = Enum(2)
+  val transferring :: done :: Nil = Enum(2)
   val currentState = RegInit(done)
   // default assignment for when it's not set
   diffusion.io.startInsert := false.B
   diffusion.io.startOutput := false.B
-  //val x_out_reg = VecInit(Seq.fill(5)(RegInit(10.U(64.W))))
+  // val x_out_reg = VecInit(Seq.fill(5)(RegInit(10.U(64.W))))
   val x_out_reg = RegInit(VecInit(Seq.fill(5)(10.U(64.W))))
-  
+
   diffusion.io.x_in.data := io.x_in(counterIn)
   diffusion.io.x_in.i := counterIn
   io.x_out := x_out_reg
 
-  when (currentState === done) {
+  when(currentState === done) {
     io.done := true.B
-  } .otherwise {
+  }.otherwise {
     io.done := false.B
   }
-  switch (currentState) {
+  switch(currentState) {
     // this state allows reading and writing from the diffusion_fifo at the same time
-    is (transferring) { 
+    is(transferring) {
       // handle writing 5 values to diffusion
-      when (diffusion.io.full === false.B && counterIn < 5.U) {
+      when(diffusion.io.full === false.B && counterIn < 5.U) {
         // diffusion.io.x_in.data := io.x_in(counterIn)
         diffusion.io.startInsert := true.B
         counterIn := counterIn + 1.U
@@ -718,7 +805,7 @@ class diffusion_layer_compat extends Module {
       //   currentState := transferring
       // }
       // handle reading 5 values from diffusion
-      when (diffusion.io.empty === false.B && counterOut < 5.U) {
+      when(diffusion.io.empty === false.B && counterOut < 5.U) {
         x_out_reg(counterOut) := diffusion.io.x_out.data
         diffusion.io.startOutput := true.B
         counterOut := counterOut + 1.U
@@ -727,27 +814,26 @@ class diffusion_layer_compat extends Module {
       //   currentState := transferring
       // }
 
-      when (counterOut === 5.U) {
+      when(counterOut === 5.U) {
         currentState := done
       }
-      .otherwise {
-        currentState := transferring
-      }
+        .otherwise {
+          currentState := transferring
+        }
 
     }
-    is (done) {
-      when (io.start) {
+    is(done) {
+      when(io.start) {
         counterIn := 0.U
         counterOut := 0.U
         currentState := transferring
       }
-      .otherwise {
-        currentState := done
-      }
+        .otherwise {
+          currentState := done
+        }
     }
   }
 }
-
 
 class queue_test extends Module {
   val io = IO(new Bundle {
@@ -770,16 +856,14 @@ class queue_test extends Module {
   queue.io.deq.ready := io.start_out
 }
 
-
-
 // read from x_in and continually insert into fifo
 // also read from input fifo and write to output fifo
 // Note: Make sure that the input doesn't make the output full or data will be lost
-  // This will depend on the size of the fifos and how many stages the pipeline has
-  // pull data out of the output fifo before the stages are complete (before the 4th cycle in this case)
+// This will depend on the size of the fifos and how many stages the pipeline has
+// pull data out of the output fifo before the stages are complete (before the 4th cycle in this case)
 class diffusion_fifo(fifo_size: Int) extends Module {
   val io = IO(new Bundle {
-    val x_in        = Input(new x_val())
+    val x_in = Input(new x_val())
     val startInsert = Input(Bool())
     val x_out = Output(new x_val())
     val startOutput = Input(Bool())
@@ -789,33 +873,35 @@ class diffusion_fifo(fifo_size: Int) extends Module {
   val in = Module(new Queue(new x_val(), fifo_size))
   val out = Module(new Queue(new x_val(), fifo_size))
   val single_diffusion = Module(new single_diff_pipe())
-  
+
   // class read_val extends Bundle {
   //   val read = false.B
   //   val i = 0.U(3.W)
   // }
-  
 
-  //val readMarker = RegInit(VecInit(Seq.fill(6)(new read_val())))
+  // val readMarker = RegInit(VecInit(Seq.fill(6)(new read_val())))
   val readMarker = RegInit(VecInit(Seq.fill(6)(false.B)))
-  val read_i = RegInit(VecInit(Seq.fill(6)(0.U(3.W))))
+  val deqMarker = RegInit(VecInit(Seq.fill(6)(false.B)))
+  val read_i = RegInit(VecInit(Seq.fill(6)(7.U(3.W))))
+  // add a buffer for i so it is held for the two cycles needed
+  // val buffer_i = RegInit(0.U(3.W))
 
-  //prev code -> Wire(Vec(amountOfLayers, new single_layer_io()))
+  // prev code -> Wire(Vec(amountOfLayers, new single_layer_io()))
   // below connects the "outer" incoming and outgoing signals (in.io.enq, out.io.deq)
-    // also implements inserting and reading
-  
+  // also implements inserting and reading
+
   // connect x_in to input fifo and connect x_out to output fifo
   in.io.enq.bits := io.x_in
   io.x_out := out.io.deq.bits
   // pass through input queue full to outside and output queue empty to outside, inverting it so it makes sense
   io.full := ~in.io.enq.ready
   io.empty := ~out.io.deq.valid
-  
+
   // noticing that the two when statements below are basically like in.io.enq.valid := io.startInsert
-  
+
   // input fifo: runs on its own in theory based on start signal
   // might need an edge detector to only make this happen once
-  // alternatively, the module outside should use an edge detector and not here since this can be considered "cycle accurate". This is the current implementation 
+  // alternatively, the module outside should use an edge detector and not here since this can be considered "cycle accurate". This is the current implementation
   // important to check if the queue is full outside before the startInsert is used
   in.io.enq.valid := io.startInsert
   // when (io.startInsert === true.B) {
@@ -823,7 +909,7 @@ class diffusion_fifo(fifo_size: Int) extends Module {
   // } .otherwise {
   //   in.io.enq.valid := false.B
   // }
-  
+
   // also do the output fifo: runs on its own in theory
   out.io.deq.ready := io.startOutput
   // when (io.startOutput === true.B) {
@@ -833,52 +919,71 @@ class diffusion_fifo(fifo_size: Int) extends Module {
   // }
 
   // The next section below handles the "inner" fifo connections (in.io.deq, out.io.enq, single_diffusion.io)
-  
-    // testing default wire connection for inserting, reading flags; not sure if this works properly. The behavior works, however it may not be best practice to have a "default" value to rely on
-    in.io.deq.ready := false.B
-    out.io.enq.valid := false.B
-    
-    // keep input fifo's output to single_diffusion
-    // keep diffusion's output going to the output fifo
-    single_diffusion.io.x_in := in.io.deq.bits.data
-    single_diffusion.io.i := in.io.deq.bits.i
-    out.io.enq.bits.data := single_diffusion.io.x_out
-    
-    val counter = RegInit(0.U(3.W))
-    when (counter === 5.U) {
-      counter := 0.U
-    }
-    .otherwise {
-      counter := counter + 1.U
-    }
-    out.io.enq.bits.i := read_i(counter)
-    // writing
-    when (in.io.deq.valid && (counter % 2.U === 0.U)) {
-      in.io.deq.ready := true.B
-      read_i((counter + 4.U) % 6.U) := in.io.deq.bits.i
-      readMarker((counter + 4.U) % 6.U) := true.B
-    }
-    when (readMarker(counter) && out.io.enq.ready) {
-      readMarker(counter) := false.B
-      out.io.enq.valid := true.B
-    }
-}
 
+  // testing default wire connection for inserting, reading flags; not sure if this works properly. The behavior works, however it may not be best practice to have a "default" value to rely on
+  in.io.deq.ready := false.B
+  out.io.enq.valid := false.B
+
+  // keep input fifo's output to single_diffusion
+  // keep diffusion's output going to the output fifo
+  single_diffusion.io.x_in := in.io.deq.bits.data
+
+  single_diffusion.io.i := in.io.deq.bits.i
+  out.io.enq.bits.data := single_diffusion.io.x_out
+  // Note confirmed: increasing counter in case of overflow when adding 4
+    // also solves problem with unbalanced read and writes
+  val counter = RegInit(0.U(4.W))
+  when(counter === 5.U) {
+    counter := 0.U
+  }
+  .otherwise {
+    counter := counter + 1.U
+  }
+  out.io.enq.bits.i := read_i(counter)
+  // writing; every 2 cycles write for 2 cycle deq, save i and save read marker
+    // Trying to see if setting the deq marker at +1 will work because it takes one cycle to "register" changes
+    // Note confirmed: this works; looks like there was an extra delay when deq happens that causes i and data to be off by one
+    // specifically, i is wired directly so it must be held for 2 cycles while data is registered inside single_diffusion, so it needs 1 extra cycle
+    // at cycle 2, there is data ready; i is already connected, but needs to be held for an extra cycle: cycle 3. the deq didn't happen until cycle 3 which changes i too soon. Meanwhile, data is input at cycle 3. This means i is one cycle earlier than data.
+    // The resulting goal is to get new data at cycle 4, which means applying a deq signal at cycle 3 for the next data and i value
+    // cycle two is too early and would change i before it was done; the data is also changed, but should still be valid because of the register being used
+    // cycle 4 is too late because the next data is not there yet and the rest of the pipeline will use the wrong data that's old by 2 cycles
+
+  when(in.io.deq.valid && (counter % 2.U === 0.U)) {
+    // in.io.deq.ready := true.B
+    deqMarker((counter + 1.U) % 6.U) := true.B
+    read_i((counter + 4.U) % 6.U) := in.io.deq.bits.i
+    readMarker((counter + 4.U) % 6.U) := true.B
+  }
+  // for now check every cycle; can be checked at counter % 2 === 1.U
+    // Note that this is incompatible with a clock divider unfortunately
+  when (deqMarker(counter)) {
+    in.io.deq.ready := true.B
+    // when (in.io.deq.valid === false.B) {
+      deqMarker(counter) := false.B
+    // }
+  }
+  // reading; when reaching a read marker, enq data and reset read marker
+  when(readMarker(counter) && out.io.enq.ready) {
+    readMarker(counter) := false.B
+    out.io.enq.valid := true.B
+  }
+}
 
 class diffusion_layer_wrapper extends Module {
   val io = IO(new Bundle {
     val start = Input(Bool())
-    val x_in        = Input(Vec(5, UInt(64.W)))
+    val x_in = Input(Vec(5, UInt(64.W)))
     val x_out = Output(Vec(5, UInt(64.W)))
     val done = Output(Bool())
   })
 
-  //these two lines are to temporarily replace the actual FIFO
-  //More wires will be needed to control the push/pull & start/done flags
+  // these two lines are to temporarily replace the actual FIFO
+  // More wires will be needed to control the push/pull & start/done flags
   val fifo_in = VecInit(Seq.fill(5)(RegInit(0.U(64.W))))
   val fifo_out = VecInit(Seq.fill(5)(RegInit(0.U(64.W))))
-  
-  //Keep track of what section of the S-box is used
+
+  // Keep track of what section of the S-box is used
   val current_x = RegInit(0.U(3.W))
   val current_in = RegInit(0.U(64.W))
   val current_out = RegInit(0.U(64.W))
@@ -886,9 +991,8 @@ class diffusion_layer_wrapper extends Module {
   val current_amountSecond = RegInit(0.U(6.W))
   val single_start = Bool()
   val single_done = Bool()
-  
 
-  //Instantiate diffusion_layer_single
+  // Instantiate diffusion_layer_single
   val single_diff = Module(new diffusion_layer_single())
   single_diff.io.x_in := current_in
   single_diff.io.start := single_start_edge
@@ -897,7 +1001,7 @@ class diffusion_layer_wrapper extends Module {
   current_out := single_diff.io.x_out
   single_done := single_diff.io.done
 
-  //Edge Detectors
+  // Edge Detectors
   val edge0 = Module(new posedge())
   edge0.io.in := io.start
   val start_edge = Bool()
@@ -907,88 +1011,77 @@ class diffusion_layer_wrapper extends Module {
   edge1.io.in := single_start
   val single_start_edge = Bool()
   single_start_edge := edge1.io.out
-  
+
   val edge2 = Module(new posedge())
   edge2.io.in := single_done
   val single_done_edge = Bool()
   single_done_edge := edge2.io.out
 
-  //Assign Amount First and Amount Second
-  when(current_x === 0.U)
-  {
+  // Assign Amount First and Amount Second
+  when(current_x === 0.U) {
     current_amountFirst := 19.U
     current_amountSecond := 28.U
   }
-  .elsewhen(current_x === 1.U)
-  {
-    current_amountFirst := 61.U
-    current_amountSecond := 39.U
-  }
-  .elsewhen(current_x === 2.U)
-  {
-    current_amountFirst := 1.U
-    current_amountSecond := 6.U
-  }
-  .elsewhen(current_x === 3.U)
-  {
-    current_amountFirst := 10.U
-    current_amountSecond := 17.U
-  }
-  .elsewhen(current_x === 4.U)
-  {
-    current_amountFirst := 7.U
-    current_amountSecond := 41.U
-  }
-  .otherwise
-  {
-    current_amountFirst := 0.U
-    current_amountSecond := 0.U
-  }
+    .elsewhen(current_x === 1.U) {
+      current_amountFirst := 61.U
+      current_amountSecond := 39.U
+    }
+    .elsewhen(current_x === 2.U) {
+      current_amountFirst := 1.U
+      current_amountSecond := 6.U
+    }
+    .elsewhen(current_x === 3.U) {
+      current_amountFirst := 10.U
+      current_amountSecond := 17.U
+    }
+    .elsewhen(current_x === 4.U) {
+      current_amountFirst := 7.U
+      current_amountSecond := 41.U
+    }
+    .otherwise {
+      current_amountFirst := 0.U
+      current_amountSecond := 0.U
+    }
 
-  //On start, current_x will be reset to 0
-  when(start_edge)
-  {
+  // On start, current_x will be reset to 0
+  when(start_edge) {
     current_x := 0.U
   }
 
-  //When single_start is toggled on, contents of fifo_in(current_x) are stored in current_in
-  when(single_start_edge)
-  {
+  // When single_start is toggled on, contents of fifo_in(current_x) are stored in current_in
+  when(single_start_edge) {
     current_in := fifo_in(current_x)
   }
 
-  //When single_done is turned on, single_start will turn off and
-  //fifo_out(current_x) will store current_out and incrememnt current_x 
-  when(single_done_edge)
-  {
+  // When single_done is turned on, single_start will turn off and
+  // fifo_out(current_x) will store current_out and incrememnt current_x
+  when(single_done_edge) {
     single_start := false.B
     fifo_out(current_x) := current_out
     current_x := current_x + 1.U
   }
 
-  //As long as current_x <= 4, done is false, single_start will be on, and x_out is 0
-  //Otherwise, done is true and x_out is updated with fifo_out
-  when(current_x <= 4.U)
-  {
+  // As long as current_x <= 4, done is false, single_start will be on, and x_out is 0
+  // Otherwise, done is true and x_out is updated with fifo_out
+  when(current_x <= 4.U) {
     io.done := false.B
     single_start := true.B
     io.x_out := 0.U
   }
-  .otherwise
-  {
-    io.done := true.B
-    io.x_out := fifo_out
-  }
+    .otherwise {
+      io.done := true.B
+      io.x_out := fifo_out
+    }
 }
 
-// 
+//
 class regAssign extends Module {
   val io = IO(new Bundle {
     val start = Input(Bool())
     val x_out = Output(UInt(5.W))
     val done = Output(Bool())
   })
-  val first::second::third::fourth::done::Nil = Enum(5)
+  val first :: second :: third :: fourth :: done :: Nil = Enum(5)
 
   val temp = RegInit(0.U(5.W))
   val current = RegInit(done)
@@ -997,60 +1090,61 @@ class regAssign extends Module {
   val mode_test = RegInit(2.U(3.W))
   val wire_out = Wire(UInt(5.W))
   // choose
-  when (mode_test === 0.U) {
+  when(mode_test === 0.U) {
     wire_out := 2.U
   }
-  .elsewhen (mode_test === 1.U) {
-    wire_out := 4.U
-  }
-  .elsewhen (mode_test === 2.U) {
-    wire_out := 6.U
-  }
-  .elsewhen (mode_test === 3.U) {
-    wire_out := 8.U
-  } .otherwise {
-    wire_out := 10.U
-  }
+    .elsewhen(mode_test === 1.U) {
+      wire_out := 4.U
+    }
+    .elsewhen(mode_test === 2.U) {
+      wire_out := 6.U
+    }
+    .elsewhen(mode_test === 3.U) {
+      wire_out := 8.U
+    }
+    .otherwise {
+      wire_out := 10.U
+    }
   // save x_in with value that changes (simulate wire)
-    switch (current){
-      is(first) {
-        // set to 4
-        // IMPORTANT FINDINGS: the mode_test register assignment takes a clock cycle to apply; the register assignments are "to be assigned" and are basically nonblocking assignments
-        // shouldn't affect temp; maybe result in 8
-        mode_test := 3.U
-        temp := wire_out
-        current := fourth
-      }
-      // is(second) {
-      //   // shouldn't affect temp; maybe result in 6
-      //   // mode_test := 2.U
-      //   current := third
-      // }
-      // is(third) {
-      //   // shouldn't result in 2
-      //   // mode_test := 2.U
-      //   // should save 4
-      //   // simulating multiple cycles to output
-      //   // IMPORTANT FINDINGS: in this switch statement, a mode_test wire gets set to default if not assigned
-        
-      //   current := fourth
-      // }
-      is(fourth) {
+  switch(current) {
+    is(first) {
+      // set to 4
+      // IMPORTANT FINDINGS: the mode_test register assignment takes a clock cycle to apply; the register assignments are "to be assigned" and are basically nonblocking assignments
+      // shouldn't affect temp; maybe result in 8
+      mode_test := 3.U
+      temp := wire_out
+      current := fourth
+    }
+    // is(second) {
+    //   // shouldn't affect temp; maybe result in 6
+    //   // mode_test := 2.U
+    //   current := third
+    // }
+    // is(third) {
+    //   // shouldn't result in 2
+    //   // mode_test := 2.U
+    //   // should save 4
+    //   // simulating multiple cycles to output
+    //   // IMPORTANT FINDINGS: in this switch statement, a mode_test wire gets set to default if not assigned
+
+    //   current := fourth
+    // }
+    is(fourth) {
+      current := done
+    }
+    is(done) {
+      when(io.start) {
+        mode_test := 1.U
+        current := first
+      }.otherwise {
         current := done
       }
-      is(done) {
-        when (io.start) {
-          mode_test := 1.U
-          current := first
-        } .otherwise {
-          current := done
-        }
-      }
     }
-    // expecting 4
-  when (current === done) {
+  }
+  // expecting 4
+  when(current === done) {
     io.done := true.B
-  } .otherwise {
+  }.otherwise {
     io.done := false.B
   }
   io.x_out := temp
@@ -1071,7 +1165,7 @@ class regAssign extends Module {
 
 class diffusion_layer_single extends Module {
   val io = IO(new Bundle {
-    val x_in        = Input(UInt(64.W))
+    val x_in = Input(UInt(64.W))
     val start = Input(Bool())
     val amountFirst = Input(UInt(6.W))
     val amountSecond = Input(UInt(6.W))
@@ -1083,58 +1177,56 @@ class diffusion_layer_single extends Module {
   val temp = RegInit(0.U(64.W))
   val barrel = Module(new barrelShifter_seq(6))
   val reg_amount = RegInit(0.U(6.W))
-  //val start::first::second::done::Nil = Enum(4)
-  val first::second::done::Nil = Enum(3)
+  // val start::first::second::done::Nil = Enum(4)
+  val first :: second :: done :: Nil = Enum(3)
   val current = RegInit(done)
   barrel.io.input := io.x_in
   barrel.io.amount := reg_amount
   barrel.io.start := false.B
   val xor_temp = WireDefault(0.U(64.W))
   xor_temp := temp ^ barrel.io.output
-  switch (current){
-    is(first){
-      when (barrel.io.done) {
+  switch(current) {
+    is(first) {
+      when(barrel.io.done) {
         // store first rotate
         temp := xor_temp
         // start second rotate
         reg_amount := io.amountSecond
         barrel.io.start := true.B
         current := second
-      } 
-      .otherwise {
-        current := first
       }
+        .otherwise {
+          current := first
+        }
     }
     is(second) {
-      when (barrel.io.done) {
+      when(barrel.io.done) {
         current := done
-      } 
-      .otherwise {
-        current := second
       }
+        .otherwise {
+          current := second
+        }
     }
-    is(done){
-      when (edge.io.out) {
+    is(done) {
+      when(edge.io.out) {
         // store the io.input value, start first rotate
         temp := io.x_in
         reg_amount := io.amountFirst
         barrel.io.start := true.B
         current := first
-      } .otherwise {
+      }.otherwise {
         current := done
       }
     }
   }
 
-  when (current === done) {
+  when(current === done) {
     io.done := true.B
-  } .otherwise {
+  }.otherwise {
     io.done := false.B
   }
   io.x_out := xor_temp
 }
-
-
 
 class rotateRight extends Module {
   val io = IO(new Bundle {
@@ -1157,40 +1249,40 @@ class rotateRight extends Module {
 // single round permutation
 class permutation extends Module {
   val io = IO(new Bundle {
-    val round_in        = Input(UInt(8.W))
-    val x_in        = Input(Vec(5, UInt(64.W)))
+    val round_in = Input(UInt(8.W))
+    val x_in = Input(Vec(5, UInt(64.W)))
     val x_out = Output(Vec(5, UInt(64.W)))
   })
 
-    val addition = Module(new addition_layer())
-    val substitution = Module(new substitution_layer())
-    val diffusion= Module(new diffusion_layer())
-    val substitution_reg = Reg(Vec(5, UInt(64.W)))
+  val addition = Module(new addition_layer())
+  val substitution = Module(new substitution_layer())
+  val diffusion = Module(new diffusion_layer())
+  val substitution_reg = Reg(Vec(5, UInt(64.W)))
 
-    addition.io.round_in := io.round_in
-    addition.io.x2_in := io.x_in(2)
+  addition.io.round_in := io.round_in
+  addition.io.x2_in := io.x_in(2)
 
-    substitution.io.x_in(0) := io.x_in(0)
-    substitution.io.x_in(1) := io.x_in(1)
-    substitution.io.x_in(2) := addition.io.x2_out
-    substitution.io.x_in(3) := io.x_in(3)
-    substitution.io.x_in(4) := io.x_in(4)
+  substitution.io.x_in(0) := io.x_in(0)
+  substitution.io.x_in(1) := io.x_in(1)
+  substitution.io.x_in(2) := addition.io.x2_out
+  substitution.io.x_in(3) := io.x_in(3)
+  substitution.io.x_in(4) := io.x_in(4)
 
-    substitution_reg(0) := substitution.io.x_out(0)
-    substitution_reg(1) := substitution.io.x_out(1)
-    substitution_reg(2) := substitution.io.x_out(2)
-    substitution_reg(3) := substitution.io.x_out(3)
-    substitution_reg(4) := substitution.io.x_out(4)
-  
-    diffusion.io.x_in(0) := substitution_reg(0)
-    diffusion.io.x_in(1) := substitution_reg(1)
-    diffusion.io.x_in(2) := substitution_reg(2)
-    diffusion.io.x_in(3) := substitution_reg(3)
-    diffusion.io.x_in(4) := substitution_reg(4)
+  substitution_reg(0) := substitution.io.x_out(0)
+  substitution_reg(1) := substitution.io.x_out(1)
+  substitution_reg(2) := substitution.io.x_out(2)
+  substitution_reg(3) := substitution.io.x_out(3)
+  substitution_reg(4) := substitution.io.x_out(4)
 
-    io.x_out(0) := diffusion.io.x_out(0)
-    io.x_out(1) := diffusion.io.x_out(1)
-    io.x_out(2) := diffusion.io.x_out(2)
-    io.x_out(3) := diffusion.io.x_out(3)
-    io.x_out(4) := diffusion.io.x_out(4) 
+  diffusion.io.x_in(0) := substitution_reg(0)
+  diffusion.io.x_in(1) := substitution_reg(1)
+  diffusion.io.x_in(2) := substitution_reg(2)
+  diffusion.io.x_in(3) := substitution_reg(3)
+  diffusion.io.x_in(4) := substitution_reg(4)
+
+  io.x_out(0) := diffusion.io.x_out(0)
+  io.x_out(1) := diffusion.io.x_out(1)
+  io.x_out(2) := diffusion.io.x_out(2)
+  io.x_out(3) := diffusion.io.x_out(3)
+  io.x_out(4) := diffusion.io.x_out(4)
 }
