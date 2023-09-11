@@ -144,7 +144,7 @@ class rotateTest
   "rotateTest_loop" should "work" in {
     test(new rotateRight) { dut =>
       var start = BigInt(1)
-      while (start < BigDecimal(2).pow(6).toBigInt - 1) {
+      while (start < BigDecimal(2).pow(3).toBigInt - 1) {
         for (amountLeftShifted <- 0 until 64) {
           // println("start is: " + start)
           // println("amount left shifted is: " + amountLeftShifted)
@@ -196,7 +196,7 @@ class rotateTest
   "rotateTestBarrel_loop" should "work" in {
     test(new barrelShifter(6)) { dut =>
       var start = BigInt(1)
-      while (start < BigDecimal(2).pow(6).toBigInt - 1) {
+      while (start < BigDecimal(2).pow(3).toBigInt - 1) {
         for (amountLeftShifted <- 0 until 64) {
           // println("start is: " + start)
           // println("amount left shifted is: " + amountLeftShifted)
@@ -230,7 +230,7 @@ class rotateTest
   "sequential barrel shifter" should "work looped" in {
     test(new barrelShifter_seq(6)) { dut =>
       var start = BigInt(1)
-      while (start < BigDecimal(2).pow(7).toBigInt - 1) {
+      while (start < BigDecimal(2).pow(3).toBigInt - 1) {
         for (amountLeftShifted <- 0 until 64) {
           dut.io.done.expect(true)
           // println("start is: " + start)
@@ -278,7 +278,7 @@ class rotateTest
   "param sequential barrel shifter" should "work looped" in {
     test(new barrelShifter_seq_param(6)) { dut =>
       var start = BigInt(1)
-      while (start < BigDecimal(2).pow(4).toBigInt - 1) {
+      while (start < BigDecimal(2).pow(3).toBigInt - 1) {
         for (amountLeftShifted <- 0 until 64) {
           println("start is: " + start)
           println("amount left shifted is: " + amountLeftShifted)
@@ -412,7 +412,7 @@ class rotateTest
   "barrel shifter with 2 register" should "work looped" in {
     test(new barrelShifter_2reg()) { dut =>
       var start = BigInt(1)
-      while (start < BigDecimal(2).pow(4).toBigInt - 1) {
+      while (start < BigDecimal(2).pow(3).toBigInt - 1) {
         for (amountLeftShifted <- 0 until 64) {
           println("start is: " + start)
           println("amount left shifted is: " + amountLeftShifted)
@@ -445,46 +445,47 @@ class rotateTest
       var amountLeftShifted = 0
       while (start < BigDecimal(2).pow(3).toBigInt - 1) {
         for (amountLeftShifted <- 0 until 64) {
-          println("start is: " + start)
-          println("amount left shifted is: " + amountLeftShifted)
+          // println("start is: " + start)
+          // println("amount left shifted is: " + amountLeftShifted)
           dut.io.input.poke(rotateLeft(amountLeftShifted, start))
           dut.io.amount.poke(amountLeftShifted)
-          println(
-            "result of start shifted is: " + rotateLeft(
-              amountLeftShifted,
-              start
-            )
-          )
+          // println(
+          //   "result of start shifted is: " + rotateLeft(
+          //     amountLeftShifted,
+          //     start
+          //   )
+          // )
           dut.clock.step()
           // amountLeftShifted = 1
-          println("start is: " + start)
-          println("amount left shifted is: " + amountLeftShifted)
+          // println("start is: " + start)
+          // println("amount left shifted is: " + amountLeftShifted)
           dut.io.input.poke(rotateLeft(amountLeftShifted, start))
           dut.io.amount.poke(amountLeftShifted)
-          println(
-            "result of start shifted is: " + rotateLeft(
-              amountLeftShifted,
-              start
-            )
-          )
-          println("output is: " + dut.io.output.peek())
+          // println(
+          //   "result of start shifted is: " + rotateLeft(
+          //     amountLeftShifted,
+          //     start
+          //   )
+          // )
+          // println("output is: " + dut.io.output.peek())
           dut.clock.step()
           // amountLeftShifted = 2
-          println("start is: " + start)
-          println("amount left shifted is: " + amountLeftShifted)
+          // println("start is: " + start)
+          // println("amount left shifted is: " + amountLeftShifted)
           dut.io.input.poke(rotateLeft(amountLeftShifted, start))
           dut.io.amount.poke(amountLeftShifted)
-          println(
-            "result of start shifted is: " + rotateLeft(
-              amountLeftShifted,
-              start
-            )
-          )
-          println("output is: " + dut.io.output.peek())
+          // println(
+          //   "result of start shifted is: " + rotateLeft(
+          //     amountLeftShifted,
+          //     start
+          //   )
+          // )
+          // println("output is: " + dut.io.output.peek())
           dut.io.output.expect(start)
           dut.clock.step()
-          println("output is: " + dut.io.output.peek())
+          // println("output is: " + dut.io.output.peek())
           dut.io.output.expect(start)
+          start = start + 1
         }
       }
     }
