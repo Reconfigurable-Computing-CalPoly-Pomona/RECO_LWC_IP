@@ -615,6 +615,7 @@ class diffusionPipeTest
         }
     }
     // Vivado 2022.2: 326 LUT, 259 FF, 4.691ns Total Delay
+    // Vivado 2022.2 (pipelined): 262 LUT, 266 FF, 4.691ns Total Delay
   }
 }
 class diffusionTest
@@ -935,6 +936,7 @@ class diffusionTest
     }
     // Vivado 2018.1: 448 LUT, 224 FF, Total Delay 5.876ns
     // Vivado 2022.2: 519 LUT, 224 FF, Total Delay 5.872ns
+    // Vivado 2022.2 (pipelined): 462 LUT, 298 FF, Total Delay 5.879ns
   }
 
   "diffusion_fifo with 5 together" should "work" in {
