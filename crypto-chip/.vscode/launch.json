@@ -32,6 +32,12 @@
         {
             "type": "scala",
             "request": "launch",
+            "name": "test substitution layer",
+            "testClass": "layers.sub_test"
+        },
+        {
+            "type": "scala",
+            "request": "launch",
             "name": "test ascon",
             "testClass": "ascon.hashBehavior"
         },

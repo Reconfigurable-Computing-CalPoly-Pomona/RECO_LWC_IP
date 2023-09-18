@@ -124,7 +124,172 @@ trait testFunctions {
     }
     return singleDiffusion(xIn, amountFirst, amountSecond)
   }
+  def sub_table(in: Int): Int = {
+    if (in == 0) {
+      return BigInt("4", 16).toInt
+    }
+    else if (in == 1) {
+      return BigInt("b", 16).toInt
+    }
+    else if (in == 2) {
+      return BigInt("1f", 16).toInt
+    }
+    else if (in == 3) {
+      return BigInt("14", 16).toInt
+    }
+    else if (in == 4) {
+      return BigInt("1a", 16).toInt
+    }
+    else if (in == 5) {
+      return BigInt("15", 16).toInt
+    }
+    else if (in == 6) {
+      return BigInt("9", 16).toInt
+    }
+    else if (in == 7) {
+      return BigInt("2", 16).toInt
+    }
+    else if (in == 8) {
+      return BigInt("1b", 16).toInt
+    }
+    else if (in == 9) {
+      return BigInt("5", 16).toInt
+    }
+    else if (in == 10) {
+      return BigInt("8", 16).toInt
+    }
+    else if (in == 11) {
+      return BigInt("12", 16).toInt
+    }
+    else if (in == 12) {
+      return BigInt("1d", 16).toInt
+    }
+    else if (in == 13) {
+      return BigInt("3", 16).toInt
+    }
+    else if (in == 14) {
+      return BigInt("6", 16).toInt
+    }
+    else if (in == 15) {
+      return BigInt("1c", 16).toInt
+    }
+    else if (in == 16) {
+      return BigInt("1e", 16).toInt
+    }
+    else if (in == 17) {
+      return BigInt("13", 16).toInt
+    }
+    else if (in == 18) {
+      return BigInt("7", 16).toInt
+    }
+    else if (in == 19) {
+      return BigInt("e", 16).toInt
+    }
+    else if (in == 20) {
+      return BigInt("0", 16).toInt
+    }
+    else if (in == 21) {
+      return BigInt("d", 16).toInt
+    }
+    else if (in == 22) {
+      return BigInt("11", 16).toInt
+    }
+    else if (in == 23) {
+      return BigInt("18", 16).toInt
+    }
+    else if (in == 24) {
+      return BigInt("10", 16).toInt
+    }
+    else if (in == 25) {
+      return BigInt("c", 16).toInt
+    }
+    else if (in == 26) {
+      return BigInt("1", 16).toInt
+    }
+    else if (in == 27) {
+      return BigInt("19", 16).toInt
+    }
+    else if (in == 28) {
+      return BigInt("16", 16).toInt
+    }
+    else if (in == 29) {
+      return BigInt("a", 16).toInt
+    }
+    else if (in == 30) {
+      return BigInt("f", 16).toInt
+    }
+    else if (in == 31) {
+      return BigInt("17", 16).toInt
+    }
+    else {
+      return BigInt("00",16).toInt
+    }
+  }
+}
 
+class sub_test extends AnyFlatSpec with ChiselScalatestTester with testFunctions {
+  "sub_fifo" should "work with one value" in {
+    test(new substitution_fifo()) { dut =>
+      var count = 0
+      dut.io.in.bits.poke(0)
+      dut.io.in.valid.poke(true)
+      dut.clock.step()
+      count = count + 1
+      while (dut.io.out.valid.peekBoolean() == false) {
+        dut.clock.step()
+        count = count + 1
+      }
+      dut.io.out.ready.poke(true)
+      println("output is: " + dut.io.out.bits.peek())
+      println("count is: " + count)
+      dut.io.out.bits.expect(4)
+    }
+  }
+  "sub_fifo" should "work with 32 value" in {
+    test(new substitution_fifo()) { dut =>
+      var count = 0
+      var i = 0
+      while (i < 32) {
+        if (dut.io.in.ready.peekBoolean()) {
+          dut.io.in.bits.poke(i)
+          dut.io.in.valid.poke(true)
+          dut.clock.step()
+          count = count + 1
+          i = i + 1
+        }
+        else {
+          dut.io.in.valid.poke(false)
+          dut.clock.step()
+          count = count + 1
+        }
+      }
+      i = 0
+      while (i < 32) {
+        if (dut.io.out.valid.peekBoolean()) {
+          dut.io.out.ready.poke(true)
+          println("output is: " + dut.io.out.bits.peek())
+          dut.io.out.bits.expect(sub_table(i))
+          i = i + 1
+          dut.clock.step()
+          count = count + 1
+        }
+        else {
+          dut.clock.step()
+          count = count + 1
+          dut.io.out.ready.poke(false)
+        }
+      }
+      // dut.io.in.valid.poke(false)
+      // while (dut.io.out.valid.peekBoolean() == false) {
+      //   dut.clock.step()
+      //   count = count + 1
+      // }
+      // dut.io.out.ready.poke(true)
+      // println("output is: " + dut.io.out.bits.peek())
+      println("count is: " + count)
+      // dut.io.out.bits.expect( /*function>*/ )
+    }
+  }
 }
 class rotateTest
     extends AnyFlatSpec
@@ -843,96 +1008,95 @@ class diffusionTest
     }
   }
   "diffusion_fifo with 5 val" should "work" in {
-    test(new diffusion_fifo(5)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      // println("inserting x")
-      // println("empty is: " + dut.io.empty.peek())
-      // println("full is: " + dut.io.full.peek())
-      // perform diffusion with x_0 = 0, i=0
-      // perform full check here (with an if/when statement)
-      var count = 0
-      dut.io.full.expect(false)
-      println("full is: " + dut.io.full.peek())
-      println("empty is: " + dut.io.empty.peek())
-      // inserting 5 values
-      var i = 0
-      while (i < 5) {
-        // check if input fifo is full
-        if (dut.io.full.peekBoolean() == false) {
-          println("Writing at cycle: " + count)
-          // change to i + 1 to see if it starts at 0 or 1
-          dut.io.x_in.data.poke(i + 1)
-          dut.io.x_in.i.poke(i)
-          dut.io.startInsert.poke(1)
-          dut.clock.step()
-          count = count + 1
-          i = i + 1
-        }
-        else {
-          dut.io.startInsert.poke(0)
-          dut.clock.step()
-          count = count + 1
-        }
+    test(new diffusion_fifo(5)).withAnnotations(Seq(WriteVcdAnnotation)) {
+      dut =>
+        // println("inserting x")
+        // println("empty is: " + dut.io.empty.peek())
+        // println("full is: " + dut.io.full.peek())
+        // perform diffusion with x_0 = 0, i=0
+        // perform full check here (with an if/when statement)
+        var count = 0
+        dut.io.full.expect(false)
         println("full is: " + dut.io.full.peek())
         println("empty is: " + dut.io.empty.peek())
-      }
-      dut.io.startInsert.poke(0)
-
-      i = 0
-      while (i < 5) {
-        if (dut.io.empty.peekBoolean() == false) {
-          println("Reading at cycle: " + count)
-          // calculate result in scala
-          println("data is: " + dut.io.x_out.data.peek())
-          // change to i + 1 to see if it starts at 0 or 1
-          println("data should be: " + singleDiffusion_i(i + 1, i))
-          println("i is: " + dut.io.x_out.i.peek())
-          println("i should be: " + i)
-          dut.io.x_out.data.expect(singleDiffusion_i(i + 1, i))
-          dut.io.startOutput.poke(1)
-          dut.clock.step()
-          count = count + 1
-          i = i + 1
+        // inserting 5 values
+        var i = 0
+        while (i < 5) {
+          // check if input fifo is full
+          if (dut.io.full.peekBoolean() == false) {
+            println("Writing at cycle: " + count)
+            // change to i + 1 to see if it starts at 0 or 1
+            dut.io.x_in.data.poke(i + 1)
+            dut.io.x_in.i.poke(i)
+            dut.io.startInsert.poke(1)
+            dut.clock.step()
+            count = count + 1
+            i = i + 1
+          } else {
+            dut.io.startInsert.poke(0)
+            dut.clock.step()
+            count = count + 1
+          }
+          println("full is: " + dut.io.full.peek())
+          println("empty is: " + dut.io.empty.peek())
         }
-        else {
-          dut.io.startOutput.poke(0)
-          dut.clock.step()
-          count = count + 1
+        dut.io.startInsert.poke(0)
+
+        i = 0
+        while (i < 5) {
+          if (dut.io.empty.peekBoolean() == false) {
+            println("Reading at cycle: " + count)
+            // calculate result in scala
+            println("data is: " + dut.io.x_out.data.peek())
+            // change to i + 1 to see if it starts at 0 or 1
+            println("data should be: " + singleDiffusion_i(i + 1, i))
+            println("i is: " + dut.io.x_out.i.peek())
+            println("i should be: " + i)
+            dut.io.x_out.data.expect(singleDiffusion_i(i + 1, i))
+            dut.io.startOutput.poke(1)
+            dut.clock.step()
+            count = count + 1
+            i = i + 1
+          } else {
+            dut.io.startOutput.poke(0)
+            dut.clock.step()
+            count = count + 1
+          }
         }
-      }
-      println("took " + count + " cycles to finish")
-      // println("waiting to finish processing ")
-      // println("full is: " + dut.io.full.peek())
-      // println("empty is: " + dut.io.empty.peek())
-      // // not sure how many clocks
-      // var count = 0
-      // while (dut.io.full.peekBoolean() == false) {
-      //   count = count + 1
-      //   dut.clock.step()
-      // }
+        println("took " + count + " cycles to finish")
+        // println("waiting to finish processing ")
+        // println("full is: " + dut.io.full.peek())
+        // println("empty is: " + dut.io.empty.peek())
+        // // not sure how many clocks
+        // var count = 0
+        // while (dut.io.full.peekBoolean() == false) {
+        //   count = count + 1
+        //   dut.clock.step()
+        // }
 
-      // // for (i <- 0 until 20) {
-      // //     dut.clock.step()
-      // //     // dut.io.full.expect(false)
-      // //     println("empty is: " + dut.io.empty.peek())
-      // //     println("full is: " + dut.io.full.peek())
-      // // }
-      // for (i <- 0 until 10) {
-      //   if (dut.io.empty.peekBoolean() == false) {
-      //     // calculate result in scala
-      //     println("data is: " + dut.io.x_out.data.peek())
-      //     println("data should be: " + singleDiffusion_i(i, i))
-      //     println("i is: " + dut.io.x_out.i.peek())
-      //     println("i should be: " + i)
-      //     dut.io.x_out.data.expect(singleDiffusion_i(i, i))
-      //     dut.io.startOutput.poke(1)
-      //     dut.clock.step()
+        // // for (i <- 0 until 20) {
+        // //     dut.clock.step()
+        // //     // dut.io.full.expect(false)
+        // //     println("empty is: " + dut.io.empty.peek())
+        // //     println("full is: " + dut.io.full.peek())
+        // // }
+        // for (i <- 0 until 10) {
+        //   if (dut.io.empty.peekBoolean() == false) {
+        //     // calculate result in scala
+        //     println("data is: " + dut.io.x_out.data.peek())
+        //     println("data should be: " + singleDiffusion_i(i, i))
+        //     println("i is: " + dut.io.x_out.i.peek())
+        //     println("i should be: " + i)
+        //     dut.io.x_out.data.expect(singleDiffusion_i(i, i))
+        //     dut.io.startOutput.poke(1)
+        //     dut.clock.step()
 
-      //     dut.io.startOutput.poke(0)
-      //     dut.clock.step()
-      //   }
-      // }
-      // // println("empty is: " + dut.io.empty.peek())
-      // // println("full is: " + dut.io.full.peek())
+        //     dut.io.startOutput.poke(0)
+        //     dut.clock.step()
+        //   }
+        // }
+        // // println("empty is: " + dut.io.empty.peek())
+        // // println("full is: " + dut.io.full.peek())
     }
     // Vivado 2018.1: 448 LUT, 224 FF, Total Delay 5.876ns
     // Vivado 2022.2: 519 LUT, 224 FF, Total Delay 5.872ns

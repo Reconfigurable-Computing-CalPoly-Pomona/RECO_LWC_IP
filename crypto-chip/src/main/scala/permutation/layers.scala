@@ -30,127 +30,238 @@ class addition_layer extends Module {
 
   io.x2_out := io.x2_in ^ array(io.round_in)
 }
+class substitution_fifo extends Module {
+  val io = IO(new Bundle{
+    val in = Flipped(Decoupled(UInt(5.W)))
+    val out = Decoupled(UInt(5.W))
+  })
+  val input_queue = Module(new Queue(UInt(5.W), 64))
+  val output_queue = Module(new Queue(UInt(5.W), 64))
+  val rom = Module(new substitute_lookup_table())
+  // external connections
+  input_queue.io.enq <> io.in
+  io.out <> output_queue.io.deq
+  for (i <- 0 until 5) {
+    rom.io.in(i) := input_queue.io.deq.bits(i)
+  }
+  output_queue.io.enq.bits := rom.io.out.asUInt
+  when (input_queue.io.deq.valid) {
+    input_queue.io.deq.ready := true.B
+    output_queue.io.enq.valid := true.B
+  }
+  .otherwise {
+    input_queue.io.deq.ready := false.B
+    output_queue.io.enq.valid := false.B
+  }
+}
 
+class substitution_compat_in extends Module {
+  val io = IO(new Bundle{
+    val in = Input(Vec(5,UInt(64.W)))
+    val out = Output(UInt(5.W))
+  })
+  val counter = RegInit(0.U(6.W))
+
+
+}
+
+// https://www.chisel-lang.org/chisel3/docs/explanations/memories.html
+class substitute_lookup_table extends Module {
+  val io = IO(new Bundle {
+    val in = Input(Vec(5,UInt(1.W)))
+    val out = Output(Vec(5,UInt(1.W)))
+  })
+  // val array = Wire(Vec(32, UInt(5.W)))
+  val array = VecInit (
+"h4".U,
+"hb".U,
+"h1f".U,
+"h14".U,
+"h1a".U,
+"h15".U,
+"h9".U,
+"h2".U,
+"h1b".U,
+"h5".U,
+"h8".U,
+"h12".U,
+"h1d".U,
+"h3".U,
+"h6".U,
+"h1c".U,
+"h1e".U,
+"h13".U,
+"h7".U,
+"he".U,
+"h0".U,
+"hd".U,
+"h11".U,
+"h18".U,
+"h10".U,
+"hc".U,
+"h1".U,
+"h19".U,
+"h16".U,
+"ha".U,
+"hf".U,
+"h17".U)
+
+  // array(0) := "h4".U
+  // array(1) := "hb".U
+  // array(2) := "h1f".U
+  // array(3) := "h14".U
+  // array(4) := "h1a".U
+  // array(5) := "h15".U
+  // array(6) := "h9".U
+  // array(7) := "h2".U
+  // array(8) := "h1b".U
+  // array(9) := "h5".U
+  // array(10) := "h8".U
+  // array(11) := "h12".U
+  // array(12) := "h1d".U
+  // array(13) := "h3".U
+  // array(14) := "h6".U
+  // array(15) := "h1c".U
+  // array(16) := "h1e".U
+  // array(17) := "h13".U
+  // array(18) := "h7".U
+  // array(19) := "he".U
+  // array(20) := "h0".U
+  // array(21) := "hd".U
+  // array(22) := "h11".U
+  // array(23) := "h18".U
+  // array(24) := "h10".U
+  // array(25) := "hc".U
+  // array(26) := "h1".U
+  // array(27) := "h19".U
+  // array(28) := "h16".U
+  // array(29) := "ha".U
+  // array(30) := "hf".U
+  // array(31) := "h17".U
+  for (i <- 0 until 5) {
+    io.out(i) := array(io.in.asUInt)(i)
+  }
+}
 class substitution_layer extends Module {
   val io = IO(new Bundle {
     val x_in = Input(Vec(5, UInt(64.W)))
     val x_out = Output(Vec(5, UInt(64.W)))
   })
-  val array = Wire(Vec(32, UInt(5.W)))
-  val temp = Wire(Vec(64, UInt(5.W)))
-  array(0) := "h4".U
-  array(1) := "hb".U
-  array(2) := "h1f".U
-  array(3) := "h14".U
-  array(4) := "h1a".U
-  array(5) := "h15".U
-  array(6) := "h9".U
-  array(7) := "h2".U
-  array(8) := "h1b".U
-  array(9) := "h5".U
-  array(10) := "h8".U
-  array(11) := "h12".U
-  array(12) := "h1d".U
-  array(13) := "h3".U
-  array(14) := "h6".U
-  array(15) := "h1c".U
-  array(16) := "h1e".U
-  array(17) := "h13".U
-  array(18) := "h7".U
-  array(19) := "he".U
-  array(20) := "h0".U
-  array(21) := "hd".U
-  array(22) := "h11".U
-  array(23) := "h18".U
-  array(24) := "h10".U
-  array(25) := "hc".U
-  array(26) := "h1".U
-  array(27) := "h19".U
-  array(28) := "h16".U
-  array(29) := "ha".U
-  array(30) := "hf".U
-  array(31) := "h17".U
+  // val array = Wire(Vec(32, UInt(5.W)))
+  // val temp = Wire(Vec(64, UInt(5.W)))
+  // array(0) := "h4".U
+  // array(1) := "hb".U
+  // array(2) := "h1f".U
+  // array(3) := "h14".U
+  // array(4) := "h1a".U
+  // array(5) := "h15".U
+  // array(6) := "h9".U
+  // array(7) := "h2".U
+  // array(8) := "h1b".U
+  // array(9) := "h5".U
+  // array(10) := "h8".U
+  // array(11) := "h12".U
+  // array(12) := "h1d".U
+  // array(13) := "h3".U
+  // array(14) := "h6".U
+  // array(15) := "h1c".U
+  // array(16) := "h1e".U
+  // array(17) := "h13".U
+  // array(18) := "h7".U
+  // array(19) := "he".U
+  // array(20) := "h0".U
+  // array(21) := "hd".U
+  // array(22) := "h11".U
+  // array(23) := "h18".U
+  // array(24) := "h10".U
+  // array(25) := "hc".U
+  // array(26) := "h1".U
+  // array(27) := "h19".U
+  // array(28) := "h16".U
+  // array(29) := "ha".U
+  // array(30) := "hf".U
+  // array(31) := "h17".U
 
-  for (i <- 0 until 64) {
-    temp(i) := array(
-      Cat(
-        io.x_in(0)(i),
-        io.x_in(1)(i),
-        io.x_in(2)(i),
-        io.x_in(3)(i),
-        io.x_in(4)(i)
-      )
-    )
-  }
+  // for (i <- 0 until 64) {
+  //   temp(i) := array(
+  //     Cat(
+  //       io.x_in(0)(i),
+  //       io.x_in(1)(i),
+  //       io.x_in(2)(i),
+  //       io.x_in(3)(i),
+  //       io.x_in(4)(i)
+  //     )
+  //   )
+  // }
 
-  for (j <- 0 until 5) {
-    io.x_out(j) := Cat(
-      temp(63)(4 - j),
-      temp(62)(4 - j),
-      temp(61)(4 - j),
-      temp(60)(4 - j),
-      temp(59)(4 - j),
-      temp(58)(4 - j),
-      temp(57)(4 - j),
-      temp(56)(4 - j),
-      temp(55)(4 - j),
-      temp(54)(4 - j),
-      temp(53)(4 - j),
-      temp(52)(4 - j),
-      temp(51)(4 - j),
-      temp(50)(4 - j),
-      temp(49)(4 - j),
-      temp(48)(4 - j),
-      temp(47)(4 - j),
-      temp(46)(4 - j),
-      temp(45)(4 - j),
-      temp(44)(4 - j),
-      temp(43)(4 - j),
-      temp(42)(4 - j),
-      temp(41)(4 - j),
-      temp(40)(4 - j),
-      temp(39)(4 - j),
-      temp(38)(4 - j),
-      temp(37)(4 - j),
-      temp(36)(4 - j),
-      temp(35)(4 - j),
-      temp(34)(4 - j),
-      temp(33)(4 - j),
-      temp(32)(4 - j),
-      temp(31)(4 - j),
-      temp(30)(4 - j),
-      temp(29)(4 - j),
-      temp(28)(4 - j),
-      temp(27)(4 - j),
-      temp(26)(4 - j),
-      temp(25)(4 - j),
-      temp(24)(4 - j),
-      temp(23)(4 - j),
-      temp(22)(4 - j),
-      temp(21)(4 - j),
-      temp(20)(4 - j),
-      temp(19)(4 - j),
-      temp(18)(4 - j),
-      temp(17)(4 - j),
-      temp(16)(4 - j),
-      temp(15)(4 - j),
-      temp(14)(4 - j),
-      temp(13)(4 - j),
-      temp(12)(4 - j),
-      temp(11)(4 - j),
-      temp(10)(4 - j),
-      temp(9)(4 - j),
-      temp(8)(4 - j),
-      temp(7)(4 - j),
-      temp(6)(4 - j),
-      temp(5)(4 - j),
-      temp(4)(4 - j),
-      temp(3)(4 - j),
-      temp(2)(4 - j),
-      temp(1)(4 - j),
-      temp(0)(4 - j)
-    )
-  }
+  // for (j <- 0 until 5) {
+  //   io.x_out(j) := Cat(
+  //     temp(63)(4 - j),
+  //     temp(62)(4 - j),
+  //     temp(61)(4 - j),
+  //     temp(60)(4 - j),
+  //     temp(59)(4 - j),
+  //     temp(58)(4 - j),
+  //     temp(57)(4 - j),
+  //     temp(56)(4 - j),
+  //     temp(55)(4 - j),
+  //     temp(54)(4 - j),
+  //     temp(53)(4 - j),
+  //     temp(52)(4 - j),
+  //     temp(51)(4 - j),
+  //     temp(50)(4 - j),
+  //     temp(49)(4 - j),
+  //     temp(48)(4 - j),
+  //     temp(47)(4 - j),
+  //     temp(46)(4 - j),
+  //     temp(45)(4 - j),
+  //     temp(44)(4 - j),
+  //     temp(43)(4 - j),
+  //     temp(42)(4 - j),
+  //     temp(41)(4 - j),
+  //     temp(40)(4 - j),
+  //     temp(39)(4 - j),
+  //     temp(38)(4 - j),
+  //     temp(37)(4 - j),
+  //     temp(36)(4 - j),
+  //     temp(35)(4 - j),
+  //     temp(34)(4 - j),
+  //     temp(33)(4 - j),
+  //     temp(32)(4 - j),
+  //     temp(31)(4 - j),
+  //     temp(30)(4 - j),
+  //     temp(29)(4 - j),
+  //     temp(28)(4 - j),
+  //     temp(27)(4 - j),
+  //     temp(26)(4 - j),
+  //     temp(25)(4 - j),
+  //     temp(24)(4 - j),
+  //     temp(23)(4 - j),
+  //     temp(22)(4 - j),
+  //     temp(21)(4 - j),
+  //     temp(20)(4 - j),
+  //     temp(19)(4 - j),
+  //     temp(18)(4 - j),
+  //     temp(17)(4 - j),
+  //     temp(16)(4 - j),
+  //     temp(15)(4 - j),
+  //     temp(14)(4 - j),
+  //     temp(13)(4 - j),
+  //     temp(12)(4 - j),
+  //     temp(11)(4 - j),
+  //     temp(10)(4 - j),
+  //     temp(9)(4 - j),
+  //     temp(8)(4 - j),
+  //     temp(7)(4 - j),
+  //     temp(6)(4 - j),
+  //     temp(5)(4 - j),
+  //     temp(4)(4 - j),
+  //     temp(3)(4 - j),
+  //     temp(2)(4 - j),
+  //     temp(1)(4 - j),
+  //     temp(0)(4 - j)
+  //   )
+  // }
 }
 // have a module to prevent an input to rotate
 // for 2 registers, a max of 2 can be in at any time
