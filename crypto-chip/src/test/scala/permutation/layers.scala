@@ -228,6 +228,20 @@ trait testFunctions {
 }
 
 class sub_test extends AnyFlatSpec with ChiselScalatestTester with testFunctions {
+  "lookup table" should "work" in {
+    test(new Module { 
+      val io = IO(new Bundle {
+        val in = Input(UInt(5.W))
+        val out = Output(UInt(5.W))
+      })
+      val lookup = Module(new substitute_lookup_table)
+      io <> lookup.io
+    }).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut => 
+      dut.io.in.poke(0)
+      dut.clock.step()
+      dut.io.out.expect(4)
+    }
+  }
   "sub_fifo" should "work with one value" in {
     test(new substitution_fifo()) { dut =>
       var count = 0

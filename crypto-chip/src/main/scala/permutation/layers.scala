@@ -2,6 +2,8 @@ package layers
 
 import chisel3._
 import chisel3.util._
+import chisel3.experimental._
+import chisel3.util.HasBlackBoxResource
 import scala.math._
 import _root_.permutation.posedge
 import org.scalatest.run
@@ -31,7 +33,7 @@ class addition_layer extends Module {
   io.x2_out := io.x2_in ^ array(io.round_in)
 }
 class substitution_fifo extends Module {
-  val io = IO(new Bundle{
+  val io = IO(new Bundle {
     val in = Flipped(Decoupled(UInt(5.W)))
     val out = Decoupled(UInt(5.W))
   })
@@ -41,71 +43,54 @@ class substitution_fifo extends Module {
   // external connections
   input_queue.io.enq <> io.in
   io.out <> output_queue.io.deq
-  for (i <- 0 until 5) {
-    rom.io.in(i) := input_queue.io.deq.bits(i)
-  }
-  output_queue.io.enq.bits := rom.io.out.asUInt
+  // for (i <- 0 until 5) {
+    rom.io.in := input_queue.io.deq.bits
+  // }
+  output_queue.io.enq.bits := rom.io.out
   when (input_queue.io.deq.valid) {
     input_queue.io.deq.ready := true.B
     output_queue.io.enq.valid := true.B
   }
-  .otherwise {
-    input_queue.io.deq.ready := false.B
-    output_queue.io.enq.valid := false.B
-  }
+    .otherwise {
+      input_queue.io.deq.ready := false.B
+      output_queue.io.enq.valid := false.B
+    }
 }
 
 class substitution_compat_in extends Module {
-  val io = IO(new Bundle{
-    val in = Input(Vec(5,UInt(64.W)))
+  val io = IO(new Bundle {
+    val in = Input(Vec(5, UInt(64.W)))
     val out = Output(UInt(5.W))
   })
   val counter = RegInit(0.U(6.W))
 
-
 }
-
-// https://www.chisel-lang.org/chisel3/docs/explanations/memories.html
-class substitute_lookup_table extends Module {
+class romTest extends Module {
   val io = IO(new Bundle {
-    val in = Input(Vec(5,UInt(1.W)))
-    val out = Output(Vec(5,UInt(1.W)))
+    val in = Input(UInt(32.W))
+    val out = Output(SInt(32.W))
   })
-  // val array = Wire(Vec(32, UInt(5.W)))
-  val array = VecInit (
-"h4".U,
-"hb".U,
-"h1f".U,
-"h14".U,
-"h1a".U,
-"h15".U,
-"h9".U,
-"h2".U,
-"h1b".U,
-"h5".U,
-"h8".U,
-"h12".U,
-"h1d".U,
-"h3".U,
-"h6".U,
-"h1c".U,
-"h1e".U,
-"h13".U,
-"h7".U,
-"he".U,
-"h0".U,
-"hd".U,
-"h11".U,
-"h18".U,
-"h10".U,
-"hc".U,
-"h1".U,
-"h19".U,
-"h16".U,
-"ha".U,
-"hf".U,
-"h17".U)
-
+  val Pi = math.Pi
+  def sinTable(amp: Double, n: Int) = {
+    val times =
+      (0 until n).map(i => (i * 2 * Pi) / (n.toDouble - 1) - Pi)
+    val inits =
+      times.map(t => Math.round(amp * math.sin(t)).asSInt(32.W))
+    VecInit(inits)
+  }
+  val r = sinTable(1, 10)
+  io.out := r(io.in)
+}
+// https://www.chisel-lang.org/chisel3/docs/explanations/memories.html
+// current implementation is a long delay due to a chain
+// try bram, try different assignment to output
+class substitute_lookup_table extends BlackBox with HasBlackBoxResource {
+  val io = IO(new Bundle {
+    // val clk = Input(Clock())
+    val in = Input(UInt(5.W))
+    val out = Output(UInt(5.W))
+  })
+  addResource("substitute_lookup_table.v")
   // array(0) := "h4".U
   // array(1) := "hb".U
   // array(2) := "h1f".U
@@ -138,10 +123,8 @@ class substitute_lookup_table extends Module {
   // array(29) := "ha".U
   // array(30) := "hf".U
   // array(31) := "h17".U
-  for (i <- 0 until 5) {
-    io.out(i) := array(io.in.asUInt)(i)
-  }
 }
+
 class substitution_layer extends Module {
   val io = IO(new Bundle {
     val x_in = Input(Vec(5, UInt(64.W)))
@@ -1042,23 +1025,23 @@ class diffusion_fifo(fifo_size: Int) extends Module {
   single_diffusion.io.i := in.io.deq.bits.i
   out.io.enq.bits.data := single_diffusion.io.x_out
   // Note confirmed: increasing counter in case of overflow when adding 4
-    // also solves problem with unbalanced read and writes
+  // also solves problem with unbalanced read and writes
   val counter = RegInit(0.U(4.W))
   when(counter === 5.U) {
     counter := 0.U
   }
-  .otherwise {
-    counter := counter + 1.U
-  }
+    .otherwise {
+      counter := counter + 1.U
+    }
   out.io.enq.bits.i := read_i(counter)
   // writing; every 2 cycles write for 2 cycle deq, save i and save read marker
-    // Trying to see if setting the deq marker at +1 will work because it takes one cycle to "register" changes
-    // Note confirmed: this works; looks like there was an extra delay when deq happens that causes i and data to be off by one
-    // specifically, i is wired directly so it must be held for 2 cycles while data is registered inside single_diffusion, so it needs 1 extra cycle
-    // at cycle 2, there is data ready; i is already connected, but needs to be held for an extra cycle: cycle 3. the deq didn't happen until cycle 3 which changes i too soon. Meanwhile, data is input at cycle 3. This means i is one cycle earlier than data.
-    // The resulting goal is to get new data at cycle 4, which means applying a deq signal at cycle 3 for the next data and i value
-    // cycle two is too early and would change i before it was done; the data is also changed, but should still be valid because of the register being used
-    // cycle 4 is too late because the next data is not there yet and the rest of the pipeline will use the wrong data that's old by 2 cycles
+  // Trying to see if setting the deq marker at +1 will work because it takes one cycle to "register" changes
+  // Note confirmed: this works; looks like there was an extra delay when deq happens that causes i and data to be off by one
+  // specifically, i is wired directly so it must be held for 2 cycles while data is registered inside single_diffusion, so it needs 1 extra cycle
+  // at cycle 2, there is data ready; i is already connected, but needs to be held for an extra cycle: cycle 3. the deq didn't happen until cycle 3 which changes i too soon. Meanwhile, data is input at cycle 3. This means i is one cycle earlier than data.
+  // The resulting goal is to get new data at cycle 4, which means applying a deq signal at cycle 3 for the next data and i value
+  // cycle two is too early and would change i before it was done; the data is also changed, but should still be valid because of the register being used
+  // cycle 4 is too late because the next data is not there yet and the rest of the pipeline will use the wrong data that's old by 2 cycles
 
   when(in.io.deq.valid && (counter % 2.U === 0.U)) {
     // in.io.deq.ready := true.B
@@ -1067,11 +1050,11 @@ class diffusion_fifo(fifo_size: Int) extends Module {
     readMarker((counter + 4.U) % 6.U) := true.B
   }
   // for now check every cycle; can be checked at counter % 2 === 1.U
-    // Note that this is incompatible with a clock divider unfortunately
-  when (deqMarker(counter)) {
+  // Note that this is incompatible with a clock divider unfortunately
+  when(deqMarker(counter)) {
     in.io.deq.ready := true.B
     // when (in.io.deq.valid === false.B) {
-      deqMarker(counter) := false.B
+    deqMarker(counter) := false.B
     // }
   }
   // reading; when reaching a read marker, enq data and reset read marker
