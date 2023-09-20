@@ -65,46 +65,149 @@ class substitution_compat_in extends Module {
 
 }
 
-// https://www.chisel-lang.org/chisel3/docs/explanations/memories.html
+// https://www.chisel-lang.org/chisel3/docs/explanations/muxes-and-input-selection.html
 class substitute_lookup_table extends Module {
   val io = IO(new Bundle {
     val in = Input(Vec(5,UInt(1.W)))
     val out = Output(Vec(5,UInt(1.W)))
   })
   // val array = Wire(Vec(32, UInt(5.W)))
-  val array = VecInit (
-"h4".U,
-"hb".U,
-"h1f".U,
-"h14".U,
-"h1a".U,
-"h15".U,
-"h9".U,
-"h2".U,
-"h1b".U,
-"h5".U,
-"h8".U,
-"h12".U,
-"h1d".U,
-"h3".U,
-"h6".U,
-"h1c".U,
-"h1e".U,
-"h13".U,
-"h7".U,
-"he".U,
-"h0".U,
-"hd".U,
-"h11".U,
-"h18".U,
-"h10".U,
-"hc".U,
-"h1".U,
-"h19".U,
-"h16".U,
-"ha".U,
-"hf".U,
-"h17".U)
+//   val array = VecInit (
+// "h4".U,
+// "hb".U,
+// "h1f".U,
+// "h14".U,
+// "h1a".U,
+// "h15".U,
+// "h9".U,
+// "h2".U,
+// "h1b".U,
+// "h5".U,
+// "h8".U,
+// "h12".U,
+// "h1d".U,
+// "h3".U,
+// "h6".U,
+// "h1c".U,
+// "h1e".U,
+// "h13".U,
+// "h7".U,
+// "he".U,
+// "h0".U,
+// "hd".U,
+// "h11".U,
+// "h18".U,
+// "h10".U,
+// "hc".U,
+// "h1".U,
+// "h19".U,
+// "h16".U,
+// "ha".U,
+// "hf".U,
+// "h17".U)
+  val outTemp = WireDefault(0.U(5.W))
+
+  switch(io.in.asUInt) {
+    is(0.U) {
+      outTemp := "h4".U
+    }
+    is(1.U) {
+      outTemp := "hb".U    
+    }
+    is(2.U) {
+      outTemp := "h1f".U    
+    }
+    is(3.U) {
+      outTemp := "h14".U    
+    }
+    is(4.U) {
+      outTemp := "h1a".U
+    }
+    is(5.U) {
+      outTemp := "h15".U    
+    }
+    is(6.U) {
+      outTemp := "h9".U    
+    }
+    is(7.U) {
+      outTemp := "h2".U    
+    }
+    is(8.U) {
+      outTemp := "h1b".U    
+    }
+    is(9.U) {
+      outTemp := "h5".U    
+    }
+    is(10.U) {
+      outTemp := "h8".U    
+    }
+    is(11.U) {
+      outTemp := "h12".U    
+    }
+    is(12.U) {
+      outTemp := "h1d".U    
+    }
+    is(13.U) {
+      outTemp := "h3".U    
+    }
+    is(14.U) {
+      outTemp := "h6".U    
+    }
+    is(15.U) {
+      outTemp := "h1c".U    
+    }
+    is(16.U) {
+      outTemp := "h1e".U    
+    }
+    is(17.U) {
+      outTemp := "h13".U    
+    }
+    is(18.U) {
+      outTemp := "h7".U    
+    }
+    is(19.U) {
+      outTemp := "he".U    
+    }
+    is(20.U) {
+      outTemp := "h0".U    
+    }
+    is(21.U) {
+      outTemp := "hd".U    
+    }
+    is(22.U) {
+      outTemp := "h11".U    
+    }
+    is(23.U) {
+      outTemp := "h18".U    
+    }
+    is(24.U) {
+      outTemp := "h10".U    
+    }
+    is(25.U) {
+      outTemp := "hc".U    
+    }
+    is(26.U) {
+      outTemp := "h1".U    
+    }
+    is(27.U) {
+      outTemp := "h19".U    
+    }
+    is(28.U) {
+      outTemp := "h16".U    
+    }
+    is(29.U) {
+      outTemp := "ha".U    
+    }
+    is(30.U) {
+      outTemp := "hf".U    
+    }
+    is(31.U) {
+      outTemp := "h17".U    
+    }
+  }
+  for (i <- 0 until 5) {
+    io.out(i) := outTemp(i)
+  }
 
   // array(0) := "h4".U
   // array(1) := "hb".U
@@ -138,9 +241,9 @@ class substitute_lookup_table extends Module {
   // array(29) := "ha".U
   // array(30) := "hf".U
   // array(31) := "h17".U
-  for (i <- 0 until 5) {
-    io.out(i) := array(io.in.asUInt)(i)
-  }
+  // for (i <- 0 until 5) {
+  //   io.out(i) := array(io.in.asUInt)(i)
+  // }
 }
 class substitution_layer extends Module {
   val io = IO(new Bundle {
