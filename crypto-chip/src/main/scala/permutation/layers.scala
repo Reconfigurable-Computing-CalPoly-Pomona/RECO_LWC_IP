@@ -31,7 +31,7 @@ class addition_layer extends Module {
   io.x2_out := io.x2_in ^ array(io.round_in)
 }
 class substitution_fifo extends Module {
-  val io = IO(new Bundle{
+  val io = IO(new Bundle {
     val in = Flipped(Decoupled(UInt(5.W)))
     val out = Decoupled(UInt(5.W))
   })
@@ -45,49 +45,55 @@ class substitution_fifo extends Module {
     rom.io.in(i) := input_queue.io.deq.bits(i)
   }
   output_queue.io.enq.bits := rom.io.out.asUInt
-  when (input_queue.io.deq.valid) {
+  when(input_queue.io.deq.valid) {
     input_queue.io.deq.ready := true.B
     output_queue.io.enq.valid := true.B
   }
-  .otherwise {
-    input_queue.io.deq.ready := false.B
-    output_queue.io.enq.valid := false.B
-  }
+    .otherwise {
+      input_queue.io.deq.ready := false.B
+      output_queue.io.enq.valid := false.B
+    }
 }
 class convert_to_5_bit extends Module {
-  val io = IO(new Bundle{
+  val io = IO(new Bundle {
     val counter = Input(UInt(6.W))
-    val in = Input(Vec(5,UInt(64.W)))
+    val in = Input(Vec(5, UInt(64.W)))
     val out = Output(UInt(5.W))
   })
-  io.out := io.in(io.counter)(0) ## io.in(io.counter)(1) ## io.in(io.counter)(2) ## io.in(io.counter)(3) ## io.in(io.counter)(4)
+  io.out := io.in(4)(io.counter) ## io.in(3)(io.counter) ## io.in(2
+  )(io.counter) ## io.in(1)(io.counter) ## io.in(0)(io.counter)
   // for (i <- 0 until 5) {
   //   io.out(i) := io.in(io.counter)(i)
   // }
 }
 class convert_from_5_bit extends Module {
-  val io = IO(new Bundle{
-    val counter = Input(UInt(6.W))
+  val io = IO(new Bundle {
+    val write = Input(Bool())
     val in = Input(UInt(5.W))
-    val out = Output(Vec(5,UInt(64.W)))
+    val out = Output(Vec(5, UInt(64.W)))
   })
+  val temp = RegInit(VecInit(Seq.fill(5)(0.U(64.W))))
   // // split into 5, 1 bit values
   // val temp = Vec(5,UInt(1.W))
   // for (i <- 0 until 5) {
   //   temp(i) := io.in(i)
   // }
   // assign the temp vector to output by shifting one bit
-  for (i <- 0 until 5) {
-    // left shift here
-    io.out(i) := io.out(i)(63,1) ## io.in(i)
-    // (io.out(i) << 1.U) | temp(i)
+  when (io.write === true.B) {
+    for (i <- 0 until 5) {
+      // left shift here
+      temp(i) := temp(i)(63, 1) ## io.in(i)
+      // (io.out(i) << 1.U) | temp(i)
+    }
   }
+  io.out := temp
 }
 class substitution_compat_in extends Module {
-  val io = IO(new Bundle{
+  val io = IO(new Bundle {
     val start = Input(Bool())
-    val in = Input(Vec(5,UInt(64.W)))
-    val out = Output(Vec(5,UInt(64.W)))
+    val in = Input(Vec(5, UInt(64.W)))
+    val out = Output(Vec(5, UInt(64.W)))
+    val done = Output(Bool())
   })
   val lut = Module(new substitution_fifo())
   val counter_in = RegInit(0.U(6.W))
@@ -95,56 +101,82 @@ class substitution_compat_in extends Module {
   val to_5 = Module(new convert_to_5_bit())
   to_5.io.counter := counter_in
   val from_5 = Module(new convert_from_5_bit())
-  from_5.io.counter := counter_out
+  from_5.io.write := false.B
 
+  to_5.io.in := io.in
   lut.io.in.bits := to_5.io.out
   from_5.io.in := lut.io.out.bits
-  when (lut.io.in.ready) {
-
-    counter_in := counter_in + 1.U
+  io.out := from_5.io.out
+  
+  lut.io.in.valid := false.B
+  lut.io.out.ready := false.B
+  io.done := false.B
+  // make sure not to hold start signal; should be handled by state machine
+  when (io.start === true.B) {
+    counter_in := 0.U
+    counter_out := 0.U
+  }
+  // might only do 63 bits and not 64
+  when (counter_in < 63.U) {
+    when(lut.io.in.ready) {
+      counter_in := counter_in + 1.U
+      lut.io.in.valid := true.B
+    }
+  }
+  when (counter_out < 63.U) {
+    io.done := false.B
+    when(lut.io.out.valid) {
+      counter_out := counter_out + 1.U
+      lut.io.out.ready := true.B
+      from_5.io.write := true.B
+    }
+  }
+  .otherwise {
+    io.done := true.B
   }
 }
 
 // https://www.chisel-lang.org/chisel3/docs/explanations/muxes-and-input-selection.html
 class substitute_lookup_table extends Module {
   val io = IO(new Bundle {
-    val in = Input(Vec(5,UInt(1.W)))
-    val out = Output(Vec(5,UInt(1.W)))
+    val in = Input(Vec(5, UInt(1.W)))
+    val out = Output(Vec(5, UInt(1.W)))
   })
   // val array = Wire(Vec(32, UInt(5.W)))
-  val array = VecInit (
-"h4".U,
-"hb".U,
-"h1f".U,
-"h14".U,
-"h1a".U,
-"h15".U,
-"h9".U,
-"h2".U,
-"h1b".U,
-"h5".U,
-"h8".U,
-"h12".U,
-"h1d".U,
-"h3".U,
-"h6".U,
-"h1c".U,
-"h1e".U,
-"h13".U,
-"h7".U,
-"he".U,
-"h0".U,
-"hd".U,
-"h11".U,
-"h18".U,
-"h10".U,
-"hc".U,
-"h1".U,
-"h19".U,
-"h16".U,
-"ha".U,
-"hf".U,
-"h17".U)
+  val array = VecInit(
+    "h4".U,
+    "hb".U,
+    "h1f".U,
+    "h14".U,
+    "h1a".U,
+    "h15".U,
+    "h9".U,
+    "h2".U,
+    "h1b".U,
+    "h5".U,
+    "h8".U,
+    "h12".U,
+    "h1d".U,
+    "h3".U,
+    "h6".U,
+    "h1c".U,
+    "h1e".U,
+    "h13".U,
+    "h7".U,
+    "he".U,
+    "h0".U,
+    "hd".U,
+    "h11".U,
+    "h18".U,
+    "h10".U,
+    "hc".U,
+    "h1".U,
+    "h19".U,
+    "h16".U,
+    "ha".U,
+    "hf".U,
+    "h17".U
+  )
   // val outTemp = WireDefault(0.U(5.W))
 
   // switch(io.in.asUInt) {
@@ -152,97 +184,97 @@ class substitute_lookup_table extends Module {
   //     outTemp := "h4".U
   //   }
   //   is(1.U) {
-  //     outTemp := "hb".U    
+  //     outTemp := "hb".U
   //   }
   //   is(2.U) {
-  //     outTemp := "h1f".U    
+  //     outTemp := "h1f".U
   //   }
   //   is(3.U) {
-  //     outTemp := "h14".U    
+  //     outTemp := "h14".U
   //   }
   //   is(4.U) {
   //     outTemp := "h1a".U
   //   }
   //   is(5.U) {
-  //     outTemp := "h15".U    
+  //     outTemp := "h15".U
   //   }
   //   is(6.U) {
-  //     outTemp := "h9".U    
+  //     outTemp := "h9".U
   //   }
   //   is(7.U) {
-  //     outTemp := "h2".U    
+  //     outTemp := "h2".U
   //   }
   //   is(8.U) {
-  //     outTemp := "h1b".U    
+  //     outTemp := "h1b".U
   //   }
   //   is(9.U) {
-  //     outTemp := "h5".U    
+  //     outTemp := "h5".U
   //   }
   //   is(10.U) {
-  //     outTemp := "h8".U    
+  //     outTemp := "h8".U
   //   }
   //   is(11.U) {
-  //     outTemp := "h12".U    
+  //     outTemp := "h12".U
   //   }
   //   is(12.U) {
-  //     outTemp := "h1d".U    
+  //     outTemp := "h1d".U
   //   }
   //   is(13.U) {
-  //     outTemp := "h3".U    
+  //     outTemp := "h3".U
   //   }
   //   is(14.U) {
-  //     outTemp := "h6".U    
+  //     outTemp := "h6".U
   //   }
   //   is(15.U) {
-  //     outTemp := "h1c".U    
+  //     outTemp := "h1c".U
   //   }
   //   is(16.U) {
-  //     outTemp := "h1e".U    
+  //     outTemp := "h1e".U
   //   }
   //   is(17.U) {
-  //     outTemp := "h13".U    
+  //     outTemp := "h13".U
   //   }
   //   is(18.U) {
-  //     outTemp := "h7".U    
+  //     outTemp := "h7".U
   //   }
   //   is(19.U) {
-  //     outTemp := "he".U    
+  //     outTemp := "he".U
   //   }
   //   is(20.U) {
-  //     outTemp := "h0".U    
+  //     outTemp := "h0".U
   //   }
   //   is(21.U) {
-  //     outTemp := "hd".U    
+  //     outTemp := "hd".U
   //   }
   //   is(22.U) {
-  //     outTemp := "h11".U    
+  //     outTemp := "h11".U
   //   }
   //   is(23.U) {
-  //     outTemp := "h18".U    
+  //     outTemp := "h18".U
   //   }
   //   is(24.U) {
-  //     outTemp := "h10".U    
+  //     outTemp := "h10".U
   //   }
   //   is(25.U) {
-  //     outTemp := "hc".U    
+  //     outTemp := "hc".U
   //   }
   //   is(26.U) {
-  //     outTemp := "h1".U    
+  //     outTemp := "h1".U
   //   }
   //   is(27.U) {
-  //     outTemp := "h19".U    
+  //     outTemp := "h19".U
   //   }
   //   is(28.U) {
-  //     outTemp := "h16".U    
+  //     outTemp := "h16".U
   //   }
   //   is(29.U) {
-  //     outTemp := "ha".U    
+  //     outTemp := "ha".U
   //   }
   //   is(30.U) {
-  //     outTemp := "hf".U    
+  //     outTemp := "hf".U
   //   }
   //   is(31.U) {
-  //     outTemp := "h17".U    
+  //     outTemp := "h17".U
   //   }
   // }
   for (i <- 0 until 5) {
@@ -1187,23 +1219,23 @@ class diffusion_fifo(fifo_size: Int) extends Module {
   single_diffusion.io.i := in.io.deq.bits.i
   out.io.enq.bits.data := single_diffusion.io.x_out
   // Note confirmed: increasing counter in case of overflow when adding 4
-    // also solves problem with unbalanced read and writes
+  // also solves problem with unbalanced read and writes
   val counter = RegInit(0.U(4.W))
   when(counter === 5.U) {
     counter := 0.U
   }
-  .otherwise {
-    counter := counter + 1.U
-  }
+    .otherwise {
+      counter := counter + 1.U
+    }
   out.io.enq.bits.i := read_i(counter)
   // writing; every 2 cycles write for 2 cycle deq, save i and save read marker
-    // Trying to see if setting the deq marker at +1 will work because it takes one cycle to "register" changes
-    // Note confirmed: this works; looks like there was an extra delay when deq happens that causes i and data to be off by one
-    // specifically, i is wired directly so it must be held for 2 cycles while data is registered inside single_diffusion, so it needs 1 extra cycle
-    // at cycle 2, there is data ready; i is already connected, but needs to be held for an extra cycle: cycle 3. the deq didn't happen until cycle 3 which changes i too soon. Meanwhile, data is input at cycle 3. This means i is one cycle earlier than data.
-    // The resulting goal is to get new data at cycle 4, which means applying a deq signal at cycle 3 for the next data and i value
-    // cycle two is too early and would change i before it was done; the data is also changed, but should still be valid because of the register being used
-    // cycle 4 is too late because the next data is not there yet and the rest of the pipeline will use the wrong data that's old by 2 cycles
+  // Trying to see if setting the deq marker at +1 will work because it takes one cycle to "register" changes
+  // Note confirmed: this works; looks like there was an extra delay when deq happens that causes i and data to be off by one
+  // specifically, i is wired directly so it must be held for 2 cycles while data is registered inside single_diffusion, so it needs 1 extra cycle
+  // at cycle 2, there is data ready; i is already connected, but needs to be held for an extra cycle: cycle 3. the deq didn't happen until cycle 3 which changes i too soon. Meanwhile, data is input at cycle 3. This means i is one cycle earlier than data.
+  // The resulting goal is to get new data at cycle 4, which means applying a deq signal at cycle 3 for the next data and i value
+  // cycle two is too early and would change i before it was done; the data is also changed, but should still be valid because of the register being used
+  // cycle 4 is too late because the next data is not there yet and the rest of the pipeline will use the wrong data that's old by 2 cycles
 
   when(in.io.deq.valid && (counter % 2.U === 0.U)) {
     // in.io.deq.ready := true.B
@@ -1212,11 +1244,11 @@ class diffusion_fifo(fifo_size: Int) extends Module {
     readMarker((counter + 4.U) % 6.U) := true.B
   }
   // for now check every cycle; can be checked at counter % 2 === 1.U
-    // Note that this is incompatible with a clock divider unfortunately
-  when (deqMarker(counter)) {
+  // Note that this is incompatible with a clock divider unfortunately
+  when(deqMarker(counter)) {
     in.io.deq.ready := true.B
     // when (in.io.deq.valid === false.B) {
-      deqMarker(counter) := false.B
+    deqMarker(counter) := false.B
     // }
   }
   // reading; when reaching a read marker, enq data and reset read marker

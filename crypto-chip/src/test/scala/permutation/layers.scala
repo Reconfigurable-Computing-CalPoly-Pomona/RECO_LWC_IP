@@ -290,6 +290,26 @@ class sub_test extends AnyFlatSpec with ChiselScalatestTester with testFunctions
       // dut.io.out.bits.expect( /*function>*/ )
     }
   }
+  "sub_compat_fifo" should "work with 32 value" in {
+    test(new substitution_compat_in()).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+      dut.io.in(0).poke(0)
+      dut.io.in(1).poke(0)
+      dut.io.in(2).poke(0)
+      dut.io.in(3).poke(0)
+      dut.io.in(4).poke(0)
+
+      dut.io.start.poke(true)
+      println("output before clock is: " + dut.io.out.peek())
+      dut.clock.step()
+      println("output after clock is: " + dut.io.out.peek())
+      dut.io.start.poke(false)
+      for (i <- 0 until 66) {
+        println("done is: " + dut.io.done.peek())
+        println("output is: " + dut.io.out.peek())
+        dut.clock.step()
+      }
+    }
+  }
 }
 class rotateTest
     extends AnyFlatSpec
