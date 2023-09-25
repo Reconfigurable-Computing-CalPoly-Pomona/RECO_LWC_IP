@@ -60,8 +60,9 @@ class convert_to_5_bit extends Module {
     val in = Input(Vec(5, UInt(64.W)))
     val out = Output(UInt(5.W))
   })
-  io.out := io.in(4)(io.counter) ## io.in(3)(io.counter) ## io.in(2
-  )(io.counter) ## io.in(1)(io.counter) ## io.in(0)(io.counter)
+  io.out := io.in(4)(io.counter) ## io.in(3)(io.counter) ## io.in(2)(
+    io.counter
+  ) ## io.in(1)(io.counter) ## io.in(0)(io.counter)
   // for (i <- 0 until 5) {
   //   io.out(i) := io.in(io.counter)(i)
   // }
@@ -72,58 +73,58 @@ class convert_from_5_bit extends Module {
     val in = Input(UInt(5.W))
     val out = Output(Vec(5, UInt(64.W)))
   })
-  val temp = RegInit(VecInit(Seq.fill(5)(0.U(64.W))))
+  val temp = RegInit(VecInit(Seq.fill(5)(2.U(64.W))))
   // // split into 5, 1 bit values
   // val temp = Vec(5,UInt(1.W))
   // for (i <- 0 until 5) {
   //   temp(i) := io.in(i)
   // }
   // assign the temp vector to output by shifting one bit
-  when (io.write === true.B) {
+  when(io.write === true.B) {
     for (i <- 0 until 5) {
       // left shift here
-      temp(i) := temp(i)(63, 1) ## io.in(i)
+      temp(i) := (temp(i)(62, 0)) ## io.in(i)
       // (io.out(i) << 1.U) | temp(i)
     }
   }
   io.out := temp
 }
-class substitution_compat_in extends Module {
+class substitution_layer_compat extends Module {
   val io = IO(new Bundle {
     val start = Input(Bool())
-    val in = Input(Vec(5, UInt(64.W)))
-    val out = Output(Vec(5, UInt(64.W)))
+    val x_in = Input(Vec(5, UInt(64.W)))
+    val x_out = Output(Vec(5, UInt(64.W)))
     val done = Output(Bool())
   })
   val lut = Module(new substitution_fifo())
-  val counter_in = RegInit(0.U(6.W))
-  val counter_out = RegInit(0.U(6.W))
+  val counter_in = RegInit(0.U(7.W))
+  val counter_out = RegInit(0.U(7.W))
   val to_5 = Module(new convert_to_5_bit())
   to_5.io.counter := counter_in
   val from_5 = Module(new convert_from_5_bit())
   from_5.io.write := false.B
 
-  to_5.io.in := io.in
+  to_5.io.in := io.x_in
   lut.io.in.bits := to_5.io.out
   from_5.io.in := lut.io.out.bits
-  io.out := from_5.io.out
-  
+  io.x_out := from_5.io.out
+
   lut.io.in.valid := false.B
   lut.io.out.ready := false.B
   io.done := false.B
   // make sure not to hold start signal; should be handled by state machine
-  when (io.start === true.B) {
+  when(io.start === true.B) {
     counter_in := 0.U
     counter_out := 0.U
   }
-  // might only do 63 bits and not 64
-  when (counter_in < 63.U) {
+  // might only do 63 bits and not 64; Confirmed and fixed by increasing size of counters
+  when(counter_in < 64.U) {
     when(lut.io.in.ready) {
       counter_in := counter_in + 1.U
       lut.io.in.valid := true.B
     }
   }
-  when (counter_out < 63.U) {
+  when(counter_out < 64.U) {
     io.done := false.B
     when(lut.io.out.valid) {
       counter_out := counter_out + 1.U
@@ -131,9 +132,9 @@ class substitution_compat_in extends Module {
       from_5.io.write := true.B
     }
   }
-  .otherwise {
-    io.done := true.B
-  }
+    .otherwise {
+      io.done := true.B
+    }
 }
 
 // https://www.chisel-lang.org/chisel3/docs/explanations/muxes-and-input-selection.html
@@ -142,7 +143,6 @@ class substitute_lookup_table extends Module {
     val in = Input(Vec(5, UInt(1.W)))
     val out = Output(Vec(5, UInt(1.W)))
   })
-  // val array = Wire(Vec(32, UInt(5.W)))
   val array = VecInit(
     "h4".U,
     "hb".U,
@@ -177,280 +177,131 @@ class substitute_lookup_table extends Module {
     "hf".U,
     "h17".U
   )
-  // val outTemp = WireDefault(0.U(5.W))
-
-  // switch(io.in.asUInt) {
-  //   is(0.U) {
-  //     outTemp := "h4".U
-  //   }
-  //   is(1.U) {
-  //     outTemp := "hb".U
-  //   }
-  //   is(2.U) {
-  //     outTemp := "h1f".U
-  //   }
-  //   is(3.U) {
-  //     outTemp := "h14".U
-  //   }
-  //   is(4.U) {
-  //     outTemp := "h1a".U
-  //   }
-  //   is(5.U) {
-  //     outTemp := "h15".U
-  //   }
-  //   is(6.U) {
-  //     outTemp := "h9".U
-  //   }
-  //   is(7.U) {
-  //     outTemp := "h2".U
-  //   }
-  //   is(8.U) {
-  //     outTemp := "h1b".U
-  //   }
-  //   is(9.U) {
-  //     outTemp := "h5".U
-  //   }
-  //   is(10.U) {
-  //     outTemp := "h8".U
-  //   }
-  //   is(11.U) {
-  //     outTemp := "h12".U
-  //   }
-  //   is(12.U) {
-  //     outTemp := "h1d".U
-  //   }
-  //   is(13.U) {
-  //     outTemp := "h3".U
-  //   }
-  //   is(14.U) {
-  //     outTemp := "h6".U
-  //   }
-  //   is(15.U) {
-  //     outTemp := "h1c".U
-  //   }
-  //   is(16.U) {
-  //     outTemp := "h1e".U
-  //   }
-  //   is(17.U) {
-  //     outTemp := "h13".U
-  //   }
-  //   is(18.U) {
-  //     outTemp := "h7".U
-  //   }
-  //   is(19.U) {
-  //     outTemp := "he".U
-  //   }
-  //   is(20.U) {
-  //     outTemp := "h0".U
-  //   }
-  //   is(21.U) {
-  //     outTemp := "hd".U
-  //   }
-  //   is(22.U) {
-  //     outTemp := "h11".U
-  //   }
-  //   is(23.U) {
-  //     outTemp := "h18".U
-  //   }
-  //   is(24.U) {
-  //     outTemp := "h10".U
-  //   }
-  //   is(25.U) {
-  //     outTemp := "hc".U
-  //   }
-  //   is(26.U) {
-  //     outTemp := "h1".U
-  //   }
-  //   is(27.U) {
-  //     outTemp := "h19".U
-  //   }
-  //   is(28.U) {
-  //     outTemp := "h16".U
-  //   }
-  //   is(29.U) {
-  //     outTemp := "ha".U
-  //   }
-  //   is(30.U) {
-  //     outTemp := "hf".U
-  //   }
-  //   is(31.U) {
-  //     outTemp := "h17".U
-  //   }
-  // }
   for (i <- 0 until 5) {
     io.out(i) := array(io.in.asUInt)(i)
   }
-
-  // array(0) := "h4".U
-  // array(1) := "hb".U
-  // array(2) := "h1f".U
-  // array(3) := "h14".U
-  // array(4) := "h1a".U
-  // array(5) := "h15".U
-  // array(6) := "h9".U
-  // array(7) := "h2".U
-  // array(8) := "h1b".U
-  // array(9) := "h5".U
-  // array(10) := "h8".U
-  // array(11) := "h12".U
-  // array(12) := "h1d".U
-  // array(13) := "h3".U
-  // array(14) := "h6".U
-  // array(15) := "h1c".U
-  // array(16) := "h1e".U
-  // array(17) := "h13".U
-  // array(18) := "h7".U
-  // array(19) := "he".U
-  // array(20) := "h0".U
-  // array(21) := "hd".U
-  // array(22) := "h11".U
-  // array(23) := "h18".U
-  // array(24) := "h10".U
-  // array(25) := "hc".U
-  // array(26) := "h1".U
-  // array(27) := "h19".U
-  // array(28) := "h16".U
-  // array(29) := "ha".U
-  // array(30) := "hf".U
-  // array(31) := "h17".U
-  // for (i <- 0 until 5) {
-  //   io.out(i) := array(io.in.asUInt)(i)
-  // }
 }
 class substitution_layer extends Module {
   val io = IO(new Bundle {
     val x_in = Input(Vec(5, UInt(64.W)))
     val x_out = Output(Vec(5, UInt(64.W)))
   })
-  val counter = RegInit(0.U(5.W))
-  counter := counter + 1.U
-  // val array = Wire(Vec(32, UInt(5.W)))
-  // val temp = Wire(Vec(64, UInt(5.W)))
-  // array(0) := "h4".U
-  // array(1) := "hb".U
-  // array(2) := "h1f".U
-  // array(3) := "h14".U
-  // array(4) := "h1a".U
-  // array(5) := "h15".U
-  // array(6) := "h9".U
-  // array(7) := "h2".U
-  // array(8) := "h1b".U
-  // array(9) := "h5".U
-  // array(10) := "h8".U
-  // array(11) := "h12".U
-  // array(12) := "h1d".U
-  // array(13) := "h3".U
-  // array(14) := "h6".U
-  // array(15) := "h1c".U
-  // array(16) := "h1e".U
-  // array(17) := "h13".U
-  // array(18) := "h7".U
-  // array(19) := "he".U
-  // array(20) := "h0".U
-  // array(21) := "hd".U
-  // array(22) := "h11".U
-  // array(23) := "h18".U
-  // array(24) := "h10".U
-  // array(25) := "hc".U
-  // array(26) := "h1".U
-  // array(27) := "h19".U
-  // array(28) := "h16".U
-  // array(29) := "ha".U
-  // array(30) := "hf".U
-  // array(31) := "h17".U
+  val array = Wire(Vec(32, UInt(5.W)))
+  val temp = Wire(Vec(64, UInt(5.W)))
+  array(0) := "h4".U
+  array(1) := "hb".U
+  array(2) := "h1f".U
+  array(3) := "h14".U
+  array(4) := "h1a".U
+  array(5) := "h15".U
+  array(6) := "h9".U
+  array(7) := "h2".U
+  array(8) := "h1b".U
+  array(9) := "h5".U
+  array(10) := "h8".U
+  array(11) := "h12".U
+  array(12) := "h1d".U
+  array(13) := "h3".U
+  array(14) := "h6".U
+  array(15) := "h1c".U
+  array(16) := "h1e".U
+  array(17) := "h13".U
+  array(18) := "h7".U
+  array(19) := "he".U
+  array(20) := "h0".U
+  array(21) := "hd".U
+  array(22) := "h11".U
+  array(23) := "h18".U
+  array(24) := "h10".U
+  array(25) := "hc".U
+  array(26) := "h1".U
+  array(27) := "h19".U
+  array(28) := "h16".U
+  array(29) := "ha".U
+  array(30) := "hf".U
+  array(31) := "h17".U
 
-  // for (i <- 0 until 64) {
-  //   temp(i) := array(
-  //     Cat(
-  //       io.x_in(0)(i),
-  //       io.x_in(1)(i),
-  //       io.x_in(2)(i),
-  //       io.x_in(3)(i),
-  //       io.x_in(4)(i)
-  //     )
-  //   )
-  // }
+  for (i <- 0 until 64) {
+    temp(i) := array(
+      Cat(
+        io.x_in(0)(i),
+        io.x_in(1)(i),
+        io.x_in(2)(i),
+        io.x_in(3)(i),
+        io.x_in(4)(i)
+      )
+    )
+  }
 
-  // for (j <- 0 until 5) {
-  //   io.x_out(j) := Cat(
-  //     temp(63)(4 - j),
-  //     temp(62)(4 - j),
-  //     temp(61)(4 - j),
-  //     temp(60)(4 - j),
-  //     temp(59)(4 - j),
-  //     temp(58)(4 - j),
-  //     temp(57)(4 - j),
-  //     temp(56)(4 - j),
-  //     temp(55)(4 - j),
-  //     temp(54)(4 - j),
-  //     temp(53)(4 - j),
-  //     temp(52)(4 - j),
-  //     temp(51)(4 - j),
-  //     temp(50)(4 - j),
-  //     temp(49)(4 - j),
-  //     temp(48)(4 - j),
-  //     temp(47)(4 - j),
-  //     temp(46)(4 - j),
-  //     temp(45)(4 - j),
-  //     temp(44)(4 - j),
-  //     temp(43)(4 - j),
-  //     temp(42)(4 - j),
-  //     temp(41)(4 - j),
-  //     temp(40)(4 - j),
-  //     temp(39)(4 - j),
-  //     temp(38)(4 - j),
-  //     temp(37)(4 - j),
-  //     temp(36)(4 - j),
-  //     temp(35)(4 - j),
-  //     temp(34)(4 - j),
-  //     temp(33)(4 - j),
-  //     temp(32)(4 - j),
-  //     temp(31)(4 - j),
-  //     temp(30)(4 - j),
-  //     temp(29)(4 - j),
-  //     temp(28)(4 - j),
-  //     temp(27)(4 - j),
-  //     temp(26)(4 - j),
-  //     temp(25)(4 - j),
-  //     temp(24)(4 - j),
-  //     temp(23)(4 - j),
-  //     temp(22)(4 - j),
-  //     temp(21)(4 - j),
-  //     temp(20)(4 - j),
-  //     temp(19)(4 - j),
-  //     temp(18)(4 - j),
-  //     temp(17)(4 - j),
-  //     temp(16)(4 - j),
-  //     temp(15)(4 - j),
-  //     temp(14)(4 - j),
-  //     temp(13)(4 - j),
-  //     temp(12)(4 - j),
-  //     temp(11)(4 - j),
-  //     temp(10)(4 - j),
-  //     temp(9)(4 - j),
-  //     temp(8)(4 - j),
-  //     temp(7)(4 - j),
-  //     temp(6)(4 - j),
-  //     temp(5)(4 - j),
-  //     temp(4)(4 - j),
-  //     temp(3)(4 - j),
-  //     temp(2)(4 - j),
-  //     temp(1)(4 - j),
-  //     temp(0)(4 - j)
-  //   )
-  // }
+  for (j <- 0 until 5) {
+    io.x_out(j) := Cat(
+      temp(63)(4 - j),
+      temp(62)(4 - j),
+      temp(61)(4 - j),
+      temp(60)(4 - j),
+      temp(59)(4 - j),
+      temp(58)(4 - j),
+      temp(57)(4 - j),
+      temp(56)(4 - j),
+      temp(55)(4 - j),
+      temp(54)(4 - j),
+      temp(53)(4 - j),
+      temp(52)(4 - j),
+      temp(51)(4 - j),
+      temp(50)(4 - j),
+      temp(49)(4 - j),
+      temp(48)(4 - j),
+      temp(47)(4 - j),
+      temp(46)(4 - j),
+      temp(45)(4 - j),
+      temp(44)(4 - j),
+      temp(43)(4 - j),
+      temp(42)(4 - j),
+      temp(41)(4 - j),
+      temp(40)(4 - j),
+      temp(39)(4 - j),
+      temp(38)(4 - j),
+      temp(37)(4 - j),
+      temp(36)(4 - j),
+      temp(35)(4 - j),
+      temp(34)(4 - j),
+      temp(33)(4 - j),
+      temp(32)(4 - j),
+      temp(31)(4 - j),
+      temp(30)(4 - j),
+      temp(29)(4 - j),
+      temp(28)(4 - j),
+      temp(27)(4 - j),
+      temp(26)(4 - j),
+      temp(25)(4 - j),
+      temp(24)(4 - j),
+      temp(23)(4 - j),
+      temp(22)(4 - j),
+      temp(21)(4 - j),
+      temp(20)(4 - j),
+      temp(19)(4 - j),
+      temp(18)(4 - j),
+      temp(17)(4 - j),
+      temp(16)(4 - j),
+      temp(15)(4 - j),
+      temp(14)(4 - j),
+      temp(13)(4 - j),
+      temp(12)(4 - j),
+      temp(11)(4 - j),
+      temp(10)(4 - j),
+      temp(9)(4 - j),
+      temp(8)(4 - j),
+      temp(7)(4 - j),
+      temp(6)(4 - j),
+      temp(5)(4 - j),
+      temp(4)(4 - j),
+      temp(3)(4 - j),
+      temp(2)(4 - j),
+      temp(1)(4 - j),
+      temp(0)(4 - j)
+    )
+  }
 }
-// have a module to prevent an input to rotate
-// for 2 registers, a max of 2 can be in at any time
-// class layer_delay extends Module {
-//   val io = IO(new Bundle {
-//     val ready = Output(Bool())
-//     val start = Input(Bool())
-//     val input = Input(UInt(muxWidth.W))
-//     val amount = Input(UInt(amountOfLayers.W))
-//     val output = Output(UInt(muxWidth.W))
-//   })
-// }
 
 class muxRotateLevel(currentLevel: Int, width: Int) extends Module {
   val io = IO(new Bundle {
@@ -1536,41 +1387,41 @@ class rotateRight extends Module {
 
 // single round permutation
 class permutation extends Module {
-  val io = IO(new Bundle {
-    val round_in = Input(UInt(8.W))
-    val x_in = Input(Vec(5, UInt(64.W)))
-    val x_out = Output(Vec(5, UInt(64.W)))
-  })
+val io = IO(new Bundle {
+val round_in = Input(UInt(8.W))
+val x_in = Input(Vec(5, UInt(64.W)))
+val x_out = Output(Vec(5, UInt(64.W)))
+})
 
-  val addition = Module(new addition_layer())
-  val substitution = Module(new substitution_layer())
-  val diffusion = Module(new diffusion_layer())
-  val substitution_reg = Reg(Vec(5, UInt(64.W)))
+val addition = Module(new addition_layer())
+val substitution = Module(new substitution_layer())
+val diffusion = Module(new diffusion_layer())
+val substitution_reg = Reg(Vec(5, UInt(64.W)))
 
-  addition.io.round_in := io.round_in
-  addition.io.x2_in := io.x_in(2)
+addition.io.round_in := io.round_in
+addition.io.x2_in := io.x_in(2)
 
-  substitution.io.x_in(0) := io.x_in(0)
-  substitution.io.x_in(1) := io.x_in(1)
-  substitution.io.x_in(2) := addition.io.x2_out
-  substitution.io.x_in(3) := io.x_in(3)
-  substitution.io.x_in(4) := io.x_in(4)
+substitution.io.x_in(0) := io.x_in(0)
+substitution.io.x_in(1) := io.x_in(1)
+substitution.io.x_in(2) := addition.io.x2_out
+substitution.io.x_in(3) := io.x_in(3)
+substitution.io.x_in(4) := io.x_in(4)
 
-  substitution_reg(0) := substitution.io.x_out(0)
-  substitution_reg(1) := substitution.io.x_out(1)
-  substitution_reg(2) := substitution.io.x_out(2)
-  substitution_reg(3) := substitution.io.x_out(3)
-  substitution_reg(4) := substitution.io.x_out(4)
+substitution_reg(0) := substitution.io.x_out(0)
+substitution_reg(1) := substitution.io.x_out(1)
+substitution_reg(2) := substitution.io.x_out(2)
+substitution_reg(3) := substitution.io.x_out(3)
+substitution_reg(4) := substitution.io.x_out(4)
 
-  diffusion.io.x_in(0) := substitution_reg(0)
-  diffusion.io.x_in(1) := substitution_reg(1)
-  diffusion.io.x_in(2) := substitution_reg(2)
-  diffusion.io.x_in(3) := substitution_reg(3)
-  diffusion.io.x_in(4) := substitution_reg(4)
+diffusion.io.x_in(0) := substitution_reg(0)
+diffusion.io.x_in(1) := substitution_reg(1)
+diffusion.io.x_in(2) := substitution_reg(2)
+diffusion.io.x_in(3) := substitution_reg(3)
+diffusion.io.x_in(4) := substitution_reg(4)
 
-  io.x_out(0) := diffusion.io.x_out(0)
-  io.x_out(1) := diffusion.io.x_out(1)
-  io.x_out(2) := diffusion.io.x_out(2)
-  io.x_out(3) := diffusion.io.x_out(3)
-  io.x_out(4) := diffusion.io.x_out(4)
+io.x_out(0) := diffusion.io.x_out(0)
+io.x_out(1) := diffusion.io.x_out(1)
+io.x_out(2) := diffusion.io.x_out(2)
+io.x_out(3) := diffusion.io.x_out(3)
+io.x_out(4) := diffusion.io.x_out(4)
 }
