@@ -54,6 +54,7 @@ class substitution_fifo extends Module {
       output_queue.io.enq.valid := false.B
     }
 }
+// in(0) is MSB, x(4) is LSB
 class convert_to_5_bit extends Module {
   val io = IO(new Bundle {
     val counter = Input(UInt(6.W))
@@ -83,7 +84,8 @@ class convert_from_5_bit extends Module {
   when(io.write === true.B) {
     for (i <- 0 until 5) {
       // left shift here
-      temp(i) := (temp(i)(62, 0)) ## io.in(i)
+      temp(i) := (io.in(i)) ## (temp(i)(63, 1))
+      // temp(i) := (temp(i)(62, 0)) ## io.in(i)
       // (io.out(i) << 1.U) | temp(i)
     }
   }
@@ -1387,41 +1389,41 @@ class rotateRight extends Module {
 
 // single round permutation
 class permutation extends Module {
-val io = IO(new Bundle {
-val round_in = Input(UInt(8.W))
-val x_in = Input(Vec(5, UInt(64.W)))
-val x_out = Output(Vec(5, UInt(64.W)))
-})
+  val io = IO(new Bundle {
+    val round_in = Input(UInt(8.W))
+    val x_in = Input(Vec(5, UInt(64.W)))
+    val x_out = Output(Vec(5, UInt(64.W)))
+  })
 
-val addition = Module(new addition_layer())
-val substitution = Module(new substitution_layer())
-val diffusion = Module(new diffusion_layer())
-val substitution_reg = Reg(Vec(5, UInt(64.W)))
+  val addition = Module(new addition_layer())
+  val substitution = Module(new substitution_layer())
+  val diffusion = Module(new diffusion_layer())
+  val substitution_reg = Reg(Vec(5, UInt(64.W)))
 
-addition.io.round_in := io.round_in
-addition.io.x2_in := io.x_in(2)
+  addition.io.round_in := io.round_in
+  addition.io.x2_in := io.x_in(2)
 
-substitution.io.x_in(0) := io.x_in(0)
-substitution.io.x_in(1) := io.x_in(1)
-substitution.io.x_in(2) := addition.io.x2_out
-substitution.io.x_in(3) := io.x_in(3)
-substitution.io.x_in(4) := io.x_in(4)
+  substitution.io.x_in(0) := io.x_in(0)
+  substitution.io.x_in(1) := io.x_in(1)
+  substitution.io.x_in(2) := addition.io.x2_out
+  substitution.io.x_in(3) := io.x_in(3)
+  substitution.io.x_in(4) := io.x_in(4)
 
-substitution_reg(0) := substitution.io.x_out(0)
-substitution_reg(1) := substitution.io.x_out(1)
-substitution_reg(2) := substitution.io.x_out(2)
-substitution_reg(3) := substitution.io.x_out(3)
-substitution_reg(4) := substitution.io.x_out(4)
+  substitution_reg(0) := substitution.io.x_out(0)
+  substitution_reg(1) := substitution.io.x_out(1)
+  substitution_reg(2) := substitution.io.x_out(2)
+  substitution_reg(3) := substitution.io.x_out(3)
+  substitution_reg(4) := substitution.io.x_out(4)
 
-diffusion.io.x_in(0) := substitution_reg(0)
-diffusion.io.x_in(1) := substitution_reg(1)
-diffusion.io.x_in(2) := substitution_reg(2)
-diffusion.io.x_in(3) := substitution_reg(3)
-diffusion.io.x_in(4) := substitution_reg(4)
+  diffusion.io.x_in(0) := substitution_reg(0)
+  diffusion.io.x_in(1) := substitution_reg(1)
+  diffusion.io.x_in(2) := substitution_reg(2)
+  diffusion.io.x_in(3) := substitution_reg(3)
+  diffusion.io.x_in(4) := substitution_reg(4)
 
-io.x_out(0) := diffusion.io.x_out(0)
-io.x_out(1) := diffusion.io.x_out(1)
-io.x_out(2) := diffusion.io.x_out(2)
-io.x_out(3) := diffusion.io.x_out(3)
-io.x_out(4) := diffusion.io.x_out(4)
+  io.x_out(0) := diffusion.io.x_out(0)
+  io.x_out(1) := diffusion.io.x_out(1)
+  io.x_out(2) := diffusion.io.x_out(2)
+  io.x_out(3) := diffusion.io.x_out(3)
+  io.x_out(4) := diffusion.io.x_out(4)
 }

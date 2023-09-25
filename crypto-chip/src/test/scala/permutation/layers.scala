@@ -202,6 +202,7 @@ class sub_test
   "sub_fifo" should "work with one value" in {
     test(new substitution_fifo()) { dut =>
       var count = 0
+      println("input is: " + dut.io.in.bits.peek())
       dut.io.in.bits.poke(0)
       dut.io.in.valid.poke(true)
       dut.clock.step()
@@ -237,7 +238,8 @@ class sub_test
       while (i < 32) {
         if (dut.io.out.valid.peekBoolean()) {
           dut.io.out.ready.poke(true)
-          println("output is: " + dut.io.out.bits.peek())
+          println("input was: " + i)
+          println("output is: " + dut.io.out.bits.peekInt())
           dut.io.out.bits.expect(sub_table(i))
           i = i + 1
           dut.clock.step()
@@ -259,7 +261,7 @@ class sub_test
       // dut.io.out.bits.expect( /*function>*/ )
     }
   }
-  "sub_compat_fifo" should "work with 32 value" in {
+  "sub_compat_fifo" should "work" in {
     test(new substitution_layer_compat())
       .withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
         dut.io.x_in(0).poke(0)
@@ -297,6 +299,25 @@ class sub_test
         }
       }
   }
+  "sub_original" should "work" in {
+    test(new substitution_layer())
+      .withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+        dut.io.x_in(0).poke(0)
+        dut.io.x_in(1).poke(0)
+        dut.io.x_in(2).poke(0)
+        dut.io.x_in(3).poke(0)
+        dut.io.x_in(4).poke(0)
+        println("output is: " + dut.io.x_out.peek())
+        println("using 1 for all pokes")
+        dut.io.x_in(0).poke(1)
+        dut.io.x_in(1).poke(1)
+        dut.io.x_in(2).poke(1)
+        dut.io.x_in(3).poke(1)
+        dut.io.x_in(4).poke(1)
+        println("output is: " + dut.io.x_out.peek())
+      }
+  }
+
 }
 class rotateTest
     extends AnyFlatSpec
