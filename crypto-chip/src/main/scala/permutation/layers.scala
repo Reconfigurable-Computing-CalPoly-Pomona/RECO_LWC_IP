@@ -61,9 +61,9 @@ class convert_to_5_bit extends Module {
     val in = Input(Vec(5, UInt(64.W)))
     val out = Output(UInt(5.W))
   })
-  io.out := io.in(4)(io.counter) ## io.in(3)(io.counter) ## io.in(2)(
+  io.out := io.in(0)(io.counter) ## io.in(1)(io.counter) ## io.in(2)(
     io.counter
-  ) ## io.in(1)(io.counter) ## io.in(0)(io.counter)
+  ) ## io.in(3)(io.counter) ## io.in(4)(io.counter)
   // for (i <- 0 until 5) {
   //   io.out(i) := io.in(io.counter)(i)
   // }
@@ -81,10 +81,10 @@ class convert_from_5_bit extends Module {
   //   temp(i) := io.in(i)
   // }
   // assign the temp vector to output by shifting one bit
+  // TODO: Why does the temp assignment need to be switched (instead of temp(0), then temp(1), it starts at temp(4)). The x values seem to be switched in which is first and last, which 4 being first and 0 being last. This also applies to the substitution where 0 is MSB, 4 is LSB and the LSB starts first
   when(io.write === true.B) {
     for (i <- 0 until 5) {
-      // left shift here
-      temp(i) := (io.in(i)) ## (temp(i)(63, 1))
+      temp(4 - i) := (io.in(i)) ## (temp(4 - i)(63, 1))
       // temp(i) := (temp(i)(62, 0)) ## io.in(i)
       // (io.out(i) << 1.U) | temp(i)
     }
