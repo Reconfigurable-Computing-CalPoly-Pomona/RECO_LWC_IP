@@ -106,6 +106,37 @@ class substitution_layer_compat extends Module {
   val from_5 = Module(new convert_from_5_bit())
   from_5.io.write := false.B
 
+  to_5.io.in := io.x_in
+  lut.io.in.bits := to_5.io.out
+  from_5.io.in := lut.io.out.bits
+  io.x_out := from_5.io.out
+
+  lut.io.in.valid := false.B
+  lut.io.out.ready := false.B
+  io.done := false.B
+  // make sure not to hold start signal; should be handled by state machine
+  when(io.start === true.B) {
+    counter_in := 0.U
+    counter_out := 0.U
+  }
+  // might only do 63 bits and not 64; Confirmed and fixed by increasing size of counters
+  when(counter_in < 64.U) {
+    when(lut.io.in.ready) {
+      counter_in := counter_in + 1.U
+      lut.io.in.valid := true.B
+    }
+  }
+  when(counter_out < 64.U) {
+    io.done := false.B
+    when(lut.io.out.valid) {
+      counter_out := counter_out + 1.U
+      lut.io.out.ready := true.B
+      from_5.io.write := true.B
+    }
+  }
+    .otherwise {
+      io.done := true.B
+    }
 }
 class romTest extends Module {
   val io = IO(new Bundle {
