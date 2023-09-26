@@ -120,7 +120,7 @@ class permutation_two extends Module {
   })
 
     val addition = Module(new addition_layer())
-    val substitution = Module(new substitution_layer())
+    val substitution = Module(new substitution_layer_compat())
     val diffusion= Module(new diffusion_layer_compat())
     // val posedge = Module(new posedge())
     // posedge.io.in := io.start
@@ -143,6 +143,7 @@ class permutation_two extends Module {
     diffusion.io.x_in(4) := state(4) 
     
     diffusion.io.start := false.B
+    substitution.io.start := false.B
   
     switch (current){
       // start the state machine
@@ -155,12 +156,24 @@ class permutation_two extends Module {
       //   current := sub
       // }
       is(sub){
-        state := substitution.io.x_out
+        when (substitution.io.done) {
+          diffusion.io.start := true.B
+          state := substitution.io.x_out
+          // current := tempdiff
+          current := diff
+        }
+        .otherwise {
+          current := sub
+        }
         // state := (substitution.io.x_out)
         // sub_state := state
-        diffusion.io.start := true.B
-        current := diff
+        
+        
       }
+      // is(tempdiff) {
+      //   diffusion.io.start := true.B
+      //   current := diff
+      // }
       is(diff){
         when (diffusion.io.done) {
           // state := diffusion.io.x_out
@@ -172,6 +185,7 @@ class permutation_two extends Module {
       is(done){
         when (io.start) {
           state(2) := addition.io.x2_out
+          substitution.io.start := true.B
           current := sub
         }.otherwise {
           current := done

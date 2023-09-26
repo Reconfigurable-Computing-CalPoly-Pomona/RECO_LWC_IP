@@ -127,124 +127,96 @@ trait testFunctions {
   def sub_table(in: Int): Int = {
     if (in == 0) {
       return BigInt("4", 16).toInt
-    }
-    else if (in == 1) {
+    } else if (in == 1) {
       return BigInt("b", 16).toInt
-    }
-    else if (in == 2) {
+    } else if (in == 2) {
       return BigInt("1f", 16).toInt
-    }
-    else if (in == 3) {
+    } else if (in == 3) {
       return BigInt("14", 16).toInt
-    }
-    else if (in == 4) {
+    } else if (in == 4) {
       return BigInt("1a", 16).toInt
-    }
-    else if (in == 5) {
+    } else if (in == 5) {
       return BigInt("15", 16).toInt
-    }
-    else if (in == 6) {
+    } else if (in == 6) {
       return BigInt("9", 16).toInt
-    }
-    else if (in == 7) {
+    } else if (in == 7) {
       return BigInt("2", 16).toInt
-    }
-    else if (in == 8) {
+    } else if (in == 8) {
       return BigInt("1b", 16).toInt
-    }
-    else if (in == 9) {
+    } else if (in == 9) {
       return BigInt("5", 16).toInt
-    }
-    else if (in == 10) {
+    } else if (in == 10) {
       return BigInt("8", 16).toInt
-    }
-    else if (in == 11) {
+    } else if (in == 11) {
       return BigInt("12", 16).toInt
-    }
-    else if (in == 12) {
+    } else if (in == 12) {
       return BigInt("1d", 16).toInt
-    }
-    else if (in == 13) {
+    } else if (in == 13) {
       return BigInt("3", 16).toInt
-    }
-    else if (in == 14) {
+    } else if (in == 14) {
       return BigInt("6", 16).toInt
-    }
-    else if (in == 15) {
+    } else if (in == 15) {
       return BigInt("1c", 16).toInt
-    }
-    else if (in == 16) {
+    } else if (in == 16) {
       return BigInt("1e", 16).toInt
-    }
-    else if (in == 17) {
+    } else if (in == 17) {
       return BigInt("13", 16).toInt
-    }
-    else if (in == 18) {
+    } else if (in == 18) {
       return BigInt("7", 16).toInt
-    }
-    else if (in == 19) {
+    } else if (in == 19) {
       return BigInt("e", 16).toInt
-    }
-    else if (in == 20) {
+    } else if (in == 20) {
       return BigInt("0", 16).toInt
-    }
-    else if (in == 21) {
+    } else if (in == 21) {
       return BigInt("d", 16).toInt
-    }
-    else if (in == 22) {
+    } else if (in == 22) {
       return BigInt("11", 16).toInt
-    }
-    else if (in == 23) {
+    } else if (in == 23) {
       return BigInt("18", 16).toInt
-    }
-    else if (in == 24) {
+    } else if (in == 24) {
       return BigInt("10", 16).toInt
-    }
-    else if (in == 25) {
+    } else if (in == 25) {
       return BigInt("c", 16).toInt
-    }
-    else if (in == 26) {
+    } else if (in == 26) {
       return BigInt("1", 16).toInt
-    }
-    else if (in == 27) {
+    } else if (in == 27) {
       return BigInt("19", 16).toInt
-    }
-    else if (in == 28) {
+    } else if (in == 28) {
       return BigInt("16", 16).toInt
-    }
-    else if (in == 29) {
+    } else if (in == 29) {
       return BigInt("a", 16).toInt
-    }
-    else if (in == 30) {
+    } else if (in == 30) {
       return BigInt("f", 16).toInt
-    }
-    else if (in == 31) {
+    } else if (in == 31) {
       return BigInt("17", 16).toInt
-    }
-    else {
-      return BigInt("00",16).toInt
+    } else {
+      return BigInt("00", 16).toInt
     }
   }
 }
 
-class sub_test extends AnyFlatSpec with ChiselScalatestTester with testFunctions {
-  "lookup table" should "work" in {
-    test(new Module { 
-      val io = IO(new Bundle {
-        val in = Input(UInt(5.W))
-        val out = Output(UInt(5.W))
-      })
-      val lookup = Module(new substitute_lookup_table)
-      io <> lookup.io
-    }).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut => 
-      dut.io.in.poke(0)
-      dut.clock.step()
-      dut.io.out.expect(4)
-    }
-  }
+class sub_test
+    extends AnyFlatSpec
+    with ChiselScalatestTester
+    with testFunctions {
+    // "lookup table" should "work" in {
+    //   test(new Module { 
+    //     val io = IO(new Bundle {
+    //       val in = Input(UInt(5.W))
+    //       val out = Output(UInt(5.W))
+    //     })
+    //     val lookup = Module(new substitute_lookup_table)
+    //     io <> lookup.io
+    //   }).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut => 
+    //     dut.io.in.poke(0)
+    //     dut.clock.step()
+    //     dut.io.out.expect(4)
+    //   }
+    // }
   "sub_fifo" should "work with one value" in {
     test(new substitution_fifo()) { dut =>
       var count = 0
+      println("input is: " + dut.io.in.bits.peek())
       dut.io.in.bits.poke(0)
       dut.io.in.valid.poke(true)
       dut.clock.step()
@@ -270,8 +242,7 @@ class sub_test extends AnyFlatSpec with ChiselScalatestTester with testFunctions
           dut.clock.step()
           count = count + 1
           i = i + 1
-        }
-        else {
+        } else {
           dut.io.in.valid.poke(false)
           dut.clock.step()
           count = count + 1
@@ -281,13 +252,13 @@ class sub_test extends AnyFlatSpec with ChiselScalatestTester with testFunctions
       while (i < 32) {
         if (dut.io.out.valid.peekBoolean()) {
           dut.io.out.ready.poke(true)
-          println("output is: " + dut.io.out.bits.peek())
+          println("input was: " + i)
+          println("output is: " + dut.io.out.bits.peekInt())
           dut.io.out.bits.expect(sub_table(i))
           i = i + 1
           dut.clock.step()
           count = count + 1
-        }
-        else {
+        } else {
           dut.clock.step()
           count = count + 1
           dut.io.out.ready.poke(false)
@@ -304,6 +275,63 @@ class sub_test extends AnyFlatSpec with ChiselScalatestTester with testFunctions
       // dut.io.out.bits.expect( /*function>*/ )
     }
   }
+  "sub_compat_fifo" should "work" in {
+    test(new substitution_layer_compat())
+      .withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+        dut.io.x_in(0).poke(0)
+        dut.io.x_in(1).poke(0)
+        dut.io.x_in(2).poke(0)
+        dut.io.x_in(3).poke(0)
+        dut.io.x_in(4).poke(0)
+
+        dut.io.start.poke(true)
+        println("output before clock is: " + dut.io.x_out.peek())
+        dut.clock.step()
+        println("output after clock is: " + dut.io.x_out.peek())
+        dut.io.start.poke(false)
+        for (i <- 0 until 70) {
+          println("done is: " + dut.io.done.peek())
+          println("output is: " + dut.io.x_out.peek())
+          dut.clock.step()
+        }
+        println("using 1 for all pokes")
+        dut.io.x_in(0).poke(1)
+        dut.io.x_in(1).poke(1)
+        dut.io.x_in(2).poke(1)
+        dut.io.x_in(3).poke(1)
+        dut.io.x_in(4).poke(1)
+
+        dut.io.start.poke(true)
+        println("output before clock is: " + dut.io.x_out.peek())
+        dut.clock.step()
+        println("output after clock is: " + dut.io.x_out.peek())
+        dut.io.start.poke(false)
+        for (i <- 0 until 70) {
+          println("done is: " + dut.io.done.peek())
+          println("output is: " + dut.io.x_out.peek())
+          dut.clock.step()
+        }
+      }
+  }
+  "sub_original" should "work" in {
+    test(new substitution_layer())
+      .withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+        dut.io.x_in(0).poke(0)
+        dut.io.x_in(1).poke(0)
+        dut.io.x_in(2).poke(0)
+        dut.io.x_in(3).poke(0)
+        dut.io.x_in(4).poke(0)
+        println("output is: " + dut.io.x_out.peek())
+        println("using 1 for all pokes")
+        dut.io.x_in(0).poke(1)
+        dut.io.x_in(1).poke(1)
+        dut.io.x_in(2).poke(1)
+        dut.io.x_in(3).poke(1)
+        dut.io.x_in(4).poke(1)
+        println("output is: " + dut.io.x_out.peek())
+      }
+  }
+
 }
 class rotateTest
     extends AnyFlatSpec

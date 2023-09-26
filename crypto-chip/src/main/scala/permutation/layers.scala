@@ -43,9 +43,7 @@ class substitution_fifo extends Module {
   // external connections
   input_queue.io.enq <> io.in
   io.out <> output_queue.io.deq
-  // for (i <- 0 until 5) {
-    rom.io.in := input_queue.io.deq.bits
-  // }
+  rom.io.in := input_queue.io.deq.bits
   output_queue.io.enq.bits := rom.io.out
   when (input_queue.io.deq.valid) {
     input_queue.io.deq.ready := true.B
@@ -56,13 +54,57 @@ class substitution_fifo extends Module {
       output_queue.io.enq.valid := false.B
     }
 }
-
-class substitution_compat_in extends Module {
+// in(0) is MSB, x(4) is LSB
+class convert_to_5_bit extends Module {
   val io = IO(new Bundle {
+    val counter = Input(UInt(6.W))
     val in = Input(Vec(5, UInt(64.W)))
     val out = Output(UInt(5.W))
   })
-  val counter = RegInit(0.U(6.W))
+  io.out := io.in(0)(io.counter) ## io.in(1)(io.counter) ## io.in(2)(
+    io.counter
+  ) ## io.in(3)(io.counter) ## io.in(4)(io.counter)
+  // for (i <- 0 until 5) {
+  //   io.out(i) := io.in(io.counter)(i)
+  // }
+}
+class convert_from_5_bit extends Module {
+  val io = IO(new Bundle {
+    val write = Input(Bool())
+    val in = Input(UInt(5.W))
+    val out = Output(Vec(5, UInt(64.W)))
+  })
+  val temp = RegInit(VecInit(Seq.fill(5)(2.U(64.W))))
+  // // split into 5, 1 bit values
+  // val temp = Vec(5,UInt(1.W))
+  // for (i <- 0 until 5) {
+  //   temp(i) := io.in(i)
+  // }
+  // assign the temp vector to output by shifting one bit
+  // TODO: Why does the temp assignment need to be switched (instead of temp(0), then temp(1), it starts at temp(4)). The x values seem to be switched in which is first and last, which 4 being first and 0 being last. This also applies to the substitution where 0 is MSB, 4 is LSB and the LSB starts first
+  when(io.write === true.B) {
+    for (i <- 0 until 5) {
+      temp(4 - i) := (io.in(i)) ## (temp(4 - i)(63, 1))
+      // temp(i) := (temp(i)(62, 0)) ## io.in(i)
+      // (io.out(i) << 1.U) | temp(i)
+    }
+  }
+  io.out := temp
+}
+class substitution_layer_compat extends Module {
+  val io = IO(new Bundle {
+    val start = Input(Bool())
+    val x_in = Input(Vec(5, UInt(64.W)))
+    val x_out = Output(Vec(5, UInt(64.W)))
+    val done = Output(Bool())
+  })
+  val lut = Module(new substitution_fifo())
+  val counter_in = RegInit(0.U(7.W))
+  val counter_out = RegInit(0.U(7.W))
+  val to_5 = Module(new convert_to_5_bit())
+  to_5.io.counter := counter_in
+  val from_5 = Module(new convert_from_5_bit())
+  from_5.io.write := false.B
 
 }
 class romTest extends Module {
@@ -130,133 +172,122 @@ class substitution_layer extends Module {
     val x_in = Input(Vec(5, UInt(64.W)))
     val x_out = Output(Vec(5, UInt(64.W)))
   })
-  // val array = Wire(Vec(32, UInt(5.W)))
-  // val temp = Wire(Vec(64, UInt(5.W)))
-  // array(0) := "h4".U
-  // array(1) := "hb".U
-  // array(2) := "h1f".U
-  // array(3) := "h14".U
-  // array(4) := "h1a".U
-  // array(5) := "h15".U
-  // array(6) := "h9".U
-  // array(7) := "h2".U
-  // array(8) := "h1b".U
-  // array(9) := "h5".U
-  // array(10) := "h8".U
-  // array(11) := "h12".U
-  // array(12) := "h1d".U
-  // array(13) := "h3".U
-  // array(14) := "h6".U
-  // array(15) := "h1c".U
-  // array(16) := "h1e".U
-  // array(17) := "h13".U
-  // array(18) := "h7".U
-  // array(19) := "he".U
-  // array(20) := "h0".U
-  // array(21) := "hd".U
-  // array(22) := "h11".U
-  // array(23) := "h18".U
-  // array(24) := "h10".U
-  // array(25) := "hc".U
-  // array(26) := "h1".U
-  // array(27) := "h19".U
-  // array(28) := "h16".U
-  // array(29) := "ha".U
-  // array(30) := "hf".U
-  // array(31) := "h17".U
+  val array = Wire(Vec(32, UInt(5.W)))
+  val temp = Wire(Vec(64, UInt(5.W)))
+  array(0) := "h4".U
+  array(1) := "hb".U
+  array(2) := "h1f".U
+  array(3) := "h14".U
+  array(4) := "h1a".U
+  array(5) := "h15".U
+  array(6) := "h9".U
+  array(7) := "h2".U
+  array(8) := "h1b".U
+  array(9) := "h5".U
+  array(10) := "h8".U
+  array(11) := "h12".U
+  array(12) := "h1d".U
+  array(13) := "h3".U
+  array(14) := "h6".U
+  array(15) := "h1c".U
+  array(16) := "h1e".U
+  array(17) := "h13".U
+  array(18) := "h7".U
+  array(19) := "he".U
+  array(20) := "h0".U
+  array(21) := "hd".U
+  array(22) := "h11".U
+  array(23) := "h18".U
+  array(24) := "h10".U
+  array(25) := "hc".U
+  array(26) := "h1".U
+  array(27) := "h19".U
+  array(28) := "h16".U
+  array(29) := "ha".U
+  array(30) := "hf".U
+  array(31) := "h17".U
 
-  // for (i <- 0 until 64) {
-  //   temp(i) := array(
-  //     Cat(
-  //       io.x_in(0)(i),
-  //       io.x_in(1)(i),
-  //       io.x_in(2)(i),
-  //       io.x_in(3)(i),
-  //       io.x_in(4)(i)
-  //     )
-  //   )
-  // }
+  for (i <- 0 until 64) {
+    temp(i) := array(
+      Cat(
+        io.x_in(0)(i),
+        io.x_in(1)(i),
+        io.x_in(2)(i),
+        io.x_in(3)(i),
+        io.x_in(4)(i)
+      )
+    )
+  }
 
-  // for (j <- 0 until 5) {
-  //   io.x_out(j) := Cat(
-  //     temp(63)(4 - j),
-  //     temp(62)(4 - j),
-  //     temp(61)(4 - j),
-  //     temp(60)(4 - j),
-  //     temp(59)(4 - j),
-  //     temp(58)(4 - j),
-  //     temp(57)(4 - j),
-  //     temp(56)(4 - j),
-  //     temp(55)(4 - j),
-  //     temp(54)(4 - j),
-  //     temp(53)(4 - j),
-  //     temp(52)(4 - j),
-  //     temp(51)(4 - j),
-  //     temp(50)(4 - j),
-  //     temp(49)(4 - j),
-  //     temp(48)(4 - j),
-  //     temp(47)(4 - j),
-  //     temp(46)(4 - j),
-  //     temp(45)(4 - j),
-  //     temp(44)(4 - j),
-  //     temp(43)(4 - j),
-  //     temp(42)(4 - j),
-  //     temp(41)(4 - j),
-  //     temp(40)(4 - j),
-  //     temp(39)(4 - j),
-  //     temp(38)(4 - j),
-  //     temp(37)(4 - j),
-  //     temp(36)(4 - j),
-  //     temp(35)(4 - j),
-  //     temp(34)(4 - j),
-  //     temp(33)(4 - j),
-  //     temp(32)(4 - j),
-  //     temp(31)(4 - j),
-  //     temp(30)(4 - j),
-  //     temp(29)(4 - j),
-  //     temp(28)(4 - j),
-  //     temp(27)(4 - j),
-  //     temp(26)(4 - j),
-  //     temp(25)(4 - j),
-  //     temp(24)(4 - j),
-  //     temp(23)(4 - j),
-  //     temp(22)(4 - j),
-  //     temp(21)(4 - j),
-  //     temp(20)(4 - j),
-  //     temp(19)(4 - j),
-  //     temp(18)(4 - j),
-  //     temp(17)(4 - j),
-  //     temp(16)(4 - j),
-  //     temp(15)(4 - j),
-  //     temp(14)(4 - j),
-  //     temp(13)(4 - j),
-  //     temp(12)(4 - j),
-  //     temp(11)(4 - j),
-  //     temp(10)(4 - j),
-  //     temp(9)(4 - j),
-  //     temp(8)(4 - j),
-  //     temp(7)(4 - j),
-  //     temp(6)(4 - j),
-  //     temp(5)(4 - j),
-  //     temp(4)(4 - j),
-  //     temp(3)(4 - j),
-  //     temp(2)(4 - j),
-  //     temp(1)(4 - j),
-  //     temp(0)(4 - j)
-  //   )
-  // }
+  for (j <- 0 until 5) {
+    io.x_out(j) := Cat(
+      temp(63)(4 - j),
+      temp(62)(4 - j),
+      temp(61)(4 - j),
+      temp(60)(4 - j),
+      temp(59)(4 - j),
+      temp(58)(4 - j),
+      temp(57)(4 - j),
+      temp(56)(4 - j),
+      temp(55)(4 - j),
+      temp(54)(4 - j),
+      temp(53)(4 - j),
+      temp(52)(4 - j),
+      temp(51)(4 - j),
+      temp(50)(4 - j),
+      temp(49)(4 - j),
+      temp(48)(4 - j),
+      temp(47)(4 - j),
+      temp(46)(4 - j),
+      temp(45)(4 - j),
+      temp(44)(4 - j),
+      temp(43)(4 - j),
+      temp(42)(4 - j),
+      temp(41)(4 - j),
+      temp(40)(4 - j),
+      temp(39)(4 - j),
+      temp(38)(4 - j),
+      temp(37)(4 - j),
+      temp(36)(4 - j),
+      temp(35)(4 - j),
+      temp(34)(4 - j),
+      temp(33)(4 - j),
+      temp(32)(4 - j),
+      temp(31)(4 - j),
+      temp(30)(4 - j),
+      temp(29)(4 - j),
+      temp(28)(4 - j),
+      temp(27)(4 - j),
+      temp(26)(4 - j),
+      temp(25)(4 - j),
+      temp(24)(4 - j),
+      temp(23)(4 - j),
+      temp(22)(4 - j),
+      temp(21)(4 - j),
+      temp(20)(4 - j),
+      temp(19)(4 - j),
+      temp(18)(4 - j),
+      temp(17)(4 - j),
+      temp(16)(4 - j),
+      temp(15)(4 - j),
+      temp(14)(4 - j),
+      temp(13)(4 - j),
+      temp(12)(4 - j),
+      temp(11)(4 - j),
+      temp(10)(4 - j),
+      temp(9)(4 - j),
+      temp(8)(4 - j),
+      temp(7)(4 - j),
+      temp(6)(4 - j),
+      temp(5)(4 - j),
+      temp(4)(4 - j),
+      temp(3)(4 - j),
+      temp(2)(4 - j),
+      temp(1)(4 - j),
+      temp(0)(4 - j)
+    )
+  }
 }
-// have a module to prevent an input to rotate
-// for 2 registers, a max of 2 can be in at any time
-// class layer_delay extends Module {
-//   val io = IO(new Bundle {
-//     val ready = Output(Bool())
-//     val start = Input(Bool())
-//     val input = Input(UInt(muxWidth.W))
-//     val amount = Input(UInt(amountOfLayers.W))
-//     val output = Output(UInt(muxWidth.W))
-//   })
-// }
 
 class muxRotateLevel(currentLevel: Int, width: Int) extends Module {
   val io = IO(new Bundle {
