@@ -43,6 +43,7 @@ class substitution_fifo extends Module {
   io.out <> output_queue.io.deq
   rom.io.in := input_queue.io.deq.bits
   output_queue.io.enq.bits := rom.io.out
+  rom.io.clk := clock
   when (input_queue.io.deq.valid) {
     input_queue.io.deq.ready := true.B
     output_queue.io.enq.valid := true.B

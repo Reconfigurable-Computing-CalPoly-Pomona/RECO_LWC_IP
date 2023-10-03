@@ -285,7 +285,7 @@ class sub_test
   }
   "sub_compat_fifo" should "work" in {
     test(new substitution_layer_compat())
-      .withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+      .withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
         dut.io.x_in(0).poke(0)
         dut.io.x_in(1).poke(0)
         dut.io.x_in(2).poke(0)
@@ -323,7 +323,7 @@ class sub_test
   }
   "sub_original" should "work" in {
     test(new substitution_layer())
-      .withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+      .withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
         dut.io.x_in(0).poke(0)
         dut.io.x_in(1).poke(0)
         dut.io.x_in(2).poke(0)
