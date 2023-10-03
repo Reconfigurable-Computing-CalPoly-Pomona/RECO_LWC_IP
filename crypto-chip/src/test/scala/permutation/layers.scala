@@ -199,81 +199,89 @@ class sub_test
     extends AnyFlatSpec
     with ChiselScalatestTester
     with testFunctions {
-    // "lookup table" should "work" in {
-    //   test(new Module { 
-    //     val io = IO(new Bundle {
-    //       val in = Input(UInt(5.W))
-    //       val out = Output(UInt(5.W))
-    //     })
-    //     val lookup = Module(new substitute_lookup_table)
-    //     io <> lookup.io
-    //   }).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut => 
-    //     dut.io.in.poke(0)
-    //     dut.clock.step()
-    //     dut.io.out.expect(4)
-    //   }
-    // }
-  "sub_fifo" should "work with one value" in {
-    test(new substitution_fifo()) { dut =>
-      var count = 0
-      println("input is: " + dut.io.in.bits.peek())
-      dut.io.in.bits.poke(0)
-      dut.io.in.valid.poke(true)
+  "lookup table" should "work" in {
+    test(new Module {
+      val io = IO(new Bundle {
+        val in = Input(UInt(5.W))
+        val out = Output(UInt(5.W))
+      })
+      val lookup = Module(new substitute_lookup_table)
+      println("Running one value test")
+      io.out := lookup.io.out
+      lookup.io.in := io.in
+      lookup.io.clk := clock
+    }).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+      dut.io.in.poke(0)
+      println("after poke")
       dut.clock.step()
-      count = count + 1
-      while (dut.io.out.valid.peekBoolean() == false) {
-        dut.clock.step()
-        count = count + 1
-      }
-      dut.io.out.ready.poke(true)
-      println("output is: " + dut.io.out.bits.peek())
-      println("count is: " + count)
-      dut.io.out.bits.expect(4)
+      println("after clock; expecting 4, result is: " + dut.io.out.peekInt())
+      dut.io.out.expect(4)
+      println("after expect")
     }
   }
+  "sub_fifo" should "work with one value" in {
+    test(new substitution_fifo())
+      .withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+        var count = 0
+        println("input is: " + dut.io.in.bits.peek())
+        dut.io.in.bits.poke(0)
+        dut.io.in.valid.poke(true)
+        dut.clock.step()
+        count = count + 1
+        while (dut.io.out.valid.peekBoolean() == false) {
+          dut.clock.step()
+          count = count + 1
+        }
+        dut.io.out.ready.poke(true)
+        println("output is: " + dut.io.out.bits.peek())
+        println("count is: " + count)
+        dut.io.out.bits.expect(4)
+      }
+  }
   "sub_fifo" should "work with 32 value" in {
-    test(new substitution_fifo()) { dut =>
-      var count = 0
-      var i = 0
-      while (i < 32) {
-        if (dut.io.in.ready.peekBoolean()) {
-          dut.io.in.bits.poke(i)
-          dut.io.in.valid.poke(true)
-          dut.clock.step()
-          count = count + 1
-          i = i + 1
-        } else {
-          dut.io.in.valid.poke(false)
-          dut.clock.step()
-          count = count + 1
+    test(new substitution_fifo())
+      .withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+        var count = 0
+        var i = 0
+        while (i < 32) {
+          if (dut.io.in.ready.peekBoolean()) {
+            dut.io.in.bits.poke(i)
+            dut.io.in.valid.poke(true)
+            dut.clock.step()
+            count = count + 1
+            i = i + 1
+          } else {
+            dut.io.in.valid.poke(false)
+            dut.clock.step()
+            count = count + 1
+          }
         }
-      }
-      i = 0
-      while (i < 32) {
-        if (dut.io.out.valid.peekBoolean()) {
-          dut.io.out.ready.poke(true)
-          println("input was: " + i)
-          println("output is: " + dut.io.out.bits.peekInt())
-          dut.io.out.bits.expect(sub_table(i))
-          i = i + 1
-          dut.clock.step()
-          count = count + 1
-        } else {
-          dut.clock.step()
-          count = count + 1
-          dut.io.out.ready.poke(false)
+        i = 0
+        while (i < 32) {
+          if (dut.io.out.valid.peekBoolean()) {
+            dut.io.out.ready.poke(true)
+            println("input was: " + i)
+            println("output is: " + dut.io.out.bits.peekInt())
+            dut.io.out.bits.expect(sub_table(i))
+            i = i + 1
+            dut.clock.step()
+            count = count + 1
+          } else {
+            dut.clock.step()
+            count = count + 1
+            dut.io.out.ready.poke(false)
+          }
         }
+        // dut.io.in.valid.poke(false)
+        // while (dut.io.out.valid.peekBoolean() == false) {
+        //   dut.clock.step()
+        //   count = count + 1
+        // }
+        // dut.io.out.ready.poke(true)
+        // println("output is: " + dut.io.out.bits.peek())
+        println("count is: " + count)
+        // dut.io.out.bits.expect( /*function>*/ )
       }
-      // dut.io.in.valid.poke(false)
-      // while (dut.io.out.valid.peekBoolean() == false) {
-      //   dut.clock.step()
-      //   count = count + 1
-      // }
-      // dut.io.out.ready.poke(true)
-      // println("output is: " + dut.io.out.bits.peek())
-      println("count is: " + count)
-      // dut.io.out.bits.expect( /*function>*/ )
-    }
   }
   "sub_compat_fifo" should "work" in {
     test(new substitution_layer_compat())

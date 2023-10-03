@@ -4,7 +4,6 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental._
 import chisel3.util.HasBlackBoxResource
-import scala.math._
 import _root_.permutation.posedge
 
 class addition_layer extends Module {
@@ -158,7 +157,7 @@ class romTest extends Module {
 // try bram, try different assignment to output
 class substitute_lookup_table extends BlackBox with HasBlackBoxResource {
   val io = IO(new Bundle {
-    // val clk = Input(Clock())
+    val clk = Input(Clock())
     val in = Input(UInt(5.W))
     val out = Output(UInt(5.W))
   })

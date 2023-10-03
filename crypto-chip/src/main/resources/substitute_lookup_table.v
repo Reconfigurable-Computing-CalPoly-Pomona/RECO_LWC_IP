@@ -1,5 +1,5 @@
 module substitute_lookup_table #(
-    parameter fileName = "in.mem"
+    parameter fileName = "./src/main/resources/in.mem"
 ) (
     input clk,
     input [4:0] in,
