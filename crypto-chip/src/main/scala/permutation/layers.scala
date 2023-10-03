@@ -41,6 +41,7 @@ class substitution_fifo extends Module {
   // external connections
   input_queue.io.enq <> io.in
   io.out <> output_queue.io.deq
+  // internal connections
   rom.io.in := input_queue.io.deq.bits
   output_queue.io.enq.bits := rom.io.out
   rom.io.clk := clock
@@ -48,10 +49,10 @@ class substitution_fifo extends Module {
     input_queue.io.deq.ready := true.B
     output_queue.io.enq.valid := true.B
   }
-    .otherwise {
+  .otherwise {
       input_queue.io.deq.ready := false.B
       output_queue.io.enq.valid := false.B
-    }
+  }
 }
 // in(0) is MSB, x(4) is LSB
 class convert_to_5_bit extends Module {

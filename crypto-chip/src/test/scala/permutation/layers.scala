@@ -219,11 +219,37 @@ class sub_test
       println("after expect")
     }
   }
+  "lookup table" should "work two times" in {
+    test(new Module {
+      val io = IO(new Bundle {
+        val in = Input(UInt(5.W))
+        val out = Output(UInt(5.W))
+      })
+      val lookup = Module(new substitute_lookup_table)
+      println("Running one value test")
+      io.out := lookup.io.out
+      lookup.io.in := io.in
+      lookup.io.clk := clock
+    }).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+      dut.io.in.poke(0)
+      println("after poke")
+      dut.clock.step()
+      println("after clock; expecting 4, result is: " + dut.io.out.peekInt())
+      dut.io.out.expect(4)
+      println("after expect")
+      dut.io.in.poke(1)
+      println("after poke")
+      dut.clock.step()
+      println("after clock; expecting 11, result is: " + dut.io.out.peekInt())
+      dut.io.out.expect(11)
+      println("after expect")
+    }
+  }
   "sub_fifo" should "work with one value" in {
     test(new substitution_fifo())
       .withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
         var count = 0
-        println("input is: " + dut.io.in.bits.peek())
+        println("input is: " + 0)
         dut.io.in.bits.poke(0)
         dut.io.in.valid.poke(true)
         dut.clock.step()
@@ -236,6 +262,48 @@ class sub_test
         println("output is: " + dut.io.out.bits.peek())
         println("count is: " + count)
         dut.io.out.bits.expect(4)
+      }
+  }
+  "sub_fifo" should "work with two values" in {
+    test(new substitution_fifo())
+      .withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+        var count = 0
+        println("input1 is: " + 2)
+        dut.io.in.bits.poke(2)
+        dut.io.in.valid.poke(true)
+        dut.clock.step()
+        count = count + 1
+        println("input2 is: " + 1)
+        dut.io.in.bits.poke(1)
+        dut.io.in.valid.poke(true)
+        dut.clock.step()
+        count = count + 1
+        dut.io.in.valid.poke(false)
+        while (dut.io.out.valid.peekBoolean() == false) {
+          dut.clock.step()
+          count = count + 1
+        }
+        dut.io.out.ready.poke(true)
+        println("output is: " + dut.io.out.bits.peek())
+        println("count is: " + count)
+        // dut.io.out.bits.expect(4)
+        dut.clock.step()
+        count = count + 1
+
+        dut.io.out.ready.poke(true)
+        println("output is: " + dut.io.out.bits.peek())
+        println("count is: " + count)
+        // dut.io.out.bits.expect(4)
+        dut.clock.step()
+        count = count + 1
+        println("output's valid is: " + dut.io.out.valid.peekBoolean())
+        dut.io.out.ready.poke(true)
+        println("output1 is: " + dut.io.out.bits.peek())
+        println("count is: " + count)
+        // dut.io.out.bits.expect(11)
+        dut.clock.step()
+        count = count + 1
+        println("output's valid is: " + dut.io.out.valid.peekBoolean())
       }
   }
   "sub_fifo" should "work with 32 value" in {
@@ -256,6 +324,7 @@ class sub_test
             count = count + 1
           }
         }
+        dut.io.in.valid.poke(false)
         i = 0
         while (i < 32) {
           if (dut.io.out.valid.peekBoolean()) {
@@ -272,6 +341,7 @@ class sub_test
             dut.io.out.ready.poke(false)
           }
         }
+        dut.io.out.ready.poke(false)
         // dut.io.in.valid.poke(false)
         // while (dut.io.out.valid.peekBoolean() == false) {
         //   dut.clock.step()
@@ -298,8 +368,8 @@ class sub_test
         println("output after clock is: " + dut.io.x_out.peek())
         dut.io.start.poke(false)
         for (i <- 0 until 70) {
-          println("done is: " + dut.io.done.peek())
-          println("output is: " + dut.io.x_out.peek())
+          // println("done is: " + dut.io.done.peek())
+          // println("output is: " + dut.io.x_out.peek())
           dut.clock.step()
         }
         println("using 1 for all pokes")
@@ -315,8 +385,8 @@ class sub_test
         println("output after clock is: " + dut.io.x_out.peek())
         dut.io.start.poke(false)
         for (i <- 0 until 70) {
-          println("done is: " + dut.io.done.peek())
-          println("output is: " + dut.io.x_out.peek())
+          // println("done is: " + dut.io.done.peek())
+          // println("output is: " + dut.io.x_out.peek())
           dut.clock.step()
         }
       }
