@@ -45,13 +45,16 @@ class substitution_fifo extends Module {
   rom.io.in := input_queue.io.deq.bits
   output_queue.io.enq.bits := rom.io.out
   rom.io.clk := clock
+
+  val delay = RegInit(false.B)
+  output_queue.io.enq.valid := delay
   when (input_queue.io.deq.valid) {
     input_queue.io.deq.ready := true.B
-    output_queue.io.enq.valid := true.B
+    delay := true.B
   }
   .otherwise {
       input_queue.io.deq.ready := false.B
-      output_queue.io.enq.valid := false.B
+      delay := false.B
   }
 }
 // in(0) is MSB, x(4) is LSB

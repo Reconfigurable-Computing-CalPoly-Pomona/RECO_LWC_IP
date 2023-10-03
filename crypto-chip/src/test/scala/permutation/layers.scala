@@ -211,11 +211,11 @@ class sub_test
       lookup.io.in := io.in
       lookup.io.clk := clock
     }).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
-      dut.io.in.poke(0)
+      dut.io.in.poke(31)
       println("after poke")
       dut.clock.step()
       println("after clock; expecting 4, result is: " + dut.io.out.peekInt())
-      dut.io.out.expect(4)
+      dut.io.out.expect(23)
       println("after expect")
     }
   }
@@ -262,6 +262,26 @@ class sub_test
         println("output is: " + dut.io.out.bits.peek())
         println("count is: " + count)
         dut.io.out.bits.expect(4)
+      }
+  }
+  "sub_fifo" should "work with last value" in {
+    test(new substitution_fifo())
+      .withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+        var count = 0
+        println("input is: " + BigInt("1F", 16))
+        dut.io.in.bits.poke(BigInt("1F", 16))
+        dut.io.in.valid.poke(true)
+        dut.clock.step()
+        count = count + 1
+        dut.io.in.valid.poke(false)
+        while (dut.io.out.valid.peekBoolean() == false) {
+          dut.clock.step()
+          count = count + 1
+        }
+        dut.io.out.ready.poke(true)
+        println("output is: " + dut.io.out.bits.peek())
+        println("count is: " + count)
+        dut.io.out.bits.expect(23)
       }
   }
   "sub_fifo" should "work with two values" in {
