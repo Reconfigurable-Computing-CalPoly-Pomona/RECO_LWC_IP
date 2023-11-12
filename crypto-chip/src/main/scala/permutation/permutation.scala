@@ -108,6 +108,7 @@ class posedge() extends Module {
   io.out := io.in & ~temp_reg
 }
 // edge detector shall be removed here to maintain compatibility with wrapper
+
 class permutation_two extends Module {
   val io = IO(new Bundle {
     val start = Input(Bool())

@@ -7,6 +7,9 @@ import chisel3.util.HasBlackBoxResource
 import _root_.permutation.posedge
 // import chiseltest.formal._
 // TODO: all ready signals should be used properly; use like a mutex
+
+// This is a combinational circuit, performing constant xor with 5 bits of the input based on round number.
+//  The equation for this operation should be x2(8,0) = x2(8,0) ^ lut(round)
 class addition_layer extends Module {
   val io = IO(new Bundle {
     val round_in = Input(UInt(8.W))
@@ -161,6 +164,10 @@ class romTest extends Module {
 // https://www.chisel-lang.org/chisel3/docs/explanations/memories.html
 // current implementation is a long delay due to a chain
 // try bram, try different assignment to output
+
+// This performs a substitution, converting the input to the output based on the input.
+// The lookup table to convert has an equation, however it is not given in the spec. A diagram is given instead, which is more complicated.
+// The lookup table operation looks like this: out = lut(in)
 class substitute_lookup_table extends BlackBox with HasBlackBoxResource {
   val io = IO(new Bundle {
     val clk = Input(Clock())
@@ -508,6 +515,9 @@ class barrelShifter(amountOfLayers: Int) extends Module {
 
 }
 
+// This is a barrel shifter that rotates up to 63 bits to the right.
+// The operation looks like this: output = input >>> amount
+// also note that this takes two cycles to finish, first for the 3 layers, then another for the last 3 layers
 class barrelShifter_2reg() extends Module {
   val io = IO(new Bundle {
     val input = Input(UInt(64.W))
@@ -614,7 +624,16 @@ class amount_decoder extends Module {
       io.amount := amountFirst(5, 3) ## amountSecond(2, 0)
     }
 }
-
+// This pipelined diffusion is based on the diffusion layer.draw.io diagram page 9
+// The equation is:
+// x0 = x0 ^ (x0 >>> 19) ^ (x0 >>> 28)
+// x1 = x1 ^ (x1 >>> 61) ^ (x1 >>> 39)
+// x2 = x2 ^ (x2 >>> 1) ^ (x2 >>> 6)
+// x3 = x3 ^ (x3 >>> 10) ^ (x3 >>> 17)
+// x4 = x4 ^ (x4 >>> 7) ^ (x4 >>> 41)
+// Note that this takes in only one 64 bit value, the diffusion_fifo takes all values, but it takes a few cycles for each input (should be total of 5 cycles)
+// The i value input is a lookup table index to what the first and second rotation value should be. For example when i=0, the operation is the first equation, i=2 is the second equation, and so on.
+// the equations are also defined in the ascon spec pdf
 class single_diff_pipe() extends Module {
   val io = IO(new Bundle {
     val x_in = Input(UInt(64.W))
