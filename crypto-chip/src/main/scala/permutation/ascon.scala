@@ -7,6 +7,9 @@ import chisel3.util._
 import permutation._
 // import layers._
 
+  // in: key (3-0), nounce (7-4), message (11-8), tagin (12-15), control(start, empty, full, mode)(lower bits of 16)
+	// out: control (push, pull)(25), cipher (20-17), tagout(24-21), control (done, warning, valid)(25)
+	// output control: (push, pull, done, warning, valid)(25)
 
 class ascon extends Module {
   val io = IO(new Bundle {
@@ -117,7 +120,6 @@ class ascon extends Module {
   permutation.io.round := Mux(stateReg===idle || ((stateReg===transit || stateReg===squeeze) && io.full && ~modeReg(2)) || ((stateReg===initial || stateReg===absorb) && io.empty && modeReg(2)), 12.U, bReg)
 
   // if [idle] or [(encrypt or decrypt) and (output fifo is full) and (if transit or squeeze)] or [hash/a and (if input fifo is empty) and (initial or absorb)], set round to 12 (default)
-  // TODO: ask Dr. Aly about automatically performing rounds
   // else set to bReg
   // when (stateReg===idle || ((stateReg===transit || stateReg===squeeze) && io.full && ~modeReg(2)) || ((stateReg===initial || stateReg===absorb) && io.empty && modeReg(2))) {
   //   permutation.io.round := 12.U

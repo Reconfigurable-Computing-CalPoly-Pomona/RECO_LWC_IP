@@ -5,7 +5,8 @@ import chisel3.util._
 import chisel3.experimental._
 import chisel3.util.HasBlackBoxResource
 import _root_.permutation.posedge
-
+// import chiseltest.formal._
+// TODO: all ready signals should be used properly; use like a mutex
 class addition_layer extends Module {
   val io = IO(new Bundle {
     val round_in = Input(UInt(8.W))
@@ -48,14 +49,14 @@ class substitution_fifo extends Module {
 
   val delay = RegInit(false.B)
   output_queue.io.enq.valid := delay
-  when (input_queue.io.deq.valid) {
+  when(input_queue.io.deq.valid) {
     input_queue.io.deq.ready := true.B
     delay := true.B
   }
-  .otherwise {
+    .otherwise {
       input_queue.io.deq.ready := false.B
       delay := false.B
-  }
+    }
 }
 // in(0) is MSB, x(4) is LSB
 class convert_to_5_bit extends Module {
