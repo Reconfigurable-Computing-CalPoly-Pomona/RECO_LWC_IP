@@ -34,6 +34,9 @@ class addition_layer extends Module {
 
   io.x2_out := io.x2_in ^ array(io.round_in)
 }
+// Optimization notes: can reduce the fifo depth since it is unlikely to become completely full
+  // also possibly remove the delay on the input since the data is already ready at the output of the input fifo
+// TODO: check the output_queue ready signal - it might not be set correctly but it might not matter inside the module
 class substitution_fifo extends Module {
   val io = IO(new Bundle {
     val in = Flipped(Decoupled(UInt(5.W)))
@@ -88,7 +91,7 @@ class convert_from_5_bit extends Module {
   //   temp(i) := io.in(i)
   // }
   // assign the temp vector to output by shifting one bit
-  // TODO: Why does the temp assignment need to be switched (instead of temp(0), then temp(1), it starts at temp(4)). The x values seem to be switched in which is first and last, which 4 being first and 0 being last. This also applies to the substitution where 0 is MSB, 4 is LSB and the LSB starts first
+  // Q: Why does the temp assignment need to be switched (instead of temp(0), then temp(1), it starts at temp(4)). A: The x values seem to be switched in which is first and last, which 4 being first and 0 being last. This also applies to the substitution where 0 is MSB, 4 is LSB and the LSB starts first
   when(io.write === true.B) {
     for (i <- 0 until 5) {
       temp(4 - i) := (io.in(i)) ## (temp(4 - i)(63, 1))
@@ -98,6 +101,7 @@ class convert_from_5_bit extends Module {
   }
   io.out := temp
 }
+// optimization notes: try reducing the counter bit sizes by starting the io at cycle 0 or cycle 63
 class substitution_layer_compat extends Module {
   val io = IO(new Bundle {
     val start = Input(Bool())
@@ -145,6 +149,7 @@ class substitution_layer_compat extends Module {
       io.done := true.B
     }
 }
+// just a testing module to setup a rom in chisel; doesn't work to create a rom based on bram, for example
 class romTest extends Module {
   val io = IO(new Bundle {
     val in = Input(UInt(32.W))
@@ -161,9 +166,6 @@ class romTest extends Module {
   val r = sinTable(1, 10)
   io.out := r(io.in)
 }
-// https://www.chisel-lang.org/chisel3/docs/explanations/memories.html
-// current implementation is a long delay due to a chain
-// try bram, try different assignment to output
 
 // This performs a substitution, converting the input to the output based on the input.
 // The lookup table to convert has an equation, however it is not given in the spec. A diagram is given instead, which is more complicated.
@@ -208,7 +210,7 @@ class substitute_lookup_table extends BlackBox with HasBlackBoxResource {
   // array(30) := "hf".U
   // array(31) := "h17".U
 }
-
+// This is the original substitution layer, performing all 64 substitutions combinationally with a lookup table
 class substitution_layer extends Module {
   val io = IO(new Bundle {
     val x_in = Input(Vec(5, UInt(64.W)))
@@ -354,6 +356,7 @@ class muxRotateLevel(currentLevel: Int, width: Int) extends Module {
 
   io.output := tmp.asUInt
 }
+// not used
 class barrelShifter_seq_param(amountOfLayers: Int) extends Module {
   val muxWidth = math.pow(2, amountOfLayers).toInt
   val io = IO(new Bundle {
@@ -392,6 +395,7 @@ class barrelShifter_seq_param(amountOfLayers: Int) extends Module {
   io.output := layer_IO(amountOfLayers - 1).output
 
 }
+// not used
 class barrelShifter(amountOfLayers: Int) extends Module {
   val io = IO(new Bundle {
     val input = Input(UInt(math.pow(2, amountOfLayers).toInt.W))

@@ -11,6 +11,7 @@ import permutation._
 	// out: control (push, pull)(25), cipher (20-17), tagout(24-21), control (done, warning, valid)(25)
 	// complete output control: (push, pull, done, warning, valid)(25)
 
+  // streaming interface
 class ascon extends Module {
   val io = IO(new Bundle {
     val key = Input(UInt(128.W))
@@ -19,11 +20,15 @@ class ascon extends Module {
 
     val message = Input(UInt(128.W))
     val start   = Input(Bool())
+    // is there a message
     val empty   = Input(Bool())
+    // is the fifo full, then pause?
     val full    = Input(Bool())
     val mode    = Input(UInt(3.W)) // 0 encryption ascon, 1 encryption ascona, 2 decryption ascon, 3 decryption ascona, 4 hash, 5 hasha, 
 
+    
     val push    = Output(Bool())
+
     val pull    = Output(Bool())
     val cipher  = Output(UInt(128.W))
     val tagout  = Output(UInt(128.W))

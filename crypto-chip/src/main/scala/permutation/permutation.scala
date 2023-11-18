@@ -206,6 +206,7 @@ class permutation_two extends Module {
 
 
 // permutation wrapper
+// maybe remove the compat layers for hashing with python
 class permutation_two_wrapper extends Module {
   val io = IO(new Bundle {
     val s_in        = Input(UInt(320.W))
