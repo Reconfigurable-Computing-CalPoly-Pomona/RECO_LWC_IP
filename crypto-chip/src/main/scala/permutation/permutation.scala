@@ -204,6 +204,16 @@ class permutation_two extends Module {
     // io.x_out := state
 }
 
+// TODO: fifo wrapper for permutation with pynq
+class permutation_two_fifo_wrapper extends Module {
+  val io = IO(new Bundle {
+    val s_in = Flipped(DecoupledIO(UInt(32.W)))
+    val start        = Input(Bool())
+    val round        = Input(UInt(4.W))
+    val done        = Output(Bool())
+    val s_out = (DecoupledIO(UInt(32.W)))
+  })
+}
 
 // permutation wrapper
 // maybe remove the compat layers for hashing with python

@@ -28,4 +28,5 @@ object permutationMain extends App {
   emitVerilog(new substitution_fifo(), Array("--target-dir", "generated")) // Vivado 2022.2: 43 LUT, 16 LUTRAM, 26 FF, .5 BRAM, 5.828ns Total Delay
   emitVerilog(new substitution_layer(), Array("--target-dir", "generated")) // Vivado 2022.2: 192 LUT, 0 FF, 5.361ns Total Delay
   emitVerilog(new substitution_layer_compat(), Array("--target-dir", "generated")) // Vivado 2022.2: 142 LUT, 16 LUTRAM, 360 FF, .5 BRAM, 4.090ns Total Delay
+  emitVerilog(new muxTest(), Array("--target-dir", "generated")) // Vivado 2022.2: 142 LUT, 16 LUTRAM, 360 FF, .5 BRAM, 4.090ns Total Delay
 }
