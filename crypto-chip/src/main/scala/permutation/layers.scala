@@ -120,8 +120,8 @@ class substitution_layer_compat extends Module {
     val done = Output(Bool())
   })
   val lut = Module(new substitution_fifo())
-  val counter_in = RegInit(0.U(7.W))
-  val counter_out = RegInit(0.U(7.W))
+  val counter_in = RegInit(0.U(6.W))
+  val counter_out = RegInit(0.U(6.W))
   val to_5 = Module(new convert_to_5_bit())
   to_5.io.counter := counter_in
   val from_5 = Module(new convert_from_5_bit())
@@ -139,15 +139,23 @@ class substitution_layer_compat extends Module {
   when(io.start === true.B) {
     counter_in := 0.U
     counter_out := 0.U
+  
+    when(lut.io.in.ready) {
+      lut.io.in.valid := true.B
+    }
+    when(lut.io.out.valid) {
+      lut.io.out.ready := true.B
+      from_5.io.write := true.B
+    }
   }
   // might only do 63 bits and not 64; Confirmed and fixed by increasing size of counters
-  when(counter_in < 64.U) {
+  when(counter_in < 63.U) {
     when(lut.io.in.ready) {
       counter_in := counter_in + 1.U
       lut.io.in.valid := true.B
     }
   }
-  when(counter_out < 64.U) {
+  when(counter_out < 63.U) {
     io.done := false.B
     when(lut.io.out.valid) {
       counter_out := counter_out + 1.U
@@ -155,9 +163,9 @@ class substitution_layer_compat extends Module {
       from_5.io.write := true.B
     }
   }
-    .otherwise {
-      io.done := true.B
-    }
+  .otherwise {
+    io.done := true.B
+  }
 }
 // just a testing module to setup a rom in chisel; doesn't work to create a rom based on bram, for example
 class romTest extends Module { //***NOT IN USE***
