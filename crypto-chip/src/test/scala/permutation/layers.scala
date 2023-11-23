@@ -373,6 +373,8 @@ class sub_test
         // dut.io.out.bits.expect( /*function>*/ )
       }
   }
+  // only know that this works after 64 cycles
+  // need to extract bitslices and figure out the correct values
   "sub_compat_fifo" should "work" in {
     test(new substitution_layer_compat())
       .withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
@@ -381,6 +383,7 @@ class sub_test
         dut.io.x_in(2).poke(0)
         dut.io.x_in(3).poke(0)
         dut.io.x_in(4).poke(0)
+        // output should be 0x04 or b00100 for all bitslices
 
         dut.io.start.poke(true)
         println("output before clock is: " + dut.io.x_out.peek())
@@ -392,12 +395,14 @@ class sub_test
           // println("output is: " + dut.io.x_out.peek())
           dut.clock.step()
         }
+        println("output after 70 clock is: " + dut.io.x_out.peek())
         println("using 1 for all pokes")
         dut.io.x_in(0).poke(1)
         dut.io.x_in(1).poke(1)
         dut.io.x_in(2).poke(1)
         dut.io.x_in(3).poke(1)
         dut.io.x_in(4).poke(1)
+        // output should be b01011
 
         dut.io.start.poke(true)
         println("output before clock is: " + dut.io.x_out.peek())
@@ -409,6 +414,7 @@ class sub_test
           // println("output is: " + dut.io.x_out.peek())
           dut.clock.step()
         }
+        println("output after 70 clock is: " + dut.io.x_out.peek())
       }
   }
   "sub_original" should "work" in {
