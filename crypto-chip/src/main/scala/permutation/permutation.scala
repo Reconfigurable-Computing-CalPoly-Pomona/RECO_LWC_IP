@@ -135,7 +135,8 @@ class permutation_two extends Module {
     substitution.io.x_in(0) := io.x_in(0)
     substitution.io.x_in(1) := io.x_in(1)
     // Q: for some reason, making the addition combinational to the substitution fixes the problem of the first round being incorrect
-      // This is a small problem since it extends the critical path to include the substition and addition layers
+      // This is a small problem since it extends the critical path to include the substition and addition layers. The compat layer converts things to registers anyways, so it might have little impact
+      // This might suggest that starting at the done state works weirdly; the state(2) assignment is not happening before the substitution layer starts as was previously assumed
     substitution.io.x_in(2) := addition.io.x2_out
     substitution.io.x_in(3) := io.x_in(3)
     substitution.io.x_in(4) := io.x_in(4)
