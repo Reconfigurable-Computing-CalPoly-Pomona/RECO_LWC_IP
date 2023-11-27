@@ -259,6 +259,7 @@ class permutation_two_wrapper extends Module {
           x3_Reg := single_round.io.x_out(3)
           x4_Reg := single_round.io.x_out(4)
           current_round := current_round + 1.U
+          single_round.io.start := true.B
           currentState := checkRound
         }
         .otherwise {
