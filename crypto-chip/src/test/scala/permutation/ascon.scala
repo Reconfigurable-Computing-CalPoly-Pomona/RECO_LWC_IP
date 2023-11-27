@@ -165,7 +165,7 @@ class hashBehavior extends AnyFlatSpec with ChiselScalatestTester {
 
 class wrappertest extends AnyFlatSpec with ChiselScalatestTester {
   "wrapper" should "work" in {
-    test(new permutation_two_wrapper).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+    test(new permutation_two_wrapper).withAnnotations(Seq(VerilatorBackendAnnotation)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // val dut1 = Module(new permutation_one_wrapper)
       // test(new permutation_one_wrapper) { dut1 =>
         // var pcycle = 13
