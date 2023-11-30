@@ -108,7 +108,6 @@ class posedge() extends Module {
   io.out := io.in & ~temp_reg
 }
 // edge detector shall be removed here to maintain compatibility with wrapper
-
 class permutation_two extends Module {
   val io = IO(new Bundle {
     val start = Input(Bool())
@@ -220,6 +219,7 @@ class permutation_two_fifo_wrapper extends Module {
 
 // permutation wrapper
 // maybe remove the compat layers for hashing with python
+// TODO: maybe reduce number of states 
 class permutation_two_wrapper extends Module {
   val io = IO(new Bundle {
     val s_in        = Input(UInt(320.W))
