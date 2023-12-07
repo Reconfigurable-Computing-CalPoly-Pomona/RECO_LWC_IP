@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram name="Page-1" id="eaKB3j1fzKeqU2Oe0nWr">
-        <mxGraphModel dx="1640" dy="1693" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="1559" dy="1682" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -2702,7 +2702,7 @@
         </mxGraphModel>
     </diagram>
     <diagram id="Y49Njn8ro7vRTDH0CUWm" name="Page-17">
-        <mxGraphModel dx="550" dy="1879" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="1231" dy="1682" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -2759,6 +2759,56 @@
                 </mxCell>
                 <mxCell id="eLP4vr0Y1cDf-B52_NeQ-9" value="convert/compat" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="420" y="280" width="120" height="60" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="QvBbVN-fHdKH7RK1qKVM" name="Page-18">
+        <mxGraphModel dx="2210" dy="582" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="zQKNya9s28HyS16-SFdl-7" style="edgeStyle=none;html=1;" edge="1" parent="1" source="zQKNya9s28HyS16-SFdl-1" target="zQKNya9s28HyS16-SFdl-6">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="zQKNya9s28HyS16-SFdl-1" value="hash function (python)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="350" y="190" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="zQKNya9s28HyS16-SFdl-2" value="permutation_two_wrapper" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="350" y="480" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="zQKNya9s28HyS16-SFdl-8" style="edgeStyle=none;html=1;" edge="1" parent="1" source="zQKNya9s28HyS16-SFdl-6" target="zQKNya9s28HyS16-SFdl-2">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="zQKNya9s28HyS16-SFdl-6" value="permutation driver (python)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="350" y="310" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="zQKNya9s28HyS16-SFdl-10" style="edgeStyle=none;html=1;" edge="1" parent="1" source="zQKNya9s28HyS16-SFdl-9" target="zQKNya9s28HyS16-SFdl-1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="zQKNya9s28HyS16-SFdl-9" value="tests/data collection&lt;br&gt;&amp;nbsp;(python)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="350" y="50" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="zQKNya9s28HyS16-SFdl-12" style="edgeStyle=none;html=1;" edge="1" parent="1" source="zQKNya9s28HyS16-SFdl-11" target="zQKNya9s28HyS16-SFdl-6">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="zQKNya9s28HyS16-SFdl-11" value="tests/data collection (python)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="130" y="250" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="zQKNya9s28HyS16-SFdl-13" value="C implementation" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="-90" y="310" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="zQKNya9s28HyS16-SFdl-15" style="edgeStyle=none;html=1;" edge="1" parent="1" source="zQKNya9s28HyS16-SFdl-14" target="zQKNya9s28HyS16-SFdl-13">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="zQKNya9s28HyS16-SFdl-17" style="edgeStyle=none;html=1;" edge="1" parent="1" source="zQKNya9s28HyS16-SFdl-14" target="zQKNya9s28HyS16-SFdl-16">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="zQKNya9s28HyS16-SFdl-14" value="tests/data collection (C)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="-270" y="250" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="zQKNya9s28HyS16-SFdl-16" value="permutation (C)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="-100" y="480" width="120" height="60" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

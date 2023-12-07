@@ -1147,6 +1147,7 @@ class diffusion_fifo(fifo_size: Int) extends Module {
   in.io.enq.bits := io.x_in
   io.x_out := out.io.deq.bits
   // pass through input queue full to outside and output queue empty to outside, inverting it so it makes sense
+  // for better async, create like a handshake between two fifos
   io.full := ~in.io.enq.ready
   io.empty := ~out.io.deq.valid
 
