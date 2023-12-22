@@ -16,14 +16,14 @@ class fifo_one extends Module {
     // connect the queue data and output data
     io.out.bits := queue.io.deq.bits
 
-    val regReady = RegInit(false.B)
-    val regvalid = RegInit(false.B)
+    // val regReady = RegInit(false.B)
+    // val regvalid = RegInit(false.B)
     
     // set deq's ready to false by default to prevent multiple reads
     queue.io.deq.ready := false.B
 
     // set valid to false by default since that there's no data by default
-    io.out.valid := false.B
+    // io.out.valid := false.B
     
     val sending :: checkReady :: Nil = Enum(2)
     val currentState = RegInit(checkReady)
@@ -38,7 +38,6 @@ class fifo_one extends Module {
             }
             .otherwise {
                 currentState := sending
-                io.out.valid := true.B
             }
         }
         is (checkReady) {
@@ -46,12 +45,20 @@ class fifo_one extends Module {
             when (io.out.ready & queue.io.deq.valid) {
                 currentState := sending
                 // when sending, the valid signal must be set true as soon as possible, so here?
-                io.out.valid := true.B
             }
             .otherwise {
                 currentState := checkReady
             }
         }
+    }
+    when (currentState === checkReady) {
+        io.out.valid := false.B
+    }
+    .elsewhen(currentState === sending) {
+        io.out.valid := true.B
+    }
+    .otherwise {
+        io.out.valid := false.B
     }
 }
 
@@ -93,7 +100,6 @@ class fifo_two extends Module {
                 currentState := checkValid
             }
             .otherwise {
-                io.in.ready := false.B
                 currentState := receiving
             }
         }
@@ -114,6 +120,16 @@ class fifo_two extends Module {
             }
         }
     }
+    when (currentState === checkValid) {
+        io.in.ready := true.B
+    }
+    .elsewhen(currentState === receiving) {
+        io.in.ready := false.B
+    }
+    .otherwise {
+        io.in.ready := true.B
+    }
+
 }
 
 class top extends Module {
