@@ -51,7 +51,7 @@
             "request": "launch",
             "name": "test asyncfifo",
             "testClass": "layers.async_test"
-        }
+        },
         {
             "type": "scala",
             "request": "launch",
