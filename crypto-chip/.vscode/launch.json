@@ -4,7 +4,6 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        
         {
             "type": "scala",
             "request": "launch",
@@ -47,6 +46,12 @@
             "name": "test wrapper",
             "testClass": "ascon.wrappertest"
         },
+        {
+            "type": "scala",
+            "request": "launch",
+            "name": "test asyncfifo",
+            "testClass": "layers.async_test"
+        }
         {
             "type": "scala",
             "request": "launch",
