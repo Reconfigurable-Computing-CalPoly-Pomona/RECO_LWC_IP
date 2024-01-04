@@ -134,9 +134,9 @@ class fifo_two extends Module {
 
 class top extends Module {
     val io = IO(new Bundle {
-        val clockA = Input(Clock())
+        val clockA = Input(Bool())
         val resetA = Input(Bool())
-        val clockB = Input(Clock())
+        val clockB = Input(Bool())
         val resetB = Input(Bool())
         val in = Flipped(Decoupled(UInt(1.W)))
         val out = Decoupled(UInt(1.W))
@@ -147,7 +147,7 @@ class top extends Module {
         // send_ack: ready from 1 to 0
         // end/finish: valid from 1 to 0
         // end_ack: ready from 0 to 1
-    val one = withClockAndReset(io.clockA, io.resetA) {
+    val one = withClockAndReset(io.clockA.asClock, io.resetA) {
         Module(new fifo_one)
     }
     one.io.in <> io.in
@@ -155,7 +155,7 @@ class top extends Module {
         // check valid: valid = 1 (0 to 1)
         // recv ack: ready from 1 to 0
         // finish: valid 1 to 0
-    val two = withClockAndReset(io.clockB, io.resetB) {
+    val two = withClockAndReset(io.clockB.asClock, io.resetB) {
         Module(new fifo_two)
     }
     two.io.in <> one.io.out
