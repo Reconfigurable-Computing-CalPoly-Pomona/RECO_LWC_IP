@@ -32,4 +32,8 @@ object permutationMain extends App {
   emitVerilog(new fifo_one(), Array("--target-dir", "generated"))
   emitVerilog(new fifo_two(), Array("--target-dir", "generated"))
   emitVerilog(new top(), Array("--target-dir", "generated"))
+  emitVerilog(new async_io_in(), Array("--target-dir", "generated"))
+  emitVerilog(new async_io_out(), Array("--target-dir", "generated"))
+
+
 }

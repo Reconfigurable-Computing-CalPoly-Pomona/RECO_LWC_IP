@@ -4,6 +4,122 @@ import chisel3.util._
 import chisel3.experimental._
 import chisel3.util.HasBlackBoxResource
 
+// This is an output async interface based on a ready-valid IO. the output will be handshaked, while the input will be a standard valid-ready io.
+
+class async_io_out extends Module {
+    val io = IO(new Bundle {
+        val in = Flipped(Decoupled(UInt(1.W)))
+        val out = Decoupled(UInt(1.W))
+    })
+
+    io.out.bits := io.in.bits
+
+    io.in.ready := true.B
+    io.out.valid := false.B
+
+    val receiving :: checkValid :: Nil = Enum(2)
+    val currentState = RegInit(checkValid)
+    switch(currentState) {
+        is (receiving) {
+            // This state is in charge of receiving a valid signal of 0. The next response is to set the ready signal back to true and complete the "transaction"
+            // another way of seeing this is when input's valid is true, the ready signal is false
+            when (!io.in.valid) {
+                currentState := checkValid
+            }
+            .otherwise {
+                currentState := receiving
+            }
+        }
+        is (checkValid) {
+            // this is in charge of mainly checking for a valid signal from outside. Also prevents acknowledging the valid signal if the queue is empty (ready is false).
+            // Ideally, if the queue is full, don't set the ready signal to true.
+            // The next response is setting ready to true and also reading in data into the input queue
+            when (io.in.valid & io.out.ready) {
+                currentState := receiving
+                // delay ready signal until next cycle to try avoiding combinational loop
+                // io.in.ready := false.B
+                // like the sender, this statement should only happen for one cycle
+                // by the time this state is done, the data should be valid going into the fifo, so it's ok to move from here to the next state
+                io.out.valid := true.B
+            }
+            .otherwise {
+                currentState := checkValid
+            }
+        }
+    }
+    when (currentState === checkValid) {
+        io.in.ready := true.B
+    }
+    .elsewhen(currentState === receiving) {
+        io.in.ready := false.B
+    }
+    .otherwise {
+        io.in.ready := true.B
+    }
+
+}
+
+
+// This is an input async interface based on a ready-valid IO. the input will be handshaked, while the output will be a standard valid-ready io.
+class async_io_in extends Module {
+    val io = IO(new Bundle {
+        val in = Flipped(Decoupled(UInt(1.W)))
+        val out = Decoupled(UInt(1.W))
+    })
+
+    // data will always be on output
+    io.out.bits := io.in.bits
+
+    // defaults for input to be ready by default and output invalid by default
+    io.in.ready := true.B
+    io.out.valid := false.B
+    
+
+    // This state machine below handles handshaking with the input
+    val receiving :: checkValid :: Nil = Enum(2)
+    val currentState = RegInit(checkValid)
+    switch(currentState) {
+        is (receiving) {
+            // This state is in charge of receiving a valid signal of 0. The next response is to set the ready signal back to true and complete the "transaction"
+            // another way of seeing this is when input's valid is true, the ready signal is false
+            when (!io.in.valid) {
+                currentState := checkValid
+            }
+            .otherwise {
+                currentState := receiving
+            }
+        }
+        is (checkValid) {
+            // this is in charge of mainly checking for a valid signal from outside. Also prevents acknowledging the valid signal if the queue is empty (ready is false).
+            // Ideally, if the queue is full, don't set the ready signal to true.
+            // The next response is setting ready to true and also reading in data into the input queue
+            when (io.in.valid & io.out.ready) {
+                currentState := receiving
+                // delay ready signal until next cycle to try avoiding combinational loop
+                // io.in.ready := false.B
+                // like the sender, this statement should only happen for one cycle
+                // by the time this state is done, the data should be valid going into the fifo, so it's ok to move from here to the next state
+                io.out.valid := true.B
+            }
+            .otherwise {
+                currentState := checkValid
+            }
+        }
+    }
+    when (currentState === checkValid) {
+        io.in.ready := true.B
+    }
+    .elsewhen(currentState === receiving) {
+        io.in.ready := false.B
+    }
+    .otherwise {
+        io.in.ready := true.B
+    }
+
+}
+
+// TODO: Wrap output logic into a module
+
 // clock A
 class fifo_one extends Module {
     val io = IO(new Bundle {
@@ -62,6 +178,7 @@ class fifo_one extends Module {
     }
 }
 
+// TODO: wrap input logic into module
 // clock B
 class fifo_two extends Module {
     val io = IO(new Bundle {
