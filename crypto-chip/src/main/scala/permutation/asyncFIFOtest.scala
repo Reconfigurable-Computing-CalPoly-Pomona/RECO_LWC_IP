@@ -6,10 +6,10 @@ import chisel3.util.HasBlackBoxResource
 
 // This is an output async interface based on a ready-valid IO. the output will be handshaked, while the input will be a standard valid-ready io.
 
-class async_io_out extends Module {
+class async_io_out(numberOfBits: Int) extends Module {
     val io = IO(new Bundle {
-        val in = Flipped(Decoupled(UInt(1.W)))
-        val out = Decoupled(UInt(1.W))
+        val in = Flipped(Decoupled(UInt(numberOfBits.W)))
+        val out = Decoupled(UInt(numberOfBits.W))
     })
 
     // connect the queue data and output data
@@ -62,10 +62,10 @@ class async_io_out extends Module {
 }
 
 // This is an input async interface based on a ready-valid IO. the input will be handshaked, while the output will be a standard valid-ready io.
-class async_io_in extends Module {
+class async_io_in(numberOfBits: Int) extends Module {
     val io = IO(new Bundle {
-        val in = Flipped(Decoupled(UInt(1.W)))
-        val out = Decoupled(UInt(1.W))
+        val in = Flipped(Decoupled(UInt(numberOfBits.W)))
+        val out = Decoupled(UInt(numberOfBits.W))
     })
 
     // data will always be on output
@@ -122,14 +122,14 @@ class async_io_in extends Module {
 
 // clock A
 // 
-class fifo_one extends Module {
+class fifo_one(numberOfBits: Int) extends Module {
     val io = IO(new Bundle {
-        val in = Flipped(Decoupled(UInt(1.W)))
-        val out = Decoupled(UInt(1.W))
+        val in = Flipped(Decoupled(UInt(numberOfBits.W)))
+        val out = Decoupled(UInt(numberOfBits.W))
     })
     // create queue with depth 4, size 1
-    val queue = Module(new Queue(UInt(1.W), 4))
-    val async_in = Module(new async_io_out())
+    val queue = Module(new Queue(UInt(numberOfBits.W), 4))
+    val async_in = Module(new async_io_out(numberOfBits))
     queue.io.enq <> io.in
     async_in.io.in <> queue.io.deq
     io.out <> async_in.io.out
@@ -137,28 +137,29 @@ class fifo_one extends Module {
 
 // clock B
 // This is a test module with an async input going into a fifo, then that fifo will go to the output all based on a valid-ready interface.
-class fifo_two extends Module {
+class fifo_two(numberOfBits: Int) extends Module {
     val io = IO(new Bundle {
-        val in = Flipped(Decoupled(UInt(1.W)))
-        val out = Decoupled(UInt(1.W))
+        val in = Flipped(Decoupled(UInt(numberOfBits.W)))
+        val out = Decoupled(UInt(numberOfBits.W))
     })
     // create queue with depth 4, size 1
-    val queue = Module(new Queue(UInt(1.W), 4))
+    val queue = Module(new Queue(UInt(numberOfBits.W), 4))
 
-    val async_in = Module(new async_io_in())
+    val async_in = Module(new async_io_in(numberOfBits))
     async_in.io.in <> io.in
     queue.io.enq <> async_in.io.out
     io.out <> queue.io.deq
 }
 // Tests async handshake from queue to queue
-class top extends Module {
+// no sequential logic is used in this module directly, so no clock needs to be stepped
+class top(numberOfBits: Int) extends Module {
     val io = IO(new Bundle {
         val clockA = Input(Bool())
         val resetA = Input(Bool())
         val clockB = Input(Bool())
         val resetB = Input(Bool())
-        val in = Flipped(Decoupled(UInt(1.W)))
-        val out = Decoupled(UInt(1.W))
+        val in = Flipped(Decoupled(UInt(numberOfBits.W)))
+        val out = Decoupled(UInt(numberOfBits.W))
     })
     // input side:
         // checkReady: ready = 1
@@ -167,7 +168,7 @@ class top extends Module {
         // end/finish: valid from 1 to 0
         // end_ack: ready from 0 to 1
     val one = withClockAndReset(io.clockA.asClock, io.resetA) {
-        Module(new fifo_one)
+        Module(new fifo_one(numberOfBits))
     }
     one.io.in <> io.in
     // output side:
@@ -175,7 +176,7 @@ class top extends Module {
         // recv ack: ready from 1 to 0
         // finish: valid 1 to 0
     val two = withClockAndReset(io.clockB.asClock, io.resetB) {
-        Module(new fifo_two)
+        Module(new fifo_two(numberOfBits))
     }
     two.io.in <> one.io.out
 
