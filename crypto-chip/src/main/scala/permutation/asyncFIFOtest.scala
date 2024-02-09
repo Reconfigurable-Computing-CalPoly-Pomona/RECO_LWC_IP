@@ -4,7 +4,7 @@ import chisel3.util._
 import chisel3.experimental._
 import chisel3.util.HasBlackBoxResource
 
-// This is an output async interface based on a ready-valid IO. the output will be handshaked, while the input will be a standard valid-ready io.
+// This is an output async interface based on a ready-valid IO. the output will be handshaked, while the input will be a standard valid-ready io. It will continuously attempt to send data out as long as there's data. If not, it will continuously check/wait.
 
 class async_io_out(numberOfBits: Int) extends Module {
     val io = IO(new Bundle {
@@ -61,7 +61,7 @@ class async_io_out(numberOfBits: Int) extends Module {
     }
 }
 
-// This is an input async interface based on a ready-valid IO. the input will be handshaked, while the output will be a standard valid-ready io.
+// This is an input async interface based on a ready-valid IO. the input will be handshaked, while the output will be a standard valid-ready io. It will continuously output data if possible. If not, it will continuously try and but will signal ready to true.
 class async_io_in(numberOfBits: Int) extends Module {
     val io = IO(new Bundle {
         val in = Flipped(Decoupled(UInt(numberOfBits.W)))

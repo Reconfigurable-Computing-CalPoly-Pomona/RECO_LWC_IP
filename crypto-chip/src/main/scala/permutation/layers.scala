@@ -35,7 +35,7 @@ class addition_layer extends Module {
   io.x2_out := io.x2_in ^ array(io.round_in)
 }
 // Optimization notes: can reduce the fifo depth since it is unlikely to become completely full
-  // also possibly remove the delay on the input since the data is already ready at the output of the input fifo
+// also possibly remove the delay on the input since the data is already ready at the output of the input fifo
 // TODO: check the output_queue valid signal - it might not be set correctly but it might not matter inside the module
 class substitution_fifo extends Module {
   val io = IO(new Bundle {
@@ -112,6 +112,8 @@ class convert_from_5_bit extends Module {
   io.out := temp
 }
 // optimization notes: try reducing the counter bit sizes by starting the io at cycle 0 or cycle 63
+  // or remove start, done to allow pipelining with variable depth input 
+// This should be the perfect place to put the async modules
 class substitution_layer_compat extends Module {
   val io = IO(new Bundle {
     val start = Input(Bool())
@@ -160,7 +162,7 @@ class substitution_layer_compat extends Module {
     }
 }
 // just a testing module to setup a rom in chisel; doesn't work to create a rom based on bram, for example
-class romTest extends Module { //***NOT IN USE***
+class romTest extends Module { // ***NOT IN USE***
   val io = IO(new Bundle {
     val in = Input(UInt(32.W))
     val out = Output(SInt(32.W))
@@ -177,107 +179,107 @@ class romTest extends Module { //***NOT IN USE***
   io.out := r(io.in)
 }
 // look into RTL_ROM implementation on FPGA
-class muxTest extends Module { //***NOT IN USE***
+class muxTest extends Module { // ***NOT IN USE***
   val io = IO(new Bundle {
     val in = Input(UInt(5.W))
     val out = Output(UInt(5.W))
   })
   io.out := 0.U
-  switch (io.in) {
-    is (0.U) {
+  switch(io.in) {
+    is(0.U) {
       io.out := "h4".U
     }
-    is (1.U) {
+    is(1.U) {
       io.out := "hb".U
     }
-    is (2.U) {
+    is(2.U) {
       io.out := "h1f".U
     }
-    is (3.U) {
+    is(3.U) {
       io.out := "h14".U
     }
-    is (4.U) {
+    is(4.U) {
       io.out := "h1a".U
     }
-    is (5.U) {
+    is(5.U) {
       io.out := "h15".U
     }
-    is (6.U) {
+    is(6.U) {
       io.out := "h9".U
     }
-    is (7.U) {
+    is(7.U) {
       io.out := "h2".U
     }
-    is (8.U) {
+    is(8.U) {
       io.out := "h1b".U
     }
-    is (9.U) {
+    is(9.U) {
       io.out := "h5".U
     }
-    is (10.U) {
+    is(10.U) {
       io.out := "h8".U
     }
-    is (11.U) {
+    is(11.U) {
       io.out := "h12".U
     }
-    is (12.U) {
+    is(12.U) {
       io.out := "h1d".U
     }
-    is (13.U) {
+    is(13.U) {
       io.out := "h3".U
     }
-    is (14.U) {
+    is(14.U) {
       io.out := "h6".U
     }
-    is (15.U) {
+    is(15.U) {
       io.out := "h1c".U
     }
-    is (16.U) {
+    is(16.U) {
       io.out := "h1e".U
     }
-    is (17.U) {
+    is(17.U) {
       io.out := "h13".U
     }
-    is (18.U) {
+    is(18.U) {
       io.out := "h7".U
     }
-    is (19.U) {
+    is(19.U) {
       io.out := "he".U
     }
-    is (20.U) {
+    is(20.U) {
       io.out := "h0".U
     }
-    is (21.U) {
+    is(21.U) {
       io.out := "hd".U
     }
-    is (22.U) {
+    is(22.U) {
       io.out := "h11".U
     }
-    is (23.U) {
+    is(23.U) {
       io.out := "h18".U
     }
-    is (24.U) {
+    is(24.U) {
       io.out := "h10".U
     }
-    is (25.U) {
+    is(25.U) {
       io.out := "hc".U
     }
-    is (26.U) {
+    is(26.U) {
       io.out := "h1".U
     }
-    is (27.U) {
+    is(27.U) {
       io.out := "h19".U
     }
-    is (28.U) {
+    is(28.U) {
       io.out := "h16".U
     }
-    is (29.U) {
+    is(29.U) {
       io.out := "ha".U
     }
-    is (30.U) {
+    is(30.U) {
       io.out := "hf".U
     }
-    is (31.U) {
+    is(31.U) {
       io.out := "h17".U
     }
   }
@@ -297,7 +299,7 @@ class substitute_lookup_table extends BlackBox with HasBlackBoxResource {
 }
 
 // This is the original substitution layer, performing all 64 substitutions combinationally with a lookup table
-class substitution_layer extends Module { //***NOT IN USE***
+class substitution_layer extends Module { // ***NOT IN USE***
   val io = IO(new Bundle {
     val x_in = Input(Vec(5, UInt(64.W)))
     val x_out = Output(Vec(5, UInt(64.W)))
@@ -607,7 +609,7 @@ class barrelShifter(amountOfLayers: Int) extends Module { // not used
 // The operation looks like this: output = input >>> amount
 // also note that this takes two cycles to finish, first for the 3 layers, then another for the last 3 layers
 // optimization: can increase register amount, but requires changing pipeline and register/FF usage
-  // shortcut barrel shifter by stopping at less layers than required
+// shortcut barrel shifter by stopping at less layers than required
 class barrelShifter_2reg() extends Module {
   val io = IO(new Bundle {
     val input = Input(UInt(64.W))
@@ -710,9 +712,9 @@ class amount_decoder extends Module {
     temp := amountSecond(5, 3)
     io.amount := temp ## amountFirst(2, 0)
   }
-  .otherwise {
-    io.amount := amountFirst(5, 3) ## amountSecond(2, 0)
-  }
+    .otherwise {
+      io.amount := amountFirst(5, 3) ## amountSecond(2, 0)
+    }
 }
 // This pipelined diffusion is based on the diffusion layer.draw.io diagram page 9
 // The equation is:
@@ -861,7 +863,7 @@ class barrelShifter_seq(amountOfLayers: Int) extends Module { // not used
   io.output := shiftedNum
 }
 
-class decode_and_assign_amount_segments_every_cycle extends Module { //***NOT IN USE***
+class decode_and_assign_amount_segments_every_cycle extends Module { // ***NOT IN USE***
   val io = IO(new Bundle {
     val i = Input(UInt(3.W))
     val amount = Output(UInt(6.W))
@@ -905,7 +907,7 @@ class decode_and_assign_amount_segments_every_cycle extends Module { //***NOT IN
     }
 }
 
-class double_pipe_diff extends Module { //***NOT IN USE***
+class double_pipe_diff extends Module { // ***NOT IN USE***
   val io = IO(new Bundle {
     val x_in = Input(new x_val())
     val x_out = Output(UInt(64.W))
@@ -1029,6 +1031,7 @@ class reg_reset_test extends Module { // not used
   io.x_out := reg
 }
 
+// This should be the place to put the async modules
 class diffusion_layer_compat extends Module {
   val io = IO(new Bundle {
     val start = Input(Bool())
@@ -1077,9 +1080,9 @@ class diffusion_layer_compat extends Module {
       when(counterOut === 5.U) {
         currentState := done
       }
-      .otherwise {
-        currentState := transferring
-      }
+        .otherwise {
+          currentState := transferring
+        }
 
     }
     is(done) {
@@ -1125,7 +1128,7 @@ class x_val extends Bundle {
 // This will depend on the size of the fifos and how many stages the pipeline has
 // pull data out of the output fifo before the stages are complete (before the 4th cycle in this case)
 // optimization: maybe reduce the fifo_size since it will usually be empty on output for example
-  // can also make a state machine, but is less maintainable when the number of stages changes
+// can also make a state machine, but is less maintainable when the number of stages changes
 class diffusion_fifo(fifo_size: Int) extends Module {
   val io = IO(new Bundle {
     val x_in = Input(new x_val())
@@ -1151,12 +1154,11 @@ class diffusion_fifo(fifo_size: Int) extends Module {
   io.full := ~in.io.enq.ready
   io.empty := ~out.io.deq.valid
 
-  
   // input fifo: runs on its own in theory based on start signal
   // might need an edge detector to only make this happen once
   // alternatively, the module outside should use an edge detector and not here since this can be considered "cycle accurate". This is the current implementation
   // important to check if the queue is full outside before the startInsert is used
-  
+
   // noticing that the two when statements below are basically like in.io.enq.valid := io.startInsert
   in.io.enq.valid := io.startInsert
   // when (io.startInsert === true.B) {
@@ -1181,7 +1183,7 @@ class diffusion_fifo(fifo_size: Int) extends Module {
 
   // keep input fifo's output to single_diffusion
   single_diffusion.io.x_in := in.io.deq.bits.data
-  
+
   // keep diffusion's output going to the output fifo
   single_diffusion.io.i := in.io.deq.bits.i
   out.io.enq.bits.data := single_diffusion.io.x_out
@@ -1225,7 +1227,7 @@ class diffusion_fifo(fifo_size: Int) extends Module {
   }
 }
 
-class diffusion_layer_wrapper extends Module { //***NOT IN USE***
+class diffusion_layer_wrapper extends Module { // ***NOT IN USE***
   val io = IO(new Bundle {
     val start = Input(Bool())
     val x_in = Input(Vec(5, UInt(64.W)))
