@@ -14,7 +14,7 @@ import scala.collection.mutable.ArrayBuffer
 
 class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
   "permutation" should "work" in {
-    test(new permutation_two()).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) {
+    test(new permutation_two()).withAnnotations(Seq(WriteVcdAnnotation)) {
       dut =>
         for (round <- 0 until 5) {
           // start with state of all 10, round with 10; CONFIRMED: this causes problems only with the first round of output
@@ -52,7 +52,7 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
     // Vivado 2022.2: 870 LUT, 879 FF, 4.090ns
   }
   "permutation original" should "work" in {
-    test(new permutation_one()).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+    test(new permutation_one()).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       for (round <- 0 until 5) {
           // start with state of all 10, round with 10; CONFIRMED: this does not cause problems, as it shouldn't
           for (i <- 0 until 5) {

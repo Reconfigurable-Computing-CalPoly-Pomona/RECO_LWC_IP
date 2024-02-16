@@ -133,21 +133,29 @@ class permutation_two extends Module {
 
   val substitution = Module(new substitution_layer_compat())
 
-
   // setup control signals for substitution layer
   // valid should only be held for one cycle; this should be the case in the async module:
   // WARN: There's a chance that a new substitution layer will start before transferring through the async module - hence why decoupled io should be preferred. For now, the one using the module must check this properly
   substitution.io.start := async_sub_in.io.out.valid
+  // unsure of line below but ready needs to be set
+  // val sub_done = Module(new posedge())
+  // sub_done.io.in := substitution.io.done
+
+  async_sub_in.io.out.ready := true.B
   async_sub_out.io.in.valid := substitution.io.done
 
   // setup control signals for diffusion layer
   val diffusion = Module(new diffusion_layer_compat())
   diffusion.io.start := async_diff_in.io.out.valid
+  // unsure of line below but ready needs to be set
+  // There's a big problem here also since the done signal is held true causing multiple async IO operations when there should only be one.
+  // val diff_done = Module(new posedge()) 
+  // diff_done.io.in := diffusion.io.done
+
+  async_diff_in.io.out.ready := true.B
   async_diff_out.io.in.valid := diffusion.io.done
 
-
   // setup data transfer between layers
-  // TODO: setup control signals for external decoupled io for async_in and async_out 
   async_out.io.in.bits(0) := io.x_in(0)
   async_out.io.in.bits(1) := io.x_in(1)
   // Q: for some reason, making the addition combinational to the substitution fixes the problem of the first round being incorrect
@@ -159,25 +167,35 @@ class permutation_two extends Module {
   async_out.io.in.bits(4) := io.x_in(4)
   async_sub_in.io.in <> async_out.io.out
 
+  substitution.io.x_in := async_sub_in.io.out.bits
+  async_sub_out.io.in.bits := substitution.io.x_out
+
   async_diff_in.io.in <> async_sub_out.io.out
+
+  diffusion.io.x_in := async_diff_in.io.out.bits
+  async_diff_out.io.in.bits := diffusion.io.x_out
+
   async_in.io.in <> async_diff_out.io.out
+  io.x_out := async_in.io.out.bits
+  io.done := async_in.io.out.valid
 
   addition.io.x2_in := io.x_in(2)
   addition.io.round_in := io.round_in
 
   // default assignment just in case
   async_out.io.in.valid := false.B
-  async_in.io.out.ready := false.B
+  async_in.io.out.ready := true.B
 
-  // Note: when start is set to true, this assumes the output (x_out) has been read from so no valid signal on the decoupled output is checked and the ready signal is sent for one cycle to "dequeue" the async_in's output. 
-  
-  when (io.start && async_out.io.in.ready) {
-    async_in.io.out.ready := true.B
+  // Note: when start is set to true, this assumes the output (x_out) has been read from so no valid signal on the decoupled output is checked and the ready signal is sent for one cycle to "dequeue" the async_in's output.
+
+  when(io.start) {
+    // remove value from output async, signal a valid input in the input async
+    async_in.io.out.ready := false.B
     async_out.io.in.valid := true.B
   }
   .otherwise {
-    async_in.io.out.ready := false.B
     async_out.io.in.valid := false.B
+    async_in.io.out.ready := true.B
   }
 }
 

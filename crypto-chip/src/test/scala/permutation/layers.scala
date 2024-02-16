@@ -210,7 +210,7 @@ class sub_test
       io.out := lookup.io.out
       lookup.io.in := io.in
       lookup.io.clk := clock
-    }).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+    }) { dut =>
       dut.io.in.poke(31)
       println("after poke")
       dut.clock.step()
@@ -230,7 +230,7 @@ class sub_test
       io.out := lookup.io.out
       lookup.io.in := io.in
       lookup.io.clk := clock
-    }).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+    }) { dut =>
       dut.io.in.poke(0)
       println("after poke")
       dut.clock.step()
@@ -246,138 +246,120 @@ class sub_test
     }
   }
   "sub_fifo" should "work with one value" in {
-    test(new substitution_fifo())
-      .withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
-        var count = 0
-        println("input is: " + 0)
-        dut.io.in.bits.poke(0)
-        dut.io.in.valid.poke(true)
+    test(new substitution_fifo()) { dut =>
+      var count = 0
+      println("input is: " + 0)
+      dut.io.in.bits.poke(0)
+      dut.io.in.valid.poke(true)
+      dut.clock.step()
+      count = count + 1
+      while (dut.io.out.valid.peekBoolean() == false) {
         dut.clock.step()
         count = count + 1
-        while (dut.io.out.valid.peekBoolean() == false) {
-          dut.clock.step()
-          count = count + 1
-        }
-        dut.io.out.ready.poke(true)
-        println("output is: " + dut.io.out.bits.peek())
-        println("count is: " + count)
-        dut.io.out.bits.expect(4)
       }
+      dut.io.out.ready.poke(true)
+      println("output is: " + dut.io.out.bits.peek())
+      println("count is: " + count)
+      dut.io.out.bits.expect(4)
+    }
   }
   "sub_fifo" should "work with last value" in {
-    test(new substitution_fifo())
-      .withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
-        var count = 0
-        println("input is: " + BigInt("1F", 16))
-        dut.io.in.bits.poke(BigInt("1F", 16))
-        dut.io.in.valid.poke(true)
+    test(new substitution_fifo()) { dut =>
+      var count = 0
+      println("input is: " + BigInt("1F", 16))
+      dut.io.in.bits.poke(BigInt("1F", 16))
+      dut.io.in.valid.poke(true)
+      dut.clock.step()
+      count = count + 1
+      dut.io.in.valid.poke(false)
+      while (dut.io.out.valid.peekBoolean() == false) {
         dut.clock.step()
         count = count + 1
-        dut.io.in.valid.poke(false)
-        while (dut.io.out.valid.peekBoolean() == false) {
-          dut.clock.step()
-          count = count + 1
-        }
-        dut.io.out.ready.poke(true)
-        println("output is: " + dut.io.out.bits.peek())
-        println("count is: " + count)
-        dut.io.out.bits.expect(23)
       }
+      dut.io.out.ready.poke(true)
+      println("output is: " + dut.io.out.bits.peek())
+      println("count is: " + count)
+      dut.io.out.bits.expect(23)
+    }
   }
   "sub_fifo" should "work with two values" in {
-    test(new substitution_fifo())
-      .withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
-        var count = 0
-        println("input1 is: " + 2)
-        dut.io.in.bits.poke(2)
-        dut.io.in.valid.poke(true)
+    test(new substitution_fifo()) { dut =>
+      var count = 0
+      println("input1 is: " + 2)
+      dut.io.in.bits.poke(2)
+      dut.io.in.valid.poke(true)
+      dut.clock.step()
+      count = count + 1
+      println("input2 is: " + 1)
+      dut.io.in.bits.poke(1)
+      dut.io.in.valid.poke(true)
+      dut.clock.step()
+      count = count + 1
+      dut.io.in.valid.poke(false)
+      while (dut.io.out.valid.peekBoolean() == false) {
         dut.clock.step()
         count = count + 1
-        println("input2 is: " + 1)
-        dut.io.in.bits.poke(1)
-        dut.io.in.valid.poke(true)
+      }
+      dut.io.out.ready.poke(true)
+      println("output is: " + dut.io.out.bits.peek())
+      println("count is: " + count)
+      println("took " + count + " cycles for first output")
+      dut.clock.step()
+      count = 0
+
+      while (dut.io.out.valid.peekBoolean() == false) {
         dut.clock.step()
         count = count + 1
-        dut.io.in.valid.poke(false)
-        while (dut.io.out.valid.peekBoolean() == false) {
+      }
+      dut.io.out.ready.poke(true)
+      println("second output is: " + dut.io.out.bits.peek())
+      println("cycles between first and second is: " + count)
+      dut.clock.step()
+    }
+  }
+  "sub_fifo" should "work with 32 value" in {
+    test(new substitution_fifo()) { dut =>
+      var count = 0
+      var i = 0
+      while (i < 32) {
+        if (dut.io.in.ready.peekBoolean()) {
+          dut.io.in.bits.poke(i)
+          dut.io.in.valid.poke(true)
+          dut.clock.step()
+          count = count + 1
+          i = i + 1
+        } else {
+          dut.io.in.valid.poke(false)
           dut.clock.step()
           count = count + 1
         }
-        dut.io.out.ready.poke(true)
-        println("output is: " + dut.io.out.bits.peek())
-        println("count is: " + count)
-        // dut.io.out.bits.expect(4)
-        dut.clock.step()
-        count = count + 1
-
-        dut.io.out.ready.poke(true)
-        println("output is: " + dut.io.out.bits.peek())
-        println("count is: " + count)
-        // dut.io.out.bits.expect(4)
-        dut.clock.step()
-        count = count + 1
-        println("output's valid is: " + dut.io.out.valid.peekBoolean())
-        dut.io.out.ready.poke(true)
-        println("output1 is: " + dut.io.out.bits.peek())
-        println("count is: " + count)
-        // dut.io.out.bits.expect(11)
-        dut.clock.step()
-        count = count + 1
-        println("output's valid is: " + dut.io.out.valid.peekBoolean())
       }
-  }
-  "sub_fifo" should "work with 32 value" in {
-    test(new substitution_fifo())
-      .withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
-        var count = 0
-        var i = 0
-        while (i < 32) {
-          if (dut.io.in.ready.peekBoolean()) {
-            dut.io.in.bits.poke(i)
-            dut.io.in.valid.poke(true)
-            dut.clock.step()
-            count = count + 1
-            i = i + 1
-          } else {
-            dut.io.in.valid.poke(false)
-            dut.clock.step()
-            count = count + 1
-          }
+      dut.io.in.valid.poke(false)
+      i = 0
+      while (i < 32) {
+        if (dut.io.out.valid.peekBoolean()) {
+          dut.io.out.ready.poke(true)
+          println("input was: " + i)
+          println("output is: " + dut.io.out.bits.peekInt())
+          dut.io.out.bits.expect(sub_table(i))
+          i = i + 1
+          dut.clock.step()
+          count = count + 1
+        } else {
+          dut.clock.step()
+          count = count + 1
+          dut.io.out.ready.poke(false)
         }
-        dut.io.in.valid.poke(false)
-        i = 0
-        while (i < 32) {
-          if (dut.io.out.valid.peekBoolean()) {
-            dut.io.out.ready.poke(true)
-            println("input was: " + i)
-            println("output is: " + dut.io.out.bits.peekInt())
-            dut.io.out.bits.expect(sub_table(i))
-            i = i + 1
-            dut.clock.step()
-            count = count + 1
-          } else {
-            dut.clock.step()
-            count = count + 1
-            dut.io.out.ready.poke(false)
-          }
-        }
-        dut.io.out.ready.poke(false)
-        // dut.io.in.valid.poke(false)
-        // while (dut.io.out.valid.peekBoolean() == false) {
-        //   dut.clock.step()
-        //   count = count + 1
-        // }
-        // dut.io.out.ready.poke(true)
-        // println("output is: " + dut.io.out.bits.peek())
-        println("count is: " + count)
-        // dut.io.out.bits.expect( /*function>*/ )
       }
+      dut.io.out.ready.poke(false)
+      println("count is: " + count)
+    }
   }
   // only know that this works after 64 cycles
   // need to extract bitslices and figure out the correct values
   "sub_compat_fifo" should "work" in {
     test(new substitution_layer_compat())
-      .withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+      .withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
         dut.io.x_in(0).poke(0)
         dut.io.x_in(1).poke(0)
         dut.io.x_in(2).poke(0)
@@ -390,36 +372,85 @@ class sub_test
         dut.clock.step()
         println("output after clock is: " + dut.io.x_out.peek())
         dut.io.start.poke(false)
-        for (i <- 0 until 70) {
-          // println("done is: " + dut.io.done.peek())
+        while (dut.io.done.peekBoolean() == false) {
           // println("output is: " + dut.io.x_out.peek())
           dut.clock.step()
         }
-        println("output after 70 clock is: " + dut.io.x_out.peek())
+        // for (i <- 0 until 70) {
+        //   // println("done is: " + dut.io.done.peek())
+        //   println("output is: " + dut.io.x_out.peek())
+        //   dut.clock.step()
+        // }
+        println("output after done is: " + dut.io.x_out.peek())
+        dut.io.x_out(2).expect(BigInt("18446744073709551615"))
+        dut.clock.step()
         println("using 1 for all pokes")
         dut.io.x_in(0).poke(1)
         dut.io.x_in(1).poke(1)
         dut.io.x_in(2).poke(1)
         dut.io.x_in(3).poke(1)
         dut.io.x_in(4).poke(1)
-        // output should be b01011
+        // output should be h17 or b10111
 
         dut.io.start.poke(true)
         println("output before clock is: " + dut.io.x_out.peek())
         dut.clock.step()
         println("output after clock is: " + dut.io.x_out.peek())
         dut.io.start.poke(false)
-        for (i <- 0 until 70) {
-          // println("done is: " + dut.io.done.peek())
+        while (dut.io.done.peekBoolean() == false) {
           // println("output is: " + dut.io.x_out.peek())
           dut.clock.step()
         }
-        println("output after 70 clock is: " + dut.io.x_out.peek())
+        // for (i <- 0 until 70) {
+        //   // println("done is: " + dut.io.done.peek())
+        //   // println("output is: " + dut.io.x_out.peek())
+        //   dut.clock.step()
+        // }
+        println("output after second done is: " + dut.io.x_out.peek())
+        // dut.clock.step(10)
+        // msb of lut is x_out(0)
+        dut.io.x_out(0).expect(BigInt("1"))
+        dut.io.x_out(1).expect(BigInt("0"))
+        dut.io.x_out(2).expect(BigInt("18446744073709551615"))
+        dut.io.x_out(3).expect(BigInt("1"))
+        dut.io.x_out(4).expect(BigInt("1"))
+        dut.clock.step()
+
+        println("back to 0 for all pokes")
+        dut.io.x_in(0).poke(0)
+        dut.io.x_in(1).poke(0)
+        dut.io.x_in(2).poke(0)
+        dut.io.x_in(3).poke(0)
+        dut.io.x_in(4).poke(0)
+        // output should be h17 or b10111
+
+        dut.io.start.poke(true)
+        println("output before clock is: " + dut.io.x_out.peek())
+        dut.clock.step()
+        println("output after clock is: " + dut.io.x_out.peek())
+        dut.io.start.poke(false)
+        while (dut.io.done.peekBoolean() == false) {
+          // println("output is: " + dut.io.x_out.peek())
+          dut.clock.step()
+        }
+        // for (i <- 0 until 70) {
+        //   // println("done is: " + dut.io.done.peek())
+        //   // println("output is: " + dut.io.x_out.peek())
+        //   dut.clock.step()
+        // }
+        println("output after third done is: " + dut.io.x_out.peek())
+        // dut.clock.step(10)
+        // msb of lut is x_out(0)
+        dut.io.x_out(0).expect(BigInt("0"))
+        dut.io.x_out(1).expect(BigInt("0"))
+        dut.io.x_out(2).expect(BigInt("18446744073709551615"))
+        dut.io.x_out(3).expect(BigInt("0"))
+        dut.io.x_out(4).expect(BigInt("0"))
       }
   }
   "sub_original" should "work" in {
     test(new substitution_layer())
-      .withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+      .withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
         dut.io.x_in(0).poke(0)
         dut.io.x_in(1).poke(0)
         dut.io.x_in(2).poke(0)
@@ -1253,7 +1284,7 @@ class diffusionTest
     test(new diffusion_layer_compat) { dut =>
       println("done is: " + dut.io.done.peek())
       println("x_out is: " + dut.io.x_out.peek())
-      dut.io.done.expect(true)
+      dut.io.done.expect(false)
       for (i <- 0 until 5) {
         dut.io.x_in(i).poke(i)
       }
@@ -1286,7 +1317,7 @@ class diffusionTest
     test(new diffusion_layer_compat) { dut =>
       println("done is: " + dut.io.done.peek())
       println("x_out is: " + dut.io.x_out.peek())
-      dut.io.done.expect(true)
+      dut.io.done.expect(false)
       for (i <- 0 until 4) {
         dut.io.x_in(i).poke(0)
       }

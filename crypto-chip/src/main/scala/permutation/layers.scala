@@ -44,7 +44,7 @@ class substitution_fifo extends Module {
   })
   val input_queue = Module(new Queue(UInt(5.W), 64))
   val output_queue = Module(new Queue(UInt(5.W), 64))
-  val rom = Module(new substitute_lookup_table())
+  val rom = Module(new muxTest())
   // external connections
   input_queue.io.enq <> io.in
   io.out <> output_queue.io.deq
@@ -61,17 +61,18 @@ class substitution_fifo extends Module {
   // internal connections
   rom.io.in := input_queue.io.deq.bits
   output_queue.io.enq.bits := rom.io.out
-  rom.io.clk := clock
+  // rom.io.clk := clock
 
-  val delay = RegInit(false.B)
-  output_queue.io.enq.valid := delay
+  // val delay = RegInit(false.B)
   when(input_queue.io.deq.valid) {
     input_queue.io.deq.ready := true.B
-    delay := true.B
+    output_queue.io.enq.valid := true.B
+    // delay := true.B
   }
     .otherwise {
       input_queue.io.deq.ready := false.B
-      delay := false.B
+      output_queue.io.enq.valid := false.B
+      // delay := false.B
     }
 }
 // in(0) is MSB, x(4) is LSB
@@ -114,6 +115,7 @@ class convert_from_5_bit extends Module {
 // optimization notes: try reducing the counter bit sizes by starting the io at cycle 0 or cycle 63
   // or remove start, done to allow pipelining with variable depth input 
 // This should be the perfect place to put the async modules
+// TODO: Big problem: the subsitution compat continues counting as if there's valid data and the done signal reflects that when the start signal is not given on reset. The fix will probably be changing this or whatever's outside into a state machine.
 class substitution_layer_compat extends Module {
   val io = IO(new Bundle {
     val start = Input(Bool())
@@ -137,29 +139,67 @@ class substitution_layer_compat extends Module {
   lut.io.in.valid := false.B
   lut.io.out.ready := false.B
   io.done := false.B
-  // make sure not to hold start signal; should be handled by state machine
-  when(io.start === true.B) {
-    counter_in := 0.U
-    counter_out := 0.U
-  }
-  // might only do 63 bits and not 64; Confirmed and fixed by increasing size of counters
-  when(counter_in < 64.U) {
-    when(lut.io.in.ready) {
-      counter_in := counter_in + 1.U
-      lut.io.in.valid := true.B
+  val start::done::Nil = Enum(2)
+  val current_state = RegInit(done)
+  switch (current_state) {
+    is (done) {
+      when (io.start) {
+        counter_in := 0.U
+        counter_out := 0.U
+        current_state := start
+      }
+      .otherwise {
+        current_state := done
+      }
+    }
+    is (start) {
+      when(lut.io.in.ready && counter_in < 64.U) {
+        counter_in := counter_in + 1.U
+        lut.io.in.valid := true.B
+      }
+      when(lut.io.out.valid && counter_out < 64.U) {
+        counter_out := counter_out + 1.U
+        lut.io.out.ready := true.B
+        from_5.io.write := true.B
+      }
+      when (counter_out >= 64.U) {
+        io.done := true.B
+        current_state := done
+      }
+      .otherwise {
+        current_state := start
+      }
     }
   }
-  when(counter_out < 64.U) {
-    io.done := false.B
-    when(lut.io.out.valid) {
-      counter_out := counter_out + 1.U
-      lut.io.out.ready := true.B
-      from_5.io.write := true.B
-    }
-  }
-    .otherwise {
-      io.done := true.B
-    }
+  // // make sure not to hold start signal; should be handled by state machine
+  // when(io.start === true.B) {
+  //   counter_in := 0.U
+  //   counter_out := 0.U
+  // }
+  // // might only do 63 bits and not 64; Confirmed and fixed by increasing size of counters
+  // when(counter_in < 64.U) {
+  //   when(lut.io.in.ready) {
+  //     counter_in := counter_in + 1.U
+  //     lut.io.in.valid := true.B
+  //   }
+  // }
+  // when(counter_out < 64.U) {
+  //   io.done := false.B
+  //   when(lut.io.out.valid) {
+  //     counter_out := counter_out + 1.U
+  //     lut.io.out.ready := true.B
+  //     from_5.io.write := true.B
+  //   }
+  // }
+  //   .otherwise {
+  //     io.done := true.B
+  //   }
+  // when (current_state === done) {
+  //   io.done := true.B
+  // }
+  // .otherwise {
+  //   io.done := false.B
+  // }
 }
 // just a testing module to setup a rom in chisel; doesn't work to create a rom based on bram, for example
 class romTest extends Module { // ***NOT IN USE***
@@ -1056,11 +1096,7 @@ class diffusion_layer_compat extends Module {
   diffusion.io.x_in.i := counterIn
   io.x_out := x_out_reg
 
-  when(currentState === done) {
-    io.done := true.B
-  }.otherwise {
-    io.done := false.B
-  }
+  io.done := false.B
   switch(currentState) {
     // this state allows reading and writing from the diffusion_fifo at the same time
     is(transferring) {
@@ -1078,6 +1114,7 @@ class diffusion_layer_compat extends Module {
       }
 
       when(counterOut === 5.U) {
+        io.done := true.B
         currentState := done
       }
         .otherwise {
