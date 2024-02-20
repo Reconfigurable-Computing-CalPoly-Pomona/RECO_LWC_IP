@@ -28,7 +28,6 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
         dut.io.clock_sub.poke(1)
         dut.io.reset_sub.poke(0)
         for (round <- 0 until 5) {
-          // start with state of all 10, round with 10; CONFIRMED: this causes problems only with the first round of output
           for (i <- 0 until 5) {
             dut.io.x_in(i).poke(10)
           }
