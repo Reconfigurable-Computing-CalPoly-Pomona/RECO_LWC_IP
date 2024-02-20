@@ -109,8 +109,13 @@ class posedge() extends Module {
   io.out := io.in & ~temp_reg
 }
 // edge detector shall be removed here to maintain compatibility with wrapper
+// TODO: add multiple clock instantiation
 class permutation_two extends Module {
   val io = IO(new Bundle {
+    val clock_sub = Input(Bool())
+    val reset_sub = Input(Bool())
+    val clock_diff = Input(Bool())
+    val reset_diff = Input(Bool())
     val start = Input(Bool())
     val round_in = Input(UInt(8.W))
     val x_in = Input(Vec(5, UInt(64.W)))
@@ -124,14 +129,23 @@ class permutation_two extends Module {
 
   // modules below are for async passing of data from substitution to diffusion
   // after using these modules, this current module should be mostly combinational, like the asyncFIFOtest top module
-  val async_in = Module(new async_io_in_vec(5, 64))
   val async_out = Module(new async_io_out_vec(5, 64))
-  val async_sub_in = Module(new async_io_in_vec(5, 64))
-  val async_sub_out = Module(new async_io_out_vec(5, 64))
-  val async_diff_in = Module(new async_io_in_vec(5, 64))
-  val async_diff_out = Module(new async_io_out_vec(5, 64))
-
-  val substitution = Module(new substitution_layer_compat())
+  val async_sub_in = withClockAndReset(io.clock_sub.asClock, io.reset_sub) {
+    Module(new async_io_in_vec(5, 64))
+  }
+  val async_sub_out = withClockAndReset(io.clock_sub.asClock, io.reset_sub) {
+    Module(new async_io_out_vec(5, 64))
+  }
+  val async_diff_in = withClockAndReset(io.clock_diff.asClock, io.reset_diff) {
+    Module(new async_io_in_vec(5, 64))
+  }
+  val async_diff_out = withClockAndReset(io.clock_diff.asClock, io.reset_diff) {
+    Module(new async_io_out_vec(5, 64))
+  }
+  val async_in = Module(new async_io_in_vec(5, 64))
+  val substitution = withClockAndReset(io.clock_sub.asClock, io.reset_sub) {
+    Module(new substitution_layer_compat())
+  }
 
   // setup control signals for substitution layer
   // valid should only be held for one cycle; this should be the case in the async module:
@@ -145,7 +159,9 @@ class permutation_two extends Module {
   async_sub_out.io.in.valid := substitution.io.done
 
   // setup control signals for diffusion layer
-  val diffusion = Module(new diffusion_layer_compat())
+  val diffusion = withClockAndReset(io.clock_diff.asClock, io.reset_diff) {
+    Module(new diffusion_layer_compat())
+  }
   diffusion.io.start := async_diff_in.io.out.valid
   // unsure of line below but ready needs to be set
   // There's a big problem here also since the done signal is held true causing multiple async IO operations when there should only be one.
@@ -190,8 +206,8 @@ class permutation_two extends Module {
 
   when(io.start) {
     // remove value from output async, signal a valid input in the input async
-    async_in.io.out.ready := false.B
     async_out.io.in.valid := true.B
+    async_in.io.out.ready := false.B
   }
   .otherwise {
     async_out.io.in.valid := false.B

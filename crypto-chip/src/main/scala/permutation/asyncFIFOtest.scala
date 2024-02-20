@@ -97,7 +97,7 @@ class async_io_out_vec(width: Int, depth: Int) extends Module {
         }
         is (checkReady) {
             // This state is in charge of checking if the ready signal of the fifo to write to is true and also that the queue is not empty (valid is true).
-            when (io.out.ready & io.in.valid) {
+            when (io.out.ready && io.in.valid) {
                 currentState := sending
                 // when sending, the valid signal must be set true as soon as possible, so here?
             }

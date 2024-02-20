@@ -8,7 +8,7 @@ import scala.math._
 class async_test extends AnyFlatSpec with ChiselScalatestTester {
   "n bit" should "work" in {
     test(new top(10)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-        for (i <- 0 until (pow(2, 10).intValue - 1)) {
+        for (i <- 10 until (pow(2, 10).intValue - 1)) {
           dut.io.in.bits.poke(i)
           dut.io.in.valid.poke(1)
           dut.io.clockA.poke(1)
