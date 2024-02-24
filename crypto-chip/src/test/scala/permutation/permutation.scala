@@ -17,7 +17,7 @@ import scala.collection.mutable.ArrayBuffer
 class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
   "permutation" should "work" in {
     // let the ratio of main, sub, diff clock be 3,2,1 respectively
-    test(new permutation_two()).withAnnotations(Seq(WriteVcdAnnotation)) {
+    test(new permutation_two()).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) {
       dut =>
         val diff_clock = 1
         val sub_clock = 2

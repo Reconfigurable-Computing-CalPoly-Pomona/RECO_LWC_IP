@@ -44,35 +44,25 @@ class substitution_fifo extends Module {
   })
   val input_queue = Module(new Queue(UInt(5.W), 64))
   val output_queue = Module(new Queue(UInt(5.W), 64))
-  val rom = Module(new muxTest())
+  val rom = Module(new substitute_lookup_table())
   // external connections
   input_queue.io.enq <> io.in
   io.out <> output_queue.io.deq
 
-  // io.out.bits := output_queue.io.deq.bits
-  // output_queue.io.deq.valid := io.out.valid
-
-  // when (io.out.ready) {
-  //   output_queue.io.deq.valid := false.B
-  // }
-  // .otherwise {
-  //   output_queue.io.deq.valid := true.B
-  // }
   // internal connections
   rom.io.in := input_queue.io.deq.bits
   output_queue.io.enq.bits := rom.io.out
-  // rom.io.clk := clock
+  rom.io.clk := clock
 
-  // val delay = RegInit(false.B)
+  val delay = RegInit(false.B)
+  output_queue.io.enq.valid := delay
   when(input_queue.io.deq.valid) {
     input_queue.io.deq.ready := true.B
-    output_queue.io.enq.valid := true.B
-    // delay := true.B
+    delay := true.B
   }
     .otherwise {
       input_queue.io.deq.ready := false.B
-      output_queue.io.enq.valid := false.B
-      // delay := false.B
+      delay := false.B
     }
 }
 // in(0) is MSB, x(4) is LSB
