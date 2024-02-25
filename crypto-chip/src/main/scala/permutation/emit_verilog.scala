@@ -17,6 +17,7 @@ object permutationMain extends App {
   emitVerilog(new diffusion_fifo(5), Array("--target-dir", "generated"))
   emitVerilog(new diffusion_layer_compat(), Array("--target-dir", "generated")) // Vivado 2021.2: 608 LUT, 623 FF, 4.090ns Total Delay
   // emitVerilog(new permutation_two_wrapper(), Array("--target-dir", "generated")) // Vivado 2022.2: 963 LUT, 108 LUTRAM, 1636 FF, .5 BRAM, 4.749ns Total Delay
+  emitVerilog(new permutation_two(), Array("--target-dir", "generated"))
   emitVerilog(new diffusion_layer(), Array("--target-dir", "generated"))
   emitVerilog(new single_diff_pipe(), Array("--target-dir", "generated")) // Vivado 2021.2: 262 LUT, 266 FF, 4.691ns Total Delay
   emitVerilog(new barrelShifter_seq_param(6), Array("--target-dir", "generated"))
