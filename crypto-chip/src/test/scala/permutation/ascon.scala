@@ -157,7 +157,7 @@ class hashBehavior extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.start.poke(false.B)
       //step(1)
       //poke(dut.io.start, false.B)
-      for (j <- 0 until pcycle*200) {
+      for (j <- 0 until pcycle*2000) {
         dut.clock.step(3)
         for (c <- 0 until diff_clock) {
           dut.io.clock_diff.poke(1)
@@ -189,7 +189,7 @@ class hashBehavior extends AnyFlatSpec with ChiselScalatestTester {
         dut.io.empty.poke(true.B)
         println("*Push: " + dut.io.push.peek() + " Pull: " + dut.io.pull.peek() + " Done: " + dut.io.done.peek() + " Result: " + dut.io.cipher.peek())  
 
-      for (j <- 0 until 800) {
+      for (j <- 0 until 8000) {
         dut.clock.step(3)
         for (c <- 0 until diff_clock) {
           dut.io.clock_diff.poke(1)
