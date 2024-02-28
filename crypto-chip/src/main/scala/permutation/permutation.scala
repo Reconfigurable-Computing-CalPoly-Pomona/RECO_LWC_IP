@@ -231,6 +231,10 @@ class permutation_two_fifo_wrapper extends Module {
 // TODO: maybe reduce number of states
 class permutation_two_wrapper extends Module {
   val io = IO(new Bundle {
+    val clock_sub = Input(Bool())
+    val reset_sub = Input(Bool())
+    val clock_diff = Input(Bool())
+    val reset_diff = Input(Bool())
     val s_in = Input(UInt(320.W))
     val start = Input(Bool())
     val round = Input(UInt(4.W)) // total number of rounds to run
@@ -248,6 +252,10 @@ class permutation_two_wrapper extends Module {
   val single_round = Module(new permutation_two())
 
   // default assignments here:
+  single_round.io.clock_diff := io.clock_diff
+  single_round.io.clock_sub := io.clock_sub
+  single_round.io.reset_diff := io.reset_diff
+  single_round.io.reset_sub := io.reset_sub
   single_round.io.x_in(0) := x0_Reg
   single_round.io.x_in(1) := x1_Reg
   single_round.io.x_in(2) := x2_Reg

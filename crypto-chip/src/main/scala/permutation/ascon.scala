@@ -14,6 +14,10 @@ import permutation._
   // streaming interface
 class ascon extends Module {
   val io = IO(new Bundle {
+    val clock_sub = Input(Bool())
+    val reset_sub = Input(Bool())
+    val clock_diff = Input(Bool())
+    val reset_diff = Input(Bool())
     val key = Input(UInt(128.W))
     val nounce = Input(UInt(128.W))
     val tagin  = Input(UInt(128.W))
@@ -115,6 +119,10 @@ class ascon extends Module {
   
   doneReg := permutation.io.done
 
+  permutation.io.clock_diff := io.clock_diff
+  permutation.io.clock_sub := io.clock_sub
+  permutation.io.reset_diff := io.reset_diff
+  permutation.io.reset_sub := io.reset_sub
 
   permutation.io.s_in := Mux(stateReg===idle && io.mode(2), Cat(0.U(8.W), 64.U(8.W), 12.U(8.W), 12.U(8.W)-b, 256.U(32.W), 0.U(256.W)),
                         Mux(stateReg===idle && ~io.mode(2), Cat(128.U(8.W), r, 12.U(8.W), b, 0.U(32.W), io.key, io.nounce), (head_update << 192.U) ^ permut_outReg ^ tail_update ^ init_update))

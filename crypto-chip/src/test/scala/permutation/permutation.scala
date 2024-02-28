@@ -38,7 +38,7 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
             dut.io.clock_diff.poke(1)
             dut.io.clock_diff.poke(0)
           }
-          for (c <- 0 until diff_clock) {
+          for (c <- 0 until sub_clock) {
             dut.io.clock_sub.poke(1)
             dut.io.clock_sub.poke(0)
           }
@@ -57,7 +57,7 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
             dut.io.clock_diff.poke(1)
             dut.io.clock_diff.poke(0)
           }
-          for (c <- 0 until diff_clock) {
+          for (c <- 0 until sub_clock) {
             dut.io.clock_sub.poke(1)
             dut.io.clock_sub.poke(0)
           }
@@ -70,7 +70,7 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
             dut.io.clock_diff.poke(1)
             dut.io.clock_diff.poke(0)
           }
-          for (c <- 0 until diff_clock) {
+          for (c <- 0 until sub_clock) {
             dut.io.clock_sub.poke(1)
             dut.io.clock_sub.poke(0)
           }

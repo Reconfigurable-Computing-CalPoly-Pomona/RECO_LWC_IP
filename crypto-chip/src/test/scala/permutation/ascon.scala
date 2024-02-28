@@ -113,8 +113,19 @@ import layers._
 
 
 class hashBehavior extends AnyFlatSpec with ChiselScalatestTester {
+    // let the ratio of main, sub, diff clock be 3,2,1 respectively
   "hash" should "work" in {
-    test(new ascon) { dut =>
+    test(new ascon).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+      val diff_clock = 1
+      val sub_clock = 2
+      dut.io.reset_diff.poke(1)
+      dut.io.clock_diff.poke(1)
+      dut.io.reset_diff.poke(0)
+      dut.io.clock_diff.poke(0)
+      dut.io.reset_sub.poke(1)
+      dut.io.clock_sub.poke(1)
+      dut.io.reset_sub.poke(0)
+      dut.io.clock_sub.poke(0)
       val pcycle = 2
       dut.io.key.poke("h00000000000000000000000000000000".U)
       dut.io.nounce.poke("h00000000000000000000000000000000".U)
@@ -133,16 +144,43 @@ class hashBehavior extends AnyFlatSpec with ChiselScalatestTester {
       // poke(dut.io.empty, false.B)
       // poke(dut.io.full, false.B)
       // poke(dut.io.mode, 5.U)
-      dut.clock.step()
+      dut.clock.step(1)
+      for (c <- 0 until diff_clock) {
+        dut.io.clock_diff.poke(1)
+        dut.io.clock_diff.poke(0)
+      }
+      for (c <- 0 until sub_clock) {
+        dut.io.clock_sub.poke(1)
+        dut.io.clock_sub.poke(0)
+      }
+
       dut.io.start.poke(false.B)
       //step(1)
       //poke(dut.io.start, false.B)
-      for (j <- 0 until pcycle*20) {
-        dut.clock.step()
+      for (j <- 0 until pcycle*200) {
+        dut.clock.step(3)
+        for (c <- 0 until diff_clock) {
+          dut.io.clock_diff.poke(1)
+          dut.io.clock_diff.poke(0)
+        }
+        for (c <- 0 until sub_clock) {
+          dut.io.clock_sub.poke(1)
+          dut.io.clock_sub.poke(0)
+        }
+
         //step(1)
         println(j + "Push: " + dut.io.push.peek() + " Pull: " + dut.io.pull.peek() + " Done: " + dut.io.done.peek() + " Result: " + dut.io.cipher.peek())  
       }
-        dut.clock.step()
+        dut.clock.step(1)
+        for (c <- 0 until diff_clock) {
+          dut.io.clock_diff.poke(1)
+          dut.io.clock_diff.poke(0)
+        }
+        for (c <- 0 until sub_clock) {
+          dut.io.clock_sub.poke(1)
+          dut.io.clock_sub.poke(0)
+        }
+
         //step(1)
         dut.io.message.poke("h08800000000000000000000000000000".U)
         //poke(dut.io.message, "h08800000000000000000000000000000".U)
@@ -151,8 +189,17 @@ class hashBehavior extends AnyFlatSpec with ChiselScalatestTester {
         dut.io.empty.poke(true.B)
         println("*Push: " + dut.io.push.peek() + " Pull: " + dut.io.pull.peek() + " Done: " + dut.io.done.peek() + " Result: " + dut.io.cipher.peek())  
 
-      for (j <- 0 until 80) {
-        dut.clock.step()
+      for (j <- 0 until 800) {
+        dut.clock.step(3)
+        for (c <- 0 until diff_clock) {
+          dut.io.clock_diff.poke(1)
+          dut.io.clock_diff.poke(0)
+        }
+        for (c <- 0 until sub_clock) {
+          dut.io.clock_sub.poke(1)
+          dut.io.clock_sub.poke(0)
+        }
+
         //step(1)
         dut.io.message.poke("h00000000000000000000000000000000".U)
         // poke(dut.io.message, "h00000000000000000000000000000000".U)
@@ -165,16 +212,33 @@ class hashBehavior extends AnyFlatSpec with ChiselScalatestTester {
 
 class wrappertest extends AnyFlatSpec with ChiselScalatestTester {
   "wrapper" should "work" in {
+    // let the ratio of main, sub, diff clock be 3,2,1 respectively
     test(new permutation_two_wrapper).withAnnotations(Seq(VerilatorBackendAnnotation)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // val dut1 = Module(new permutation_one_wrapper)
       // test(new permutation_one_wrapper) { dut1 =>
         // var pcycle = 13
         // poke(dut.io.s_in, "hfe9398aadb67f03d8bb21831c60f1002b48a92db98d5da6243189921b8f8e3e8348fa5c9d525e140".U)
+        dut.io.reset_diff.poke(1)
+        dut.io.clock_diff.poke(1)
+        dut.io.reset_diff.poke(0)
+        dut.io.reset_sub.poke(1)
+        dut.io.clock_sub.poke(1)
+        dut.io.reset_sub.poke(0)
+        val diff_clock = 1
+        val sub_clock = 2
         dut.clock.setTimeout(2000)
         dut.io.s_in.poke("h00400c00000000000000000000000000000000000000000000000000000000000000000000000000".U)
         dut.io.round.poke(12)
         dut.io.start.poke(true)
-        dut.clock.step()
+        dut.clock.step(3)
+        for (c <- 0 until diff_clock) {
+          dut.io.clock_diff.poke(1)
+          dut.io.clock_diff.poke(0)
+        }
+        for (c <- 0 until sub_clock) {
+          dut.io.clock_sub.poke(1)
+          dut.io.clock_sub.poke(0)
+        }
         dut.io.start.poke(false)
         // dut1:
         // dut1.io.s_in.poke("h00400c00000000000000000000000000000000000000000000000000000000000000000000000000".U)
@@ -185,7 +249,15 @@ class wrappertest extends AnyFlatSpec with ChiselScalatestTester {
         var count = 0
         while (dut.io.done.peekBoolean() == false) {
           println("Result is: " + (dut.io.s_out.peek()))
-          dut.clock.step()
+          dut.clock.step(3)
+          for (c <- 0 until diff_clock) {
+            dut.io.clock_diff.poke(1)
+            dut.io.clock_diff.poke(0)
+          }
+          for (c <- 0 until sub_clock) {
+            dut.io.clock_sub.poke(1)
+            dut.io.clock_sub.poke(0)
+          }
           count = count + 1
         }
         println("Final result is: " + (dut.io.s_out.peek()))
