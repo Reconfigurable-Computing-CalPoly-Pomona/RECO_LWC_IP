@@ -81,6 +81,42 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
           }
           println("Result is: " + (dut.io.x_out.peek()))
           // TODO: add expects for specific inputs and specific round amounts
+          if (round == 0) {
+            dut.io.x_out(0).expect(BigInt("34971066833044448"))
+            dut.io.x_out(1).expect(BigInt("248504187806"))
+            dut.io.x_out(2).expect(BigInt("14411518807585582404"))
+            dut.io.x_out(3).expect(BigInt("2764084271298646204"))
+            dut.io.x_out(4).expect(BigInt("6341068330467596703"))
+          }
+          else if (round == 1) {
+            dut.io.x_out(0).expect(BigInt("34935951180432353"))
+            dut.io.x_out(1).expect(BigInt("249074612999"))
+            dut.io.x_out(2).expect(BigInt("288230376151706973"))
+            dut.io.x_out(3).expect(BigInt("2455728434312122541"))
+            dut.io.x_out(4).expect(BigInt("6341068330467596703"))
+          }
+          else if (round == 2) {
+            dut.io.x_out(0).expect(BigInt("33842967902946240"))
+            dut.io.x_out(1).expect(BigInt("248437078924"))
+            dut.io.x_out(2).expect(BigInt("5764607523034230135"))
+            dut.io.x_out(3).expect(BigInt("3372351695970373790"))
+            dut.io.x_out(4).expect(BigInt("6341068330467596703"))
+          }
+          else if (round == 3) {
+            dut.io.x_out(0).expect(BigInt("33807852250334145"))
+            dut.io.x_out(1).expect(BigInt("249007504149"))
+            dut.io.x_out(2).expect(BigInt("10088063165309906286"))
+            dut.io.x_out(3).expect(BigInt("3063995858983850127"))
+            dut.io.x_out(4).expect(BigInt("6341068330467596703"))
+          }
+          else if (round == 4) {
+            dut.io.x_out(0).expect(BigInt("35112079199306724"))
+            dut.io.x_out(1).expect(BigInt("246356703710"))
+            dut.io.x_out(2).expect(BigInt("15564440312192429347"))
+            dut.io.x_out(3).expect(BigInt("3998633519151583480"))
+            dut.io.x_out(4).expect(BigInt("6341068330467596703"))
+          }
+
           println(
             "finished processing first permutations and took " + count + " cycles"
           )
