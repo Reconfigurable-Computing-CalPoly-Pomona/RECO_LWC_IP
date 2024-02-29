@@ -28,6 +28,7 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
         dut.io.clock_sub.poke(1)
         dut.io.reset_sub.poke(0)
         for (round <- 0 until 5) {
+          // inputs are: x_in(i) = 10, round_in = 10 for the initial after reset
           for (i <- 0 until 5) {
             dut.io.x_in(i).poke(10)
           }
@@ -42,6 +43,7 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
             dut.io.clock_sub.poke(1)
             dut.io.clock_sub.poke(0)
           }
+          // inputs are now x_in(i) = i * 1234, round = 0..5 (not inclusive at end)
           // create an array with 5 elements constructed with a function for each element of a BigInt
           val x = Array.tabulate(5) { x => BigInt(x) }
           for (x_index <- 0 until 5) {
@@ -78,6 +80,7 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
             // println("Result is: " + (dut.io.x_out.peek()))
           }
           println("Result is: " + (dut.io.x_out.peek()))
+          // TODO: add expects for specific inputs and specific round amounts
           println(
             "finished processing first permutations and took " + count + " cycles"
           )

@@ -35,6 +35,5 @@ object permutationMain extends App {
   emitVerilog(new top(1), Array("--target-dir", "generated"))
   emitVerilog(new async_io_in(1), Array("--target-dir", "generated"))
   emitVerilog(new async_io_out(1), Array("--target-dir", "generated"))
-
-
+  emitVerilog(new permutation_two_wrapper_reduced_io(), Array("--target-dir", "generated"))
 }

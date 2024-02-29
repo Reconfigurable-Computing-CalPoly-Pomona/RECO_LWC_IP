@@ -165,7 +165,7 @@ class permutation_two extends Module {
   diffusion.io.start := async_diff_in.io.out.valid
   // unsure of line below but ready needs to be set
   // There's a big problem here also since the done signal is held true causing multiple async IO operations when there should only be one.
-  // val diff_done = Module(new posedge()) 
+  // val diff_done = Module(new posedge())
   // diff_done.io.in := diffusion.io.done
 
   async_diff_in.io.out.ready := true.B
@@ -209,10 +209,10 @@ class permutation_two extends Module {
     async_out.io.in.valid := true.B
     async_in.io.out.ready := false.B
   }
-  .otherwise {
-    async_out.io.in.valid := false.B
-    async_in.io.out.ready := true.B
-  }
+    .otherwise {
+      async_out.io.in.valid := false.B
+      async_in.io.out.ready := true.B
+    }
 }
 
 // TODO: fifo wrapper for permutation with pynq
@@ -329,49 +329,70 @@ class permutation_two_wrapper extends Module {
     .otherwise {
       io.done := false.B
     }
-  // //Initialize
-  // when (run === 0.U) {
-  //   x0_Reg := io.s_in(319,256)
-  //   x1_Reg := io.s_in(255,192)
-  //   x2_Reg := io.s_in(191,128)
-  //   x3_Reg := io.s_in(127,64)
-  //   x4_Reg := io.s_in(63,0)
-  //   current_round := 12.U - io.round
-  //   run := io.start
-  // }//Starts; turns off run when current_round is 11
-  // .elsewhen (run === 1.U) {
-  //   run := Mux(current_round === 11.U, 0.U, 1.U)
-  // }
-  // // might hold invalid data at start
-  // when (single_round.io.done) {
-  //   x0_Reg := single_round.io.x_out(0)
-  //   x1_Reg := single_round.io.x_out(1)
-  //   x2_Reg := single_round.io.x_out(2)
-  //   x3_Reg := single_round.io.x_out(3)
-  //   x4_Reg := single_round.io.x_out(4)
-  // }
-  // single_round.io.start := run.asBool
-  // single_round.io.round_in := current_round
+}
 
-  // io.s_out := Cat(single_round.io.x_out(0), single_round.io.x_out(1), single_round.io.x_out(2), single_round.io.x_out(3), single_round.io.x_out(4))
+class permutation_two_wrapper_reduced_io extends Module {
+  val io = IO(new Bundle {
+    val clock_sub = Input(Bool())
+    val reset_sub = Input(Bool())
+    val clock_diff = Input(Bool())
+    val reset_diff = Input(Bool())
+    val round = Input(UInt(4.W)) // total number of rounds to run
+    val s_in = Input(UInt(64.W))
+    val write = Input(Bool())
+    // val start = Input(Bool())
+    val done = Output(Bool())
+    val s_out = Output(UInt(64.W))
+    val read = Input(Bool())
+  })
+  val permutation_w = Module(new permutation_two_wrapper())
+  permutation_w.io.clock_diff := io.clock_diff
+  permutation_w.io.clock_sub := io.clock_sub
+  permutation_w.io.reset_diff := io.reset_diff
+  permutation_w.io.reset_sub := io.reset_sub
 
-  // when (run === 1.U && single_round.io.done === true.B) {
-  //   current_round := current_round + 1.U
-  // }
-
-  // when (io.maxRound === 0.U) {
-  //   maxRound := 6.U
-  // }
-  // .elsewhen (io.maxRound === 1.U) {
-  //   maxRound := 8.U
-  // }
-  // .elsewhen (io.maxRound === 2.U) {
-  //   maxRound := 12.U
-  // }
-  // .otherwise {
-  //   // set unique round number to indicate invalid maxRound
-  //   maxRound := 0.U
-  // }
+  // start is set automatically once all 5 64 bit values are written
+  // permutation_w.io.start := io.start
+  io.done := permutation_w.io.done
+  permutation_w.io.round := io.round
+  permutation_w.io.start := false.B
+  val write_counter = RegInit(0.U(3.W))
+  val read_counter = RegInit(0.U(3.W))
+  // feels like a waste of registers when the permutation's input when starting will be registered anyways
+  val tempin = RegInit(VecInit(Seq.fill(5)(10.U(64.W))))
+  // not sure if this conversion from vec to wire will work
+  permutation_w.io.s_in := tempin.asUInt
+  // assumes output will not change when done; saves 320 registers
+  val tempout = VecInit(Seq.fill(5)(10.U(64.W)))
+  for (t <- 0 until 5) {
+    tempout(t) := permutation_w.io.s_out(((t + 1) * 64) - 1, t * 64)
+  }
+  // tempout := permutation_w.io.s_out(0) ## permutation_w.io.s_out(1) ## permutation_w.io.s_out(2) ## permutation_w.io.s_out(3) ## permutation_w.io.s_out(4)
+  // read and write should only be used once data has been fully registered to "dequeue" and get the next output/input. The values are available even before the write/read signals
+    // in short, to write, give data first, then give signal; to read, get data first, then give signal
+  // the module outside should check if the permutation is done before writing or data will be written and will restart the process when the number of writes = 6
+  // optimization: can make write work on both edges to reduce IO operations
+  when(io.write) {
+    when(write_counter < 5.U) {
+      // write_counter may reach 5 when tempin doesn't have 6 elements
+        // adding modulo 5 should fix this, especially since nothing will register into tempin since write_counter doesn't reach 5. In this case it's just an extra precaution and can probably be removed. TODO: check this in testing
+      write_counter := write_counter + 1.U
+      tempin(write_counter) := io.s_in
+    }
+    .otherwise {
+      permutation_w.io.start := true.B
+      write_counter := 0.U
+    }
+  }
+  when(io.read) {
+    when(read_counter < 5.U) {
+      read_counter := read_counter + 1.U
+    }
+    .otherwise {
+      read_counter := 0.U
+    }
+  }
+  io.s_out := tempout(read_counter)
 }
 
 class permutation_three extends Module {
