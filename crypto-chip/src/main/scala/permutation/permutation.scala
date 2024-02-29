@@ -371,31 +371,47 @@ class permutation_two_wrapper_reduced_io extends Module {
   edge_read.io.in := io.read
   val edge_write = Module(new posedge())
   edge_write.io.in := io.write
+  val start_reg = RegInit(false.B)
+  permutation_w.io.start := start_reg
   // tempout := permutation_w.io.s_out(0) ## permutation_w.io.s_out(1) ## permutation_w.io.s_out(2) ## permutation_w.io.s_out(3) ## permutation_w.io.s_out(4)
   // read and write should only be used once data has been fully registered to "dequeue" and get the next output/input. The values are available even before the write/read signals
-    // in short, to write, give data first, then give signal; to read, get data first, then give signal
+  // in short, to write, give data first, then give signal; to read, get data first, then give signal
   // the module outside should check if the permutation is done before writing or data will be written and will restart the process when the number of writes = 6
   // optimization: can make write work on both edges to reduce IO operations
   // additional note: write should only be held for one cycle, so either add an edge detector in here or outside
-    // An edge detector was dded to both read and write to solve this problem
+  // An edge detector was added to both read and write to solve this problem
+  // permutation_w.io.start := start_reg
   when(edge_write.io.out) {
-    tempin(write_counter % 5.U) := io.s_in
-    write_counter := write_counter + 1.U
-    when(write_counter >= 4.U) {
-      // write_counter may reach 5 when tempin doesn't have 6 elements
-      // adding modulo 5 should fix this, especially since nothing will register into tempin since write_counter doesn't reach 5. In this case it's just an extra precaution and can probably be removed. TODO: check this in testing
-      // tempin(write_counter) := io.s_in
-      permutation_w.io.start := true.B
+    tempin(4.U - write_counter) := io.s_in
+    when(write_counter > 3.U) {
       write_counter := 0.U
+      tempin(write_counter + 1.U) := io.s_in
+      start_reg := true.B
+      // permutation_w.io.start := true.B
+    }
+    .otherwise {
+      write_counter := write_counter + 1.U
     }
   }
+  .otherwise {
+    start_reg := false.B
+  }
+
+  // when (write_counter > 4.U) {
+  //   start_reg := true.B
+  // }
+  // .otherwise {
+  //   start_reg := false.B
+  // }
   when(edge_read.io.out) {
-    read_counter := read_counter + 1.U
     when(read_counter >= 4.U) {
       read_counter := 0.U
     }
+    .otherwise {
+      read_counter := read_counter + 1.U
+    }
   }
-  io.s_out := tempout(read_counter)
+  io.s_out := tempout((4.U - read_counter))
 }
 
 class permutation_three extends Module {
