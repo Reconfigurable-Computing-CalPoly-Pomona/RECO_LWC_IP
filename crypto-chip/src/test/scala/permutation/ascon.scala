@@ -211,7 +211,7 @@ class hashBehavior extends AnyFlatSpec with ChiselScalatestTester {
 
 
 class wrappertest extends AnyFlatSpec with ChiselScalatestTester {
-  "wrapper" should "work" in {
+  "reduced wrapper" should "work" in {
     // let the ratio of main, sub, diff clock be 3,2,1 respectively
     test(new permutation_two_wrapper_reduced_io).withAnnotations(Seq(VerilatorBackendAnnotation)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // val dut1 = Module(new permutation_one_wrapper)
@@ -276,6 +276,7 @@ class wrappertest extends AnyFlatSpec with ChiselScalatestTester {
           dut.io.clock_sub.poke(1)
           dut.io.clock_sub.poke(0)
         }
+        val correct_result = BigInt("1514321243387696847890303753730219876781446195237874551750669573144945654557269770228830393635766")
         var count = 0
         while (dut.io.done.peekBoolean() == false) {
           println("Result is: " + (dut.io.s_out.peek()))
@@ -290,9 +291,46 @@ class wrappertest extends AnyFlatSpec with ChiselScalatestTester {
           }
           count = count + 1
         }
-        println("Final result is: " + (dut.io.s_out.peek()))
-        // println("Result from dut1 is: " + (dut1.io.s_out.peek()))
-        
+        // println("Final result is: " + (dut.io.s_out.peek()))
+        var tempResult = BigInt(2^320 - 1)
+        tempResult = dut.io.s_out.peekInt() << (320) - (1 * 64)
+        println("Partial result is: " + (dut.io.s_out.peek()))
+        // dut.io.s_out.expect(BigInt("34971066833044448"))
+        dut.io.read.poke(true)
+        dut.clock.step()
+        dut.io.read.poke(false)
+        dut.clock.step()
+        tempResult = (tempResult) | dut.io.s_out.peekInt() << (320) - (2 * 64)
+        println("Partial result is: " + (dut.io.s_out.peek()))
+        // dut.io.s_out.expect(BigInt("248504187806"))
+        dut.io.read.poke(true)
+        dut.clock.step()
+        dut.io.read.poke(false)
+        dut.clock.step()
+        tempResult = (tempResult) | dut.io.s_out.peekInt() << (320) - (3 * 64)
+        println("Partial result is: " + (dut.io.s_out.peek()))
+        // dut.io.s_out.expect(BigInt("14411518807585582404"))
+        dut.io.read.poke(true)
+        dut.clock.step()
+        dut.io.read.poke(false)
+        dut.clock.step()
+        tempResult = (tempResult) | dut.io.s_out.peekInt() << (320) - (4 * 64)
+        println("Partial result is: " + (dut.io.s_out.peek()))
+        // dut.io.s_out.expect(BigInt("2764084271298646204"))
+        dut.io.read.poke(true)
+        dut.clock.step()
+        dut.io.read.poke(false)
+        dut.clock.step()
+        tempResult = (tempResult) | dut.io.s_out.peekInt() << (320) - (5 * 64)
+        println("Partial result is: " + (dut.io.s_out.peek()))
+        // dut.io.s_out.expect(BigInt("6341068330467596703"))
+        dut.io.read.poke(true)
+        dut.clock.step()
+        dut.io.read.poke(false)
+        dut.clock.step()
+        println("Full result is: " + (tempResult))
+        assert(tempResult === correct_result)
+
         println("finished processing first permutations and took " + count + " cycles")
     }
     // let the ratio of main, sub, diff clock be 3,2,1 respectively
