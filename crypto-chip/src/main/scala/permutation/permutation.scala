@@ -112,10 +112,10 @@ class posedge() extends Module {
 // TODO: add multiple clock instantiation
 class permutation_two extends Module {
   val io = IO(new Bundle {
-    val clock_sub = Input(Bool())
-    val reset_sub = Input(Bool())
-    val clock_diff = Input(Bool())
-    val reset_diff = Input(Bool())
+    val clock_sub = Input(Clock())
+    val reset_sub = Input(Reset())
+    val clock_diff = Input(Clock())
+    val reset_diff = Input(Reset())
     val start = Input(Bool())
     val round_in = Input(UInt(8.W))
     val x_in = Input(Vec(5, UInt(64.W)))
@@ -130,20 +130,20 @@ class permutation_two extends Module {
   // modules below are for async passing of data from substitution to diffusion
   // after using these modules, this current module should be mostly combinational, like the asyncFIFOtest top module
   val async_out = Module(new async_io_out_vec(5, 64))
-  val async_sub_in = withClockAndReset(io.clock_sub.asClock, io.reset_sub) {
+  val async_sub_in = withClockAndReset(io.clock_sub, io.reset_sub) {
     Module(new async_io_in_vec(5, 64))
   }
-  val async_sub_out = withClockAndReset(io.clock_sub.asClock, io.reset_sub) {
+  val async_sub_out = withClockAndReset(io.clock_sub, io.reset_sub) {
     Module(new async_io_out_vec(5, 64))
   }
-  val async_diff_in = withClockAndReset(io.clock_diff.asClock, io.reset_diff) {
+  val async_diff_in = withClockAndReset(io.clock_diff, io.reset_diff) {
     Module(new async_io_in_vec(5, 64))
   }
-  val async_diff_out = withClockAndReset(io.clock_diff.asClock, io.reset_diff) {
+  val async_diff_out = withClockAndReset(io.clock_diff, io.reset_diff) {
     Module(new async_io_out_vec(5, 64))
   }
   val async_in = Module(new async_io_in_vec(5, 64))
-  val substitution = withClockAndReset(io.clock_sub.asClock, io.reset_sub) {
+  val substitution = withClockAndReset(io.clock_sub, io.reset_sub) {
     Module(new substitution_layer_compat())
   }
 
@@ -159,7 +159,7 @@ class permutation_two extends Module {
   async_sub_out.io.in.valid := substitution.io.done
 
   // setup control signals for diffusion layer
-  val diffusion = withClockAndReset(io.clock_diff.asClock, io.reset_diff) {
+  val diffusion = withClockAndReset(io.clock_diff, io.reset_diff) {
     Module(new diffusion_layer_compat())
   }
   diffusion.io.start := async_diff_in.io.out.valid
@@ -231,10 +231,10 @@ class permutation_two_fifo_wrapper extends Module {
 // TODO: maybe reduce number of states
 class permutation_two_wrapper extends Module {
   val io = IO(new Bundle {
-    val clock_sub = Input(Bool())
-    val reset_sub = Input(Bool())
-    val clock_diff = Input(Bool())
-    val reset_diff = Input(Bool())
+    val clock_sub = Input(Clock())
+    val reset_sub = Input(Reset())
+    val clock_diff = Input(Clock())
+    val reset_diff = Input(Reset())
     val s_in = Input(UInt(320.W))
     val start = Input(Bool())
     val round = Input(UInt(4.W)) // total number of rounds to run
@@ -333,14 +333,13 @@ class permutation_two_wrapper extends Module {
 
 class permutation_two_wrapper_reduced_io extends Module {
   val io = IO(new Bundle {
-    val clock_sub = Input(Bool())
-    val reset_sub = Input(Bool())
-    val clock_diff = Input(Bool())
-    val reset_diff = Input(Bool())
+    val clock_sub = Input(Clock())
+    val reset_sub = Input(Reset())
+    val clock_diff = Input(Clock())
+    val reset_diff = Input(Reset())
     val round = Input(UInt(4.W)) // total number of rounds to run
     val s_in = Input(UInt(64.W))
     val write = Input(Bool())
-    // val start = Input(Bool())
     val done = Output(Bool())
     val read = Input(Bool())
     val s_out = Output(UInt(64.W))

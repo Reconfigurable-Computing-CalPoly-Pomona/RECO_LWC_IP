@@ -115,7 +115,56 @@ import layers._
 class hashBehavior extends AnyFlatSpec with ChiselScalatestTester {
     // let the ratio of main, sub, diff clock be 3,2,1 respectively
   "hash" should "work" in {
-    test(new ascon).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+    test(new Module{
+  val io = IO(new Bundle {
+    val clock_sub = Input(Bool())
+    val reset_sub = Input(Bool())
+    val clock_diff = Input(Bool())
+    val reset_diff = Input(Bool())
+    val key = Input(UInt(128.W))
+    val nounce = Input(UInt(128.W))
+    val tagin  = Input(UInt(128.W))
+
+    val message = Input(UInt(128.W))
+    val start   = Input(Bool())
+    // is there a message
+    val empty   = Input(Bool())
+    // is the fifo full, then pause?
+    val full    = Input(Bool())
+    val mode    = Input(UInt(3.W)) // 0 encryption ascon, 1 encryption ascona, 2 decryption ascon, 3 decryption ascona, 4 hash, 5 hasha, 
+
+    
+    val push    = Output(Bool())
+
+    val pull    = Output(Bool())
+    val cipher  = Output(UInt(128.W))
+    val tagout  = Output(UInt(128.W))
+    val done    = Output(Bool())
+    val warning = Output(Bool())
+    val valid = Output(Bool())
+    // val state  = Output(UInt(320.W))
+  })
+    val ascon = Module(new ascon())
+    ascon.io.clock_sub := io.clock_sub.asClock
+    ascon.io.reset_sub := io.reset_sub
+    ascon.io.clock_diff := io.clock_diff.asClock
+    ascon.io.reset_diff := io.reset_diff
+    ascon.io.key := io.key
+    ascon.io.nounce := io.nounce
+    ascon.io.tagin := io.tagin
+    ascon.io.message := io.message
+    ascon.io.start := io.start
+    ascon.io.empty := io.empty
+    ascon.io.full := io.full
+    ascon.io.mode := io.mode
+    io.push := ascon.io.push
+    io.pull := ascon.io.pull
+    io.cipher := ascon.io.cipher
+    io.tagout := ascon.io.tagout
+    io.done := ascon.io.done
+    io.warning := ascon.io.warning
+    io.valid := ascon.io.valid
+    }).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
       val diff_clock = 1
       val sub_clock = 2
       dut.io.reset_diff.poke(1)
@@ -213,7 +262,31 @@ class hashBehavior extends AnyFlatSpec with ChiselScalatestTester {
 class wrappertest extends AnyFlatSpec with ChiselScalatestTester {
   "reduced wrapper" should "work" in {
     // let the ratio of main, sub, diff clock be 3,2,1 respectively
-    test(new permutation_two_wrapper_reduced_io).withAnnotations(Seq(VerilatorBackendAnnotation)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+        test(new Module {
+      val io = IO(new Bundle {
+        val clock_sub = Input(Bool())
+        val reset_sub = Input(Bool())
+        val clock_diff = Input(Bool())
+        val reset_diff = Input(Bool())
+        val round = Input(UInt(4.W)) // total number of rounds to run
+        val s_in = Input(UInt(64.W))
+        val write = Input(Bool())
+        val done = Output(Bool())
+        val read = Input(Bool())
+        val s_out = Output(UInt(64.W))
+      })
+      val wrapper_reduced = Module(new permutation_two_wrapper_reduced_io)
+      wrapper_reduced.io.clock_sub := io.clock_sub.asClock
+      wrapper_reduced.io.reset_sub := io.reset_sub
+      wrapper_reduced.io.clock_diff := io.clock_diff.asClock
+      wrapper_reduced.io.reset_diff := io.reset_diff
+      wrapper_reduced.io.round := io.round
+      wrapper_reduced.io.s_in := io.s_in
+      wrapper_reduced.io.write := io.write
+      io.done := wrapper_reduced.io.done
+      wrapper_reduced.io.read := io.read
+      io.s_out := wrapper_reduced.io.s_out
+    }).withAnnotations(Seq(VerilatorBackendAnnotation)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // val dut1 = Module(new permutation_one_wrapper)
       // test(new permutation_one_wrapper) { dut1 =>
         // var pcycle = 13
@@ -334,7 +407,29 @@ class wrappertest extends AnyFlatSpec with ChiselScalatestTester {
         println("finished processing first permutations and took " + count + " cycles")
     }
     // let the ratio of main, sub, diff clock be 3,2,1 respectively
-    test(new permutation_two_wrapper).withAnnotations(Seq(VerilatorBackendAnnotation)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new Module {
+      val io = IO(new Bundle {
+      val clock_sub = Input(Bool())
+      val reset_sub = Input(Bool())
+      val clock_diff = Input(Bool())
+      val reset_diff = Input(Bool())
+      val s_in = Input(UInt(320.W))
+      val start = Input(Bool())
+      val round = Input(UInt(4.W)) // total number of rounds to run
+      val done = Output(Bool())
+      val s_out = Output(UInt(320.W))
+    })
+      val wrapper = Module(new permutation_two_wrapper)
+      wrapper.io.clock_sub := io.clock_sub.asClock
+      wrapper.io.reset_sub := io.reset_sub
+      wrapper.io.clock_diff := io.clock_diff.asClock
+      wrapper.io.reset_diff := io.reset_diff
+      wrapper.io.s_in := io.s_in
+      wrapper.io.start := io.start
+      wrapper.io.round := io.round
+      io.done := wrapper.io.done 
+      io.s_out := wrapper.io.s_out 
+    }).withAnnotations(Seq(VerilatorBackendAnnotation)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // val dut1 = Module(new permutation_one_wrapper)
       // test(new permutation_one_wrapper) { dut1 =>
         // var pcycle = 13

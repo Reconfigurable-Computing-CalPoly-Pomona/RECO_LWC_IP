@@ -14,10 +14,10 @@ import permutation._
   // streaming interface
 class ascon extends Module {
   val io = IO(new Bundle {
-    val clock_sub = Input(Bool())
-    val reset_sub = Input(Bool())
-    val clock_diff = Input(Bool())
-    val reset_diff = Input(Bool())
+    val clock_sub = Input(Clock())
+    val reset_sub = Input(Reset())
+    val clock_diff = Input(Clock())
+    val reset_diff = Input(Reset())
     val key = Input(UInt(128.W))
     val nounce = Input(UInt(128.W))
     val tagin  = Input(UInt(128.W))

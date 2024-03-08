@@ -210,7 +210,7 @@ class sub_test
       io.out := lookup.io.out
       lookup.io.in := io.in
       lookup.io.clk := clock
-    }) { dut =>
+    }).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
       dut.io.in.poke(31)
       println("after poke")
       dut.clock.step()
@@ -230,7 +230,7 @@ class sub_test
       io.out := lookup.io.out
       lookup.io.in := io.in
       lookup.io.clk := clock
-    }) { dut =>
+    }).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
       dut.io.in.poke(0)
       println("after poke")
       dut.clock.step()
@@ -246,7 +246,7 @@ class sub_test
     }
   }
   "sub_fifo" should "work with one value" in {
-    test(new substitution_fifo()) { dut =>
+    test(new substitution_fifo()).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
       var count = 0
       println("input is: " + 0)
       dut.io.in.bits.poke(0)
@@ -264,7 +264,7 @@ class sub_test
     }
   }
   "sub_fifo" should "work with last value" in {
-    test(new substitution_fifo()) { dut =>
+    test(new substitution_fifo()).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
       var count = 0
       println("input is: " + BigInt("1F", 16))
       dut.io.in.bits.poke(BigInt("1F", 16))
@@ -283,7 +283,7 @@ class sub_test
     }
   }
   "sub_fifo" should "work with two values" in {
-    test(new substitution_fifo()) { dut =>
+    test(new substitution_fifo()).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
       var count = 0
       println("input1 is: " + 2)
       dut.io.in.bits.poke(2)
@@ -318,7 +318,7 @@ class sub_test
     }
   }
   "sub_fifo" should "work with 32 value" in {
-    test(new substitution_fifo()) { dut =>
+    test(new substitution_fifo()).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
       var count = 0
       var i = 0
       while (i < 32) {
@@ -358,8 +358,7 @@ class sub_test
   // only know that this works after 64 cycles
   // need to extract bitslices and figure out the correct values
   "sub_compat_fifo" should "work" in {
-    test(new substitution_layer_compat())
-      .withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new substitution_layer_compat()).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
         dut.io.x_in(0).poke(0)
         dut.io.x_in(1).poke(0)
         dut.io.x_in(2).poke(0)

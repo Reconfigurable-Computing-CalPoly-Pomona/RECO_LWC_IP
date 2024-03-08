@@ -17,7 +17,31 @@ import scala.collection.mutable.ArrayBuffer
 class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
   "permutation reduced io" should "work" in {
     // let the ratio of main, sub, diff clock be 3,2,1 respectively
-    test(new permutation_two_wrapper_reduced_io()).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) {
+    test(new Module {
+      val io = IO(new Bundle {
+        val clock_sub = Input(Bool())
+        val reset_sub = Input(Bool())
+        val clock_diff = Input(Bool())
+        val reset_diff = Input(Bool())
+        val round = Input(UInt(4.W)) // total number of rounds to run
+        val s_in = Input(UInt(64.W))
+        val write = Input(Bool())
+        val done = Output(Bool())
+        val read = Input(Bool())
+        val s_out = Output(UInt(64.W))
+      })
+      val wrapper_reduced = Module(new permutation_two_wrapper_reduced_io)
+      wrapper_reduced.io.clock_sub := io.clock_sub.asClock
+      wrapper_reduced.io.reset_sub := io.reset_sub
+      wrapper_reduced.io.clock_diff := io.clock_diff.asClock
+      wrapper_reduced.io.reset_diff := io.reset_diff
+      wrapper_reduced.io.round := io.round
+      wrapper_reduced.io.s_in := io.s_in
+      wrapper_reduced.io.write := io.write
+      io.done := wrapper_reduced.io.done
+      wrapper_reduced.io.read := io.read
+      io.s_out := wrapper_reduced.io.s_out
+    }).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) {
       dut =>
         dut.io.write.poke(false)
         val diff_clock = 1
@@ -186,7 +210,29 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
   }
   "permutation" should "work" in {
     // let the ratio of main, sub, diff clock be 3,2,1 respectively
-    test(new permutation_two()).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) {
+    test(new Module {
+      val io = IO(new Bundle {
+        val clock_sub = Input(Bool())
+        val reset_sub = Input(Bool())
+        val clock_diff = Input(Bool())
+        val reset_diff = Input(Bool())
+        val start = Input(Bool())
+        val round_in = Input(UInt(8.W))
+        val x_in = Input(Vec(5, UInt(64.W)))
+        val x_out = Output(Vec(5, UInt(64.W)))
+        val done = Output(Bool())
+      })
+      val permutation = Module(new permutation_two())
+      permutation.io.clock_sub := io.clock_sub.asClock
+      permutation.io.reset_sub := io.reset_sub
+      permutation.io.clock_diff := io.clock_diff.asClock
+      permutation.io.reset_diff := io.reset_diff
+      permutation.io.start := io.start
+      permutation.io.round_in := io.round_in
+      permutation.io.x_in := io.x_in
+      io.x_out := permutation.io.x_out
+      io.done := permutation.io.done
+    }).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) {
       dut =>
         val diff_clock = 1
         val sub_clock = 2
