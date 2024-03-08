@@ -113,9 +113,9 @@ class posedge() extends Module {
 class permutation_two extends Module {
   val io = IO(new Bundle {
     val clock_sub = Input(Clock())
-    val reset_sub = Input(Reset())
+    val reset_sub = Input(Bool())
     val clock_diff = Input(Clock())
-    val reset_diff = Input(Reset())
+    val reset_diff = Input(Bool())
     val start = Input(Bool())
     val round_in = Input(UInt(8.W))
     val x_in = Input(Vec(5, UInt(64.W)))
