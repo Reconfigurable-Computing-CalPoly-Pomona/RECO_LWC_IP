@@ -113,9 +113,7 @@ class posedge() extends Module {
 class permutation_two extends Module {
   val io = IO(new Bundle {
     val clock_sub = Input(Clock())
-    val reset_sub = Input(Bool())
     val clock_diff = Input(Clock())
-    val reset_diff = Input(Bool())
     val start = Input(Bool())
     val round_in = Input(UInt(8.W))
     val x_in = Input(Vec(5, UInt(64.W)))
@@ -130,20 +128,20 @@ class permutation_two extends Module {
   // modules below are for async passing of data from substitution to diffusion
   // after using these modules, this current module should be mostly combinational, like the asyncFIFOtest top module
   val async_out = Module(new async_io_out_vec(5, 64))
-  val async_sub_in = withClockAndReset(io.clock_sub, io.reset_sub) {
+  val async_sub_in = withClock(io.clock_sub) {
     Module(new async_io_in_vec(5, 64))
   }
-  val async_sub_out = withClockAndReset(io.clock_sub, io.reset_sub) {
+  val async_sub_out = withClock(io.clock_sub) {
     Module(new async_io_out_vec(5, 64))
   }
-  val async_diff_in = withClockAndReset(io.clock_diff, io.reset_diff) {
+  val async_diff_in = withClock(io.clock_diff) {
     Module(new async_io_in_vec(5, 64))
   }
-  val async_diff_out = withClockAndReset(io.clock_diff, io.reset_diff) {
+  val async_diff_out = withClock(io.clock_diff) {
     Module(new async_io_out_vec(5, 64))
   }
   val async_in = Module(new async_io_in_vec(5, 64))
-  val substitution = withClockAndReset(io.clock_sub, io.reset_sub) {
+  val substitution = withClock(io.clock_sub) {
     Module(new substitution_layer_compat())
   }
 
@@ -159,7 +157,7 @@ class permutation_two extends Module {
   async_sub_out.io.in.valid := substitution.io.done
 
   // setup control signals for diffusion layer
-  val diffusion = withClockAndReset(io.clock_diff, io.reset_diff) {
+  val diffusion = withClock(io.clock_diff) {
     Module(new diffusion_layer_compat())
   }
   diffusion.io.start := async_diff_in.io.out.valid
@@ -232,9 +230,7 @@ class permutation_two_fifo_wrapper extends Module {
 class permutation_two_wrapper extends Module {
   val io = IO(new Bundle {
     val clock_sub = Input(Clock())
-    val reset_sub = Input(Reset())
     val clock_diff = Input(Clock())
-    val reset_diff = Input(Reset())
     val s_in = Input(UInt(320.W))
     val start = Input(Bool())
     val round = Input(UInt(4.W)) // total number of rounds to run
@@ -254,8 +250,6 @@ class permutation_two_wrapper extends Module {
   // default assignments here:
   single_round.io.clock_diff := io.clock_diff
   single_round.io.clock_sub := io.clock_sub
-  single_round.io.reset_diff := io.reset_diff
-  single_round.io.reset_sub := io.reset_sub
   single_round.io.x_in(0) := x0_Reg
   single_round.io.x_in(1) := x1_Reg
   single_round.io.x_in(2) := x2_Reg
@@ -334,9 +328,7 @@ class permutation_two_wrapper extends Module {
 class permutation_two_wrapper_reduced_io extends Module {
   val io = IO(new Bundle {
     val clock_sub = Input(Clock())
-    val reset_sub = Input(Reset())
     val clock_diff = Input(Clock())
-    val reset_diff = Input(Reset())
     val round = Input(UInt(4.W)) // total number of rounds to run
     val s_in = Input(UInt(64.W))
     val write = Input(Bool())
@@ -347,8 +339,6 @@ class permutation_two_wrapper_reduced_io extends Module {
   val permutation_w = Module(new permutation_two_wrapper())
   permutation_w.io.clock_diff := io.clock_diff
   permutation_w.io.clock_sub := io.clock_sub
-  permutation_w.io.reset_diff := io.reset_diff
-  permutation_w.io.reset_sub := io.reset_sub
 
   // start is set automatically once all 5 64 bit values are written
   // permutation_w.io.start := io.start

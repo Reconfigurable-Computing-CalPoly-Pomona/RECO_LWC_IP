@@ -20,9 +20,7 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
     test(new Module {
       val io = IO(new Bundle {
         val clock_sub = Input(Bool())
-        val reset_sub = Input(Bool())
         val clock_diff = Input(Bool())
-        val reset_diff = Input(Bool())
         val round = Input(UInt(4.W)) // total number of rounds to run
         val s_in = Input(UInt(64.W))
         val write = Input(Bool())
@@ -32,9 +30,7 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
       })
       val wrapper_reduced = Module(new permutation_two_wrapper_reduced_io)
       wrapper_reduced.io.clock_sub := io.clock_sub.asClock
-      wrapper_reduced.io.reset_sub := io.reset_sub
       wrapper_reduced.io.clock_diff := io.clock_diff.asClock
-      wrapper_reduced.io.reset_diff := io.reset_diff
       wrapper_reduced.io.round := io.round
       wrapper_reduced.io.s_in := io.s_in
       wrapper_reduced.io.write := io.write
@@ -46,12 +42,8 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
         dut.io.write.poke(false)
         val diff_clock = 1
         val sub_clock = 2
-        dut.io.reset_diff.poke(1)
         dut.io.clock_diff.poke(1)
-        dut.io.reset_diff.poke(0)
-        dut.io.reset_sub.poke(1)
         dut.io.clock_sub.poke(1)
-        dut.io.reset_sub.poke(0)
         for (round <- 0 until 5) {
           // inputs are: x_in(i) = 10, round_in = 10 for the initial after reset
           for (i <- 0 until 5) {
@@ -213,9 +205,7 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
     test(new Module {
       val io = IO(new Bundle {
         val clock_sub = Input(Bool())
-        val reset_sub = Input(Bool())
         val clock_diff = Input(Bool())
-        val reset_diff = Input(Bool())
         val start = Input(Bool())
         val round_in = Input(UInt(8.W))
         val x_in = Input(Vec(5, UInt(64.W)))
@@ -224,9 +214,7 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
       })
       val permutation = Module(new permutation_two())
       permutation.io.clock_sub := io.clock_sub.asClock
-      permutation.io.reset_sub := io.reset_sub
       permutation.io.clock_diff := io.clock_diff.asClock
-      permutation.io.reset_diff := io.reset_diff
       permutation.io.start := io.start
       permutation.io.round_in := io.round_in
       permutation.io.x_in := io.x_in
@@ -236,12 +224,8 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
       dut =>
         val diff_clock = 1
         val sub_clock = 2
-        dut.io.reset_diff.poke(1)
         dut.io.clock_diff.poke(1)
-        dut.io.reset_diff.poke(0)
-        dut.io.reset_sub.poke(1)
         dut.io.clock_sub.poke(1)
-        dut.io.reset_sub.poke(0)
         for (round <- 0 until 5) {
           // inputs are: x_in(i) = 10, round_in = 10 for the initial after reset
           for (i <- 0 until 5) {
