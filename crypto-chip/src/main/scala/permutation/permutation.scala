@@ -119,15 +119,20 @@ class permutation_two extends Module {
     val x_in = Input(Vec(5, UInt(64.W)))
     val x_out = Output(Vec(5, UInt(64.W)))
     val done = Output(Bool())
+    // val reg_init = Output(UInt(25.W))
     // val clk = Input(Clock()) //CT
     // val rst = Input(Bool()) //CT
   })
+  // val reg_temp = RegInit(2340956.U)
+  // reg_temp := reg_temp + 1.U
+  // io.reg_init := reg_temp
 
-  val addition = Module(new addition_layer())
-
+  val addition = withClock(io.clock_sub) {
+    Module(new addition_layer())
+  }
   // modules below are for async passing of data from substitution to diffusion
   // after using these modules, this current module should be mostly combinational, like the asyncFIFOtest top module
-  val async_out = Module(new async_io_out_vec(5, 64))
+  val async_out = Module(new async_io_out_vec_round(5, 64))
   val async_sub_in = withClock(io.clock_sub) {
     Module(new async_io_in_vec(5, 64))
   }
@@ -176,10 +181,15 @@ class permutation_two extends Module {
   // This is a small problem since it extends the critical path to include the substition and addition layers. The compat layer converts things to registers anyways, so it might have little impact
   // This might suggest that starting at the done state works weirdly; the state(2) assignment is not happening before the substitution layer starts as was previously assumed
 
-  async_out.io.in.bits(2) := addition.io.x2_out
+  // async_out.io.in.bits(2) := addition.io.x2_out
+  async_out.io.in.bits(2) := io.x_in(2)
   async_out.io.in.bits(3) := io.x_in(3)
   async_out.io.in.bits(4) := io.x_in(4)
+  // ideally round_in should be 4 bits since it wil only ever go up to 12. For now, put 0s at the top
+  async_out.io.in_round := 0.U(4.W) ## io.round_in
   async_sub_in.io.in <> async_out.io.out
+
+
 
   substitution.io.x_in := async_sub_in.io.out.bits
   async_sub_out.io.in.bits := substitution.io.x_out
@@ -193,8 +203,9 @@ class permutation_two extends Module {
   io.x_out := async_in.io.out.bits
   io.done := async_in.io.out.valid
 
-  addition.io.x2_in := io.x_in(2)
-  addition.io.round_in := io.round_in
+  // addition.io.x2_in := io.x_in(2)
+  addition.io.x2_in := async_sub_in.io.out.bits(2)
+  addition.io.round_in := async_out.io.out_round
 
   // default assignment just in case
   async_out.io.in.valid := false.B

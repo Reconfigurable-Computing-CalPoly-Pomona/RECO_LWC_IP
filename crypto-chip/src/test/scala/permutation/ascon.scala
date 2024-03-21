@@ -265,9 +265,7 @@ class wrappertest extends AnyFlatSpec with ChiselScalatestTester {
     test(new Module {
       val io = IO(new Bundle {
         val clock_sub = Input(Bool())
-        val reset_sub = Input(Bool())
         val clock_diff = Input(Bool())
-        val reset_diff = Input(Bool())
         val round = Input(UInt(4.W)) // total number of rounds to run
         val s_in = Input(UInt(64.W))
         val write = Input(Bool())
@@ -291,12 +289,8 @@ class wrappertest extends AnyFlatSpec with ChiselScalatestTester {
         // test(new permutation_one_wrapper) { dut1 =>
         // var pcycle = 13
         // poke(dut.io.s_in, "hfe9398aadb67f03d8bb21831c60f1002b48a92db98d5da6243189921b8f8e3e8348fa5c9d525e140".U)
-        dut.io.reset_diff.poke(1)
         dut.io.clock_diff.poke(1)
-        dut.io.reset_diff.poke(0)
-        dut.io.reset_sub.poke(1)
         dut.io.clock_sub.poke(1)
-        dut.io.reset_sub.poke(0)
         val diff_clock = 1
         val sub_clock = 2
         dut.clock.setTimeout(2000)

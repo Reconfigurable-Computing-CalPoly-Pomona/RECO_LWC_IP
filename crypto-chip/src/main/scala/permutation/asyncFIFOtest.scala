@@ -116,6 +116,63 @@ class async_io_out_vec(width: Int, depth: Int) extends Module {
         io.out.valid := false.B
     }
 }
+class async_io_out_vec_round(width: Int, depth: Int) extends Module {
+    val io = IO(new Bundle {
+        val in = Flipped(Decoupled(Vec(width, UInt(depth.W))))
+        val in_round = Input(UInt(4.W))
+        val out = Decoupled(Vec(width, UInt(depth.W)))
+        val out_round = Output(UInt(4.W))
+    })
+
+    // connect the queue data and output data
+    io.out.bits := io.in.bits
+    io.out_round := io.in_round
+
+    // val regReady = RegInit(false.B)
+    // val regvalid = RegInit(false.B)
+    
+    // set deq's ready to false by default to prevent multiple reads
+    io.in.ready := false.B
+
+    // set valid to false by default since that there's no data by default
+    // io.out.valid := false.B
+    
+    val sending :: checkReady :: Nil = Enum(2)
+    val currentState = RegInit(checkReady)
+    switch(currentState) {
+        is (sending) {
+            // This state is in charge of checking for a ready signal that's false. This means the output has acknowledged and read in data and the "transaction" can be finished.
+            // The next response is to set valid to false to start the completion of the "transaction"
+            when (!io.out.ready) {
+                currentState := checkReady
+                // since this is the last action with the async on the outside, this should only happen for one cycle
+                io.in.ready := true.B
+            }
+            .otherwise {
+                currentState := sending
+            }
+        }
+        is (checkReady) {
+            // This state is in charge of checking if the ready signal of the fifo to write to is true and also that the queue is not empty (valid is true).
+            when (io.out.ready && io.in.valid) {
+                currentState := sending
+                // when sending, the valid signal must be set true as soon as possible, so here?
+            }
+            .otherwise {
+                currentState := checkReady
+            }
+        }
+    }
+    when (currentState === checkReady) {
+        io.out.valid := false.B
+    }
+    .elsewhen(currentState === sending) {
+        io.out.valid := true.B
+    }
+    .otherwise {
+        io.out.valid := false.B
+    }
+}
 
 // This is an input async interface based on a decoupled IO. the input will be handshaked, while the output will be a standard decoupled io. It will continuously output data if possible. If not, it will continuously try and but will signal ready to true.
 class async_io_in(numberOfBits: Int) extends Module {
