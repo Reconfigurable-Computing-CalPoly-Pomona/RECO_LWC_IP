@@ -17,7 +17,7 @@ class async_test extends AnyFlatSpec with ChiselScalatestTester {
       val rtest = Module(new multiclock())
       rtest.io.clockA := io.clockA.asClock
       io.out := rtest.io.out
-    }).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+    }).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // output should be 16
       dut.io.clockA.poke(1)
       dut.io.clockA.poke(0)

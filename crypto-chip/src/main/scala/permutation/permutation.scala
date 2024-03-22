@@ -119,7 +119,7 @@ class permutation_two extends Module {
     val x_in = Input(Vec(5, UInt(64.W)))
     val x_out = Output(Vec(5, UInt(64.W)))
     val done = Output(Bool())
-    val reg_temp = Output(UInt(4.W))
+    // val reg_temp = Output(UInt(4.W))
     // val reg_init = Output(UInt(25.W))
     // val clk = Input(Clock()) //CT
     // val rst = Input(Bool()) //CT
@@ -131,7 +131,7 @@ class permutation_two extends Module {
   val addition = withClock(io.clock_sub) {
     Module(new addition_layer())
   }
-  // modules below are for async passing of data from substitution to diffusion
+  // modules below are for async passing of data from input to output, going through substitution, then diffusion
   // after using these modules, this current module should be mostly combinational, like the asyncFIFOtest top module
   val async_out = Module(new async_io_out_vec_round(5, 64))
   val async_sub_in = withClock(io.clock_sub) {
@@ -150,7 +150,7 @@ class permutation_two extends Module {
   val substitution = withClock(io.clock_sub) {
     Module(new substitution_layer_compat())
   }
-  io.reg_temp := substitution.io.reg_temp
+  // io.reg_temp := substitution.io.reg_temp
   // setup control signals for substitution layer
   // valid should only be held for one cycle; this should be the case in the async module:
   // WARN: There's a chance that a new substitution layer will start before transferring through the async module - hence why decoupled io should be preferred. For now, the one using the module must check this properly
@@ -176,37 +176,43 @@ class permutation_two extends Module {
   async_diff_out.io.in.valid := diffusion.io.done
 
   // setup data transfer between layers
+  // this is data going into the async
   async_out.io.in.bits(0) := io.x_in(0)
   async_out.io.in.bits(1) := io.x_in(1)
-  // Q: for some reason, making the addition combinational to the substitution fixes the problem of the first round being incorrect
-  // This is a small problem since it extends the critical path to include the substition and addition layers. The compat layer converts things to registers anyways, so it might have little impact
-  // This might suggest that starting at the done state works weirdly; the state(2) assignment is not happening before the substitution layer starts as was previously assumed
-
-  // async_out.io.in.bits(2) := addition.io.x2_out
   async_out.io.in.bits(2) := io.x_in(2)
   async_out.io.in.bits(3) := io.x_in(3)
   async_out.io.in.bits(4) := io.x_in(4)
+  // also add the round information
   // ideally round_in should be 4 bits since it wil only ever go up to 12. For now, put 0s at the top
   async_out.io.in_round := 0.U(4.W) ## io.round_in
+  // connect to the substitution async module
   async_sub_in.io.in <> async_out.io.out
-
-
-
-  substitution.io.x_in := async_sub_in.io.out.bits
+  
+  // Q: for some reason, making the addition combinational to the substitution fixes the problem of the first round being incorrect
+  // This is a small problem since it extends the critical path to include the substition and addition layers. The compat layer converts things to registers anyways, so it might have little impact
+  // This might suggest that starting at the done state works weirdly; the state(2) assignment is not happening before the substitution layer starts as was previously assumed
+  // Connect the addition data (bits(2) + round)
+  addition.io.x2_in := async_out.io.out.bits(2)
+  addition.io.round_in := async_out.io.out_round
+  // Connect the substitution inputs
+  substitution.io.x_in(0) := async_sub_in.io.out.bits(0)
+  substitution.io.x_in(1) := async_sub_in.io.out.bits(1)
+  substitution.io.x_in(2) := addition.io.x2_out
+  substitution.io.x_in(3) := async_sub_in.io.out.bits(3)
+  substitution.io.x_in(4) := async_sub_in.io.out.bits(4)
+  // connect the output of substitution layer to the async module for output
   async_sub_out.io.in.bits := substitution.io.x_out
-
+  // connect to the async diffusion layer module
   async_diff_in.io.in <> async_sub_out.io.out
-
+  // connect the bits from substitution layer to diffusion
   diffusion.io.x_in := async_diff_in.io.out.bits
+  // connect the output of diffusion to the async output module
   async_diff_out.io.in.bits := diffusion.io.x_out
-
+  // connect the async diffusion output to the main async module
   async_in.io.in <> async_diff_out.io.out
+  // connect the data from the main async module to output, along with done signal tied to valid (valid == done)
   io.x_out := async_in.io.out.bits
   io.done := async_in.io.out.valid
-
-  // addition.io.x2_in := io.x_in(2)
-  addition.io.x2_in := async_sub_in.io.out.bits(2)
-  addition.io.round_in := async_out.io.out_round
 
   // default assignment just in case
   async_out.io.in.valid := false.B
@@ -215,7 +221,8 @@ class permutation_two extends Module {
   // Note: when start is set to true, this assumes the output (x_out) has been read from so no valid signal on the decoupled output is checked and the ready signal is sent for one cycle to "dequeue" the async_in's output.
 
   when(io.start) {
-    // remove value from output async, signal a valid input in the input async
+    // remove data from output async, signal a valid input in the input async
+      // WARN: might cause problems if there's no data to be read (but testing so far shows no problem reading when empty)
     async_out.io.in.valid := true.B
     async_in.io.out.ready := false.B
   }
@@ -390,13 +397,13 @@ class permutation_two_wrapper_reduced_io extends Module {
       start_reg := true.B
       // permutation_w.io.start := true.B
     }
+      .otherwise {
+        write_counter := write_counter + 1.U
+      }
+  }
     .otherwise {
-      write_counter := write_counter + 1.U
+      start_reg := false.B
     }
-  }
-  .otherwise {
-    start_reg := false.B
-  }
 
   // when (write_counter > 4.U) {
   //   start_reg := true.B
@@ -408,9 +415,9 @@ class permutation_two_wrapper_reduced_io extends Module {
     when(read_counter >= 4.U) {
       read_counter := 0.U
     }
-    .otherwise {
-      read_counter := read_counter + 1.U
-    }
+      .otherwise {
+        read_counter := read_counter + 1.U
+      }
   }
   io.s_out := tempout((4.U - read_counter))
 }
