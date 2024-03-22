@@ -323,10 +323,10 @@ class fifo_two(numberOfBits: Int) extends Module {
 // no sequential logic is used in this module directly, so no clock needs to be stepped
 class top(numberOfBits: Int) extends Module {
     val io = IO(new Bundle {
-        val clockA = Input(Bool())
-        val resetA = Input(Bool())
-        val clockB = Input(Bool())
-        val resetB = Input(Bool())
+        val clockA = Input(Clock())
+        // val resetA = Input(Bool())
+        val clockB = Input(Clock())
+        // val resetB = Input(Bool())
         val in = Flipped(Decoupled(UInt(numberOfBits.W)))
         val out = Decoupled(UInt(numberOfBits.W))
     })
@@ -336,7 +336,7 @@ class top(numberOfBits: Int) extends Module {
         // send_ack: ready from 1 to 0
         // end/finish: valid from 1 to 0
         // end_ack: ready from 0 to 1
-    val one = withClockAndReset(io.clockA.asClock, io.resetA) {
+    val one = withClock(io.clockA) {
         Module(new fifo_one(numberOfBits))
     }
     one.io.in <> io.in
@@ -344,10 +344,45 @@ class top(numberOfBits: Int) extends Module {
         // check valid: valid = 1 (0 to 1)
         // recv ack: ready from 1 to 0
         // finish: valid 1 to 0
-    val two = withClockAndReset(io.clockB.asClock, io.resetB) {
+    val two = withClock(io.clockB) {
         Module(new fifo_two(numberOfBits))
     }
     two.io.in <> one.io.out
 
     io.out <> two.io.out
+}
+class reset_test() extends Module {
+    val io = IO(new Bundle {
+        val out = Output(UInt(2.W))
+    })
+    // without reset, I assume it will be at 0
+    val first::second::third::fourth::Nil = Enum(4)
+    val state = RegInit(fourth)
+    switch(state) {
+        is(first) {
+            state := second
+        }
+        is(second) {
+            state := second
+        }
+        is(third) {
+            state := third
+        }
+        is(fourth) {
+            state := third
+        }
+    }
+    io.out := state
+    // // init register to 16 (5 bits)
+    // val tempReg = RegInit((2*2*2*2).U)
+    // io.out := tempReg
+    // tempReg := tempReg + 1.U
+}
+class multiclock() extends Module {
+    val io = IO(new Bundle {
+        val clockA = Input(Clock())
+        val out = Output(UInt(2.W))
+    })
+    val rtest = withClock(io.clockA) {Module(new reset_test())}
+    io.out := rtest.io.out
 }

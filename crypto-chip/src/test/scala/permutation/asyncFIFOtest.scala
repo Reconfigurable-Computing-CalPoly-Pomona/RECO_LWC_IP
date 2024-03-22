@@ -1,13 +1,51 @@
 package layers
 import chisel3._
+import chisel3.util._
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 import layers._
 import scala.math._
+import scala.runtime.BoxedUnit
 
 class async_test extends AnyFlatSpec with ChiselScalatestTester {
+  "initreg multiclock" should "work" in {
+    test(new Module {
+      val io = IO(new Bundle {
+        val clockA = Input(Bool())
+        val out = Output(UInt(2.W))
+      })
+      val rtest = Module(new multiclock())
+      rtest.io.clockA := io.clockA.asClock
+      io.out := rtest.io.out
+    }).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+      // output should be 16
+      dut.io.clockA.poke(1)
+      dut.io.clockA.poke(0)
+      dut.clock.step()
+      dut.io.clockA.poke(1)
+      dut.io.clockA.poke(0)
+      dut.clock.step()
+      println("state is: " + (dut.io.out.peek()))
+      // for (i <- 0 until 20) {
+      //   dut.io.clockA.poke(1)
+      //   dut.io.clockA.poke(0)
+      // }
+    }
+  }
   "n bit" should "work" in {
-    test(new top(10)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new Module {
+      val io = IO(new Bundle {
+        val clockA = Input(Bool())
+        val clockB = Input(Bool())
+        val in = Flipped(Decoupled(UInt(10.W)))
+        val out = Decoupled(UInt(10.W))
+      })
+      val top = Module(new top(10))
+      top.io.clockA := io.clockA.asClock
+      top.io.clockB := io.clockB.asClock
+      top.io.in <> io.in
+      io.out <> top.io.out
+    }).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
         for (i <- 10 until (pow(2, 10).intValue - 1)) {
           dut.io.in.bits.poke(i)
           dut.io.in.valid.poke(1)
@@ -40,8 +78,19 @@ class async_test extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   "one bit" should "work" in {
-    test(new top(1))
-      .withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new Module {
+      val io = IO(new Bundle {
+        val clockA = Input(Bool())
+        val clockB = Input(Bool())
+        val in = Flipped(Decoupled(UInt(1.W)))
+        val out = Decoupled(UInt(1.W))
+      })
+      val top = Module(new top(1))
+      top.io.clockA := io.clockA.asClock
+      top.io.clockB := io.clockB.asClock
+      top.io.in <> io.in
+      io.out <> top.io.out
+    }).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
         // put in a 0 for the data
         dut.io.in.bits.poke(0)
         dut.io.in.valid.poke(1)

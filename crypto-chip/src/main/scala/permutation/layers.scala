@@ -112,6 +112,7 @@ class substitution_layer_compat extends Module {
     val x_in = Input(Vec(5, UInt(64.W)))
     val x_out = Output(Vec(5, UInt(64.W)))
     val done = Output(Bool())
+    val reg_temp = Output(UInt(4.W))
   })
   val lut = Module(new substitution_fifo())
   val counter_in = RegInit(0.U(7.W))
@@ -129,6 +130,9 @@ class substitution_layer_compat extends Module {
   lut.io.in.valid := false.B
   lut.io.out.ready := false.B
   io.done := false.B
+  val reg_temp = RegInit(10.U)
+  reg_temp := reg_temp + 1.U
+  io.reg_temp := reg_temp
   val start::done::Nil = Enum(2)
   val current_state = RegInit(done)
   switch (current_state) {

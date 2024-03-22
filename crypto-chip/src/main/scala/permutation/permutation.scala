@@ -119,6 +119,7 @@ class permutation_two extends Module {
     val x_in = Input(Vec(5, UInt(64.W)))
     val x_out = Output(Vec(5, UInt(64.W)))
     val done = Output(Bool())
+    val reg_temp = Output(UInt(4.W))
     // val reg_init = Output(UInt(25.W))
     // val clk = Input(Clock()) //CT
     // val rst = Input(Bool()) //CT
@@ -149,7 +150,7 @@ class permutation_two extends Module {
   val substitution = withClock(io.clock_sub) {
     Module(new substitution_layer_compat())
   }
-
+  io.reg_temp := substitution.io.reg_temp
   // setup control signals for substitution layer
   // valid should only be held for one cycle; this should be the case in the async module:
   // WARN: There's a chance that a new substitution layer will start before transferring through the async module - hence why decoupled io should be preferred. For now, the one using the module must check this properly

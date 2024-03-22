@@ -211,7 +211,7 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
         val x_in = Input(Vec(5, UInt(64.W)))
         val x_out = Output(Vec(5, UInt(64.W)))
         val done = Output(Bool())
-        // val reg_init = Output(UInt(25.W))
+        val reg_temp = Output(UInt(4.W))
       })
       val permutation = Module(new permutation_two())
       permutation.io.clock_sub := io.clock_sub.asClock
@@ -221,7 +221,7 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
       permutation.io.x_in := io.x_in
       io.x_out := permutation.io.x_out
       io.done := permutation.io.done
-      io.reg_init := permutation.io.reg_init
+      io.reg_temp := permutation.io.reg_temp
     }).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) {
       dut =>
         val diff_clock = 1
