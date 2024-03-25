@@ -79,4 +79,10 @@ object permutationMain extends App {
     Array("--target-dir", "generated")
   )
   emitVerilog(new multiclock(), Array("--target-dir", "generated"))
+  emitVerilog(new add_init_test(), Array("--target-dir", "generated"))
+  emitVerilog(new async_io_in_generic(UInt(1.W)), Array("--target-dir", "generated"))
+  emitVerilog(new async_io_out_generic(UInt(1.W)), Array("--target-dir", "generated"))
+  emitVerilog(new sync_to_sync(UInt(1.W)), Array("--target-dir", "generated"))
+  emitVerilog(new generic_domain_test(), Array("--target-dir", "generated"))
+  emitVerilog(new domain_test_emu(), Array("--target-dir", "generated"))
 }

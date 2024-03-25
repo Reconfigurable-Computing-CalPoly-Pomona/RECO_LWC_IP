@@ -128,26 +128,26 @@ class permutation_two extends Module {
   // reg_temp := reg_temp + 1.U
   // io.reg_init := reg_temp
 
-  val addition = withClock(io.clock_sub) {
+  val addition = withClockAndReset(io.clock_sub, reset.asAsyncReset) {
     Module(new addition_layer())
   }
   // modules below are for async passing of data from input to output, going through substitution, then diffusion
   // after using these modules, this current module should be mostly combinational, like the asyncFIFOtest top module
   val async_out = Module(new async_io_out_vec_round(5, 64))
-  val async_sub_in = withClock(io.clock_sub) {
+  val async_sub_in = withClockAndReset(io.clock_sub, reset.asAsyncReset) {
     Module(new async_io_in_vec(5, 64))
   }
-  val async_sub_out = withClock(io.clock_sub) {
+  val async_sub_out = withClockAndReset(io.clock_sub, reset.asAsyncReset) {
     Module(new async_io_out_vec(5, 64))
   }
-  val async_diff_in = withClock(io.clock_diff) {
+  val async_diff_in = withClockAndReset(io.clock_diff, reset.asAsyncReset) {
     Module(new async_io_in_vec(5, 64))
   }
-  val async_diff_out = withClock(io.clock_diff) {
+  val async_diff_out = withClockAndReset(io.clock_diff, reset.asAsyncReset) {
     Module(new async_io_out_vec(5, 64))
   }
   val async_in = Module(new async_io_in_vec(5, 64))
-  val substitution = withClock(io.clock_sub) {
+  val substitution = withClockAndReset(io.clock_sub, reset.asAsyncReset) {
     Module(new substitution_layer_compat())
   }
   // io.reg_temp := substitution.io.reg_temp
@@ -163,7 +163,7 @@ class permutation_two extends Module {
   async_sub_out.io.in.valid := substitution.io.done
 
   // setup control signals for diffusion layer
-  val diffusion = withClock(io.clock_diff) {
+  val diffusion = withClockAndReset(io.clock_diff, reset.asAsyncReset) {
     Module(new diffusion_layer_compat())
   }
   diffusion.io.start := async_diff_in.io.out.valid
