@@ -21,8 +21,12 @@ class async_test extends AnyFlatSpec with ChiselScalatestTester {
       test.io.in := io.in
       test.io.start := io.start
       io.out := test.io.out
-    }).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    }).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
       println("output is: " + (dut.io.out.peekInt()))
+      dut.io.clockA.poke(1)
+      dut.io.clockA.poke(0)
+      dut.io.clockA.poke(1)
+      // dut.io.clockA.poke(0)
       dut.io.in.poke(0)
       dut.io.start.poke(1)
       dut.clock.step()
