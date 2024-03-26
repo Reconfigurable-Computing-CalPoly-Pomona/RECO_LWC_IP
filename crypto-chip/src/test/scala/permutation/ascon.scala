@@ -289,8 +289,12 @@ class wrappertest extends AnyFlatSpec with ChiselScalatestTester {
         // test(new permutation_one_wrapper) { dut1 =>
         // var pcycle = 13
         // poke(dut.io.s_in, "hfe9398aadb67f03d8bb21831c60f1002b48a92db98d5da6243189921b8f8e3e8348fa5c9d525e140".U)
+        dut.reset.poke(true.B)
         dut.io.clock_diff.poke(1)
         dut.io.clock_sub.poke(1)
+        dut.io.clock_diff.poke(0)
+        dut.io.clock_sub.poke(0)
+        dut.reset.poke(false.B)
         val diff_clock = 1
         val sub_clock = 2
         dut.clock.setTimeout(2000)
