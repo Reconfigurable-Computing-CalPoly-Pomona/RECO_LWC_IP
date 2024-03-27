@@ -536,7 +536,7 @@ class domain_test_emu() extends Module {
   // might need to invert S,R inputs
   // debounce.io.S := io.start
   // debounce.io.R := io.start
-  
+
   val test = withReset(int_reset) {
     Module(new generic_domain_test())
   }
@@ -576,7 +576,7 @@ class domain_test_emu() extends Module {
       // read data out; might dequeue to early, so this might need to be registered
       // technically, due to the state machine, ready should be high for only one cycle
       // also adds start check so it doesn't continue multiple times while start is held high
-      when(test.io.out.valid && io.start === false.B) {
+      when(test.io.out.valid) {
         state := done
       }
         .otherwise {
