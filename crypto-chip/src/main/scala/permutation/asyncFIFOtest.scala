@@ -511,6 +511,16 @@ class async_io_in_generic[T <: Data](gen: T) extends Module {
     }
 
 }
+// class SR_latch() extends Module {
+//   val io = IO(new Bundle {
+//     val S = Input(Bool())
+//     val R = Input(Bool())
+//     val Q = Output(Bool())
+//     val Q_not = Output(Bool())
+//   })
+//   io.Q := ~(io.R | io.Q_not)
+//   io.Q_not := ~(io.S | io.Q)
+// }
 // based on input, go perform addition in reset_test module and read outputs. Result should be either +1 or +2
 // push start to start; can perform a reset if this test fails?
 class domain_test_emu() extends Module {
@@ -521,17 +531,26 @@ class domain_test_emu() extends Module {
     // val in_reset = Input(Bool())
     val out = Output(UInt(4.W))
   })
-  val test = Module(new generic_domain_test())
+  // val debounce = Module(new SR_latch())
+  val int_reset = Wire(Bool())
+  // might need to invert S,R inputs
+  // debounce.io.S := io.start
+  // debounce.io.R := io.start
+  
+  val test = withReset(int_reset) {
+    Module(new generic_domain_test())
+  }
   test.io.clockA := io.clockA
   test.io.in.bits := io.in
   io.out := test.io.out.bits
   // default "tick" assignments since I'm too lazy to find an easier alternative
-  // reset := false.B
+  // Try resetting when this module is reset; won't work if this module is too fast and will need delays if so
+  int_reset := false.B
   test.io.in.valid := false.B
   test.io.out.ready := false.B
 
   val perform_reset :: done :: start :: write_in :: read_out :: Nil = Enum(5)
-  val state = RegInit(done)
+  val state = RegInit(perform_reset)
   switch(state) {
     is(done) {
       when(io.start) {
@@ -541,10 +560,10 @@ class domain_test_emu() extends Module {
           state := done
         }
     }
-    // is(perform_reset) {
-    //   reset := true.B
-    //   state := done
-    // }
+    is(perform_reset) {
+      int_reset := true.B
+      state := done
+    }
     is(write_in) {
       when(test.io.in.ready) {
         state := read_out
@@ -556,7 +575,8 @@ class domain_test_emu() extends Module {
     is(read_out) {
       // read data out; might dequeue to early, so this might need to be registered
       // technically, due to the state machine, ready should be high for only one cycle
-      when(test.io.out.valid) {
+      // also adds start check so it doesn't continue multiple times while start is held high
+      when(test.io.out.valid && io.start === false.B) {
         state := done
       }
         .otherwise {
@@ -641,7 +661,7 @@ class add_reset_test() extends Module with RequireAsyncReset {
   val regtemp = RegInit(15.U)
   // without reset, this should be + 1; with reset this should be + 2
   // regtemp := io.in.bits + state
-  io.out.bits := regtemp + io.in.bits
+  io.out.bits := regtemp
   // dequeue from input since addition should be combinational and write to output
   // if not, this module's ready
   // when(io.in.valid) {
@@ -659,31 +679,31 @@ class add_reset_test() extends Module with RequireAsyncReset {
   switch(state_decoupled_io) {
     is(read) {
       // reminder that ready is a "dequeue" signal, not a "ready for a new value" signal
-      when (io.out.ready) {
+      when(io.out.ready) {
         state_decoupled_io := ready
       }
-      .otherwise {
-        state_decoupled_io := read
-      }
+        .otherwise {
+          state_decoupled_io := read
+        }
     }
-    is (ready) {
-      when (io.in.valid) {
+    is(ready) {
+      when(io.in.valid) {
         state_decoupled_io := read
         // every read will increment regtemp
-        regtemp := regtemp + 1.U
+        regtemp := io.in.bits
       }
-      .otherwise {
-        state_decoupled_io := ready
-      }
+        .otherwise {
+          state_decoupled_io := ready
+        }
     }
   }
 
-  when (state_decoupled_io === ready) {
+  when(state_decoupled_io === ready) {
     io.out.valid := false.B
     io.in.ready := true.B
   }
-  .elsewhen (state_decoupled_io === read) {
-    io.in.ready := false.B
-    io.out.valid := true.B
-  }
+    .elsewhen(state_decoupled_io === read) {
+      io.in.ready := false.B
+      io.out.valid := true.B
+    }
 }
