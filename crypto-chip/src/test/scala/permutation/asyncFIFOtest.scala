@@ -24,9 +24,11 @@ class async_test extends AnyFlatSpec with ChiselScalatestTester {
     }).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
       println("output is: " + (dut.io.out.peekInt()))
       // dut.reset.poke(true.B)
-      dut.io.clockA.poke(1)
-      dut.io.clockA.poke(0)
+      // dut.io.clockA.poke(1)
+      // dut.io.clockA.poke(0)
       // dut.reset.poke(false.B)
+      // extra cycle to start the state machine from reset
+      dut.clock.step()
       dut.io.in.poke(0)
       dut.io.start.poke(1)
       dut.clock.step()
@@ -39,6 +41,8 @@ class async_test extends AnyFlatSpec with ChiselScalatestTester {
         dut.io.clockA.poke(1)
         dut.io.clockA.poke(0)
       }
+      // poke 3 and the output should still be 0
+      dut.io.in.poke(3)
       println("output is: " + (dut.io.out.peekInt()))
       dut.io.start.poke(1)
       dut.clock.step()
@@ -52,7 +56,6 @@ class async_test extends AnyFlatSpec with ChiselScalatestTester {
         dut.io.clockA.poke(0)
       }
       println("output is: " + (dut.io.out.peekInt()))
-
     }
   }
   "initreg multiclock" should "work" in {
