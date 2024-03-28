@@ -115,7 +115,7 @@ class permutation_two extends Module {
     val clock_sub = Input(Clock())
     val clock_diff = Input(Clock())
     val start = Input(Bool())
-    val round_in = Input(UInt(8.W))
+    val round_in = Input(UInt(4.W))
     val x_in = Input(Vec(5, UInt(64.W)))
     val x_out = Output(Vec(5, UInt(64.W)))
     val done = Output(Bool())
@@ -153,7 +153,7 @@ class permutation_two extends Module {
   // setup clock, round, state_in
   main_to_sub.io.clockA := io.clock_sub
   // only 4 bits
-  main_to_sub.io.in.bits.round := io.round_in(3,0)
+  main_to_sub.io.in.bits.round := io.round_in
   main_to_sub.io.in.bits.state_data := io.x_in
   // setup outputs into addition+substitution layers: round, state_in
   addition.io.round_in := main_to_sub.io.out.bits.round

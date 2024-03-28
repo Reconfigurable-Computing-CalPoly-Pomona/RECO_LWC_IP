@@ -12,7 +12,7 @@ import _root_.permutation.posedge
 //  The equation for this operation should be x2(8,0) = x2(8,0) ^ lut(round)
 class addition_layer extends Module {
   val io = IO(new Bundle {
-    val round_in = Input(UInt(8.W))
+    val round_in = Input(UInt(4.W))
     val x2_in = Input(UInt(64.W))
     val x2_out = Output(UInt(64.W))
   })
