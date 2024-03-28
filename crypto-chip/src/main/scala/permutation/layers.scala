@@ -8,6 +8,7 @@ import _root_.permutation.posedge
 // import chiseltest.formal._
 // TODO: all ready signals should be used properly; use like a mutex
 
+// MAJOR WARN: make sure round_in NEVER goes outside of range. This might be the cause of many issues in hardware/FPGA
 // This is a combinational circuit, performing constant xor with 5 bits of the input based on round number.
 //  The equation for this operation should be x2(8,0) = x2(8,0) ^ lut(round)
 class addition_layer extends Module {
@@ -19,6 +20,7 @@ class addition_layer extends Module {
 
   // Combinational
   val array = Wire(Vec(12, UInt(64.W)))
+
   array(0) := "hf0".U
   array(1) := "he1".U
   array(2) := "hd2".U
