@@ -177,19 +177,21 @@ class permutation_two extends Module {
   // WARN: There's a chance that a new substitution layer will start before transferring through the async module - hence why decoupled io should be preferred. For now, the one using the module must check this properly
   substitution.io.start := main_to_sub.io.out.valid
   // when substitution is done, "dequeue" input from async module
-  main_to_sub.io.out.ready := substitution.io.done
+    // WARN: unfortunately, the async module expects a ready signal to be on when ready, not when dequeueing. This can probably be set to true instead of done, but it's not ideal.
+  main_to_sub.io.out.ready := true.B
 
   // Note: when start is set to true, this assumes the output (x_out) has been read from so no valid signal on the decoupled output is checked and the ready signal is sent for one cycle to "dequeue" the async_in's output.
   val async_in = Module(new async_io_in_vec(5, 64))
   when(io.start) {
     // remove data from output async, signal a valid input in the input async
     // WARN: might cause problems if there's no data to be read (but testing so far shows no problem reading when empty)
-    async_in.io.out.ready := true.B
+    // WARN: The ready signal is also used "incorrectly" here. It should be using it as a "dequeue" signal, not a "ready to receive data" signal
+    async_in.io.out.ready := false.B
     main_to_sub.io.in.valid := true.B
   }
     .otherwise {
       main_to_sub.io.in.valid := false.B
-      async_in.io.out.ready := false.B
+      async_in.io.out.ready := true.B
     }
 
   val async_sub_out = withClockAndReset(io.clock_sub, int_reset.asAsyncReset) {

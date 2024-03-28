@@ -39,6 +39,7 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
       io.s_out := wrapper_reduced.io.s_out
     }).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) {
       dut =>
+        println("starting reduced io test")
         dut.reset.poke(true.B)
         dut.io.clock_diff.poke(1)
         dut.io.clock_sub.poke(1)
@@ -230,16 +231,18 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
       // io.reg_temp := permutation.io.reg_temp
     }).withAnnotations(Seq(WriteVcdAnnotation)).withAnnotations(Seq(VerilatorBackendAnnotation)) {
       dut =>
+        println("starting test")
         val diff_clock = 1
         val sub_clock = 2
-        dut.reset.poke(true.B)
+        dut.clock.step()
+        // dut.reset.poke(true.B)
         // dut.io.clock_diff.poke(0)
         dut.io.clock_diff.poke(1)
         dut.io.clock_diff.poke(0)
         // dut.io.clock_sub.poke(0)
         dut.io.clock_sub.poke(1)
         dut.io.clock_sub.poke(0)
-        dut.reset.poke(false.B)
+        // dut.reset.poke(false.B)
         dut.clock.step()
         for (round <- 0 until 5) {
           // inputs are: x_in(i) = 10, round_in = 10 for the initial after reset
@@ -340,6 +343,7 @@ class Permutation_once extends AnyFlatSpec with ChiselScalatestTester {
   }
   "permutation original" should "work" in {
     test(new permutation_one()).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+      println("starting permutation original test")
       for (round <- 0 until 5) {
           // start with state of all 10, round with 10; CONFIRMED: this does not cause problems, as it shouldn't
           for (i <- 0 until 5) {
