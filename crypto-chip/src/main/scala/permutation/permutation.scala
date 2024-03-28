@@ -266,7 +266,7 @@ class permutation_two_wrapper extends Module {
   val x2_Reg = RegInit(10.U(64.W))
   val x3_Reg = RegInit(10.U(64.W))
   val x4_Reg = RegInit(10.U(64.W))
-  val current_round = RegInit(10.U(8.W))
+  val current_round = RegInit(10.U(4.W))
 
   val single_round = Module(new permutation_two())
 
