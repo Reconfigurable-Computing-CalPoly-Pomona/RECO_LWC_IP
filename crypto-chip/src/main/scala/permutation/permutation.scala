@@ -142,10 +142,56 @@ class permutation_two extends Module {
   }
   // modules below are for async passing of data from input to output, going through substitution, then diffusion
   // after using these modules, this current module should be mostly combinational, like the asyncFIFOtest top module
-  val async_out = Module(new async_io_out_vec_round(5, 64))
-  val async_sub_in = withClockAndReset(io.clock_sub, int_reset.asAsyncReset) {
-    Module(new async_io_in_vec(5, 64))
+  class vec_and_round extends Bundle {
+    val round = UInt(4.W)
+    val state_data = Vec(5, UInt(64.W))
   }
+
+  val main_to_sub = withReset(int_reset.asAsyncReset) {
+    Module (new sync_to_sync(new vec_and_round()))
+  }
+  // setup clock, round, state_in
+  main_to_sub.io.clockA := io.clock_sub
+  // only 4 bits
+  main_to_sub.io.in.bits.round := io.round_in(3,0)
+  main_to_sub.io.in.bits.state_data := io.x_in
+  // setup outputs into addition+substitution layers: round, state_in
+  addition.io.round_in := main_to_sub.io.out.bits.round
+  addition.io.x2_in := main_to_sub.io.out.bits.state_data(2)
+  
+  // Q: for some reason, making the addition combinational to the substitution fixes the problem of the first round being incorrect
+  // This is a small problem since it extends the critical path to include the substition and addition layers. The compat layer converts things to registers anyways, so it might have little impact
+  // This might suggest that starting at the done state works weirdly; the state(2) assignment is not happening before the substitution layer starts as was previously assumed
+  val substitution = withClockAndReset(io.clock_sub, int_reset.asAsyncReset) {
+    Module(new substitution_layer_compat())
+  }
+  // Connect the substitution inputs
+  substitution.io.x_in(0) := main_to_sub.io.out.bits.state_data(0)
+  substitution.io.x_in(1) := main_to_sub.io.out.bits.state_data(1)
+  substitution.io.x_in(2) := addition.io.x2_out
+  substitution.io.x_in(3) := main_to_sub.io.out.bits.state_data(3)
+  substitution.io.x_in(4) := main_to_sub.io.out.bits.state_data(4)
+  
+  // setup control signals for substitution layer
+  // valid should only be held for one cycle; this should be the case in the async module:
+  // WARN: There's a chance that a new substitution layer will start before transferring through the async module - hence why decoupled io should be preferred. For now, the one using the module must check this properly
+  substitution.io.start := main_to_sub.io.out.valid
+  // when substitution is done, "dequeue" input from async module
+  main_to_sub.io.out.ready := substitution.io.done
+
+  // Note: when start is set to true, this assumes the output (x_out) has been read from so no valid signal on the decoupled output is checked and the ready signal is sent for one cycle to "dequeue" the async_in's output.
+  val async_in = Module(new async_io_in_vec(5, 64))
+  when(io.start) {
+    // remove data from output async, signal a valid input in the input async
+    // WARN: might cause problems if there's no data to be read (but testing so far shows no problem reading when empty)
+    async_in.io.out.ready := true.B
+    main_to_sub.io.in.valid := true.B
+  }
+    .otherwise {
+      main_to_sub.io.in.valid := false.B
+      async_in.io.out.ready := false.B
+    }
+
   val async_sub_out = withClockAndReset(io.clock_sub, int_reset.asAsyncReset) {
     Module(new async_io_out_vec(5, 64))
   }
@@ -156,20 +202,7 @@ class permutation_two extends Module {
     withClockAndReset(io.clock_diff, int_reset.asAsyncReset) {
       Module(new async_io_out_vec(5, 64))
     }
-  val async_in = Module(new async_io_in_vec(5, 64))
-  val substitution = withClockAndReset(io.clock_sub, int_reset.asAsyncReset) {
-    Module(new substitution_layer_compat())
-  }
-  // io.reg_temp := substitution.io.reg_temp
-  // setup control signals for substitution layer
-  // valid should only be held for one cycle; this should be the case in the async module:
-  // WARN: There's a chance that a new substitution layer will start before transferring through the async module - hence why decoupled io should be preferred. For now, the one using the module must check this properly
-  substitution.io.start := async_sub_in.io.out.valid
-  // unsure of line below but ready needs to be set
-  // val sub_done = Module(new posedge())
-  // sub_done.io.in := substitution.io.done
 
-  async_sub_in.io.out.ready := true.B
   async_sub_out.io.in.valid := substitution.io.done
 
   // setup control signals for diffusion layer
@@ -185,31 +218,6 @@ class permutation_two extends Module {
   async_diff_in.io.out.ready := true.B
   async_diff_out.io.in.valid := diffusion.io.done
 
-  // setup data transfer between layers
-  // this is data going into the async
-  async_out.io.in.bits(0) := io.x_in(0)
-  async_out.io.in.bits(1) := io.x_in(1)
-  async_out.io.in.bits(2) := io.x_in(2)
-  async_out.io.in.bits(3) := io.x_in(3)
-  async_out.io.in.bits(4) := io.x_in(4)
-  // also add the round information
-  // ideally round_in should be 4 bits since it wil only ever go up to 12. For now, put 0s at the top. If this is wrong, the max round will be 15, 7, 3, etc
-  async_out.io.in_round := io.round_in(3,0)
-  // connect to the substitution async module
-  async_sub_in.io.in <> async_out.io.out
-
-  // Q: for some reason, making the addition combinational to the substitution fixes the problem of the first round being incorrect
-  // This is a small problem since it extends the critical path to include the substition and addition layers. The compat layer converts things to registers anyways, so it might have little impact
-  // This might suggest that starting at the done state works weirdly; the state(2) assignment is not happening before the substitution layer starts as was previously assumed
-  // Connect the addition data (bits(2) + round)
-  addition.io.x2_in := async_out.io.out.bits(2)
-  addition.io.round_in := async_out.io.out_round
-  // Connect the substitution inputs
-  substitution.io.x_in(0) := async_sub_in.io.out.bits(0)
-  substitution.io.x_in(1) := async_sub_in.io.out.bits(1)
-  substitution.io.x_in(2) := addition.io.x2_out
-  substitution.io.x_in(3) := async_sub_in.io.out.bits(3)
-  substitution.io.x_in(4) := async_sub_in.io.out.bits(4)
   // connect the output of substitution layer to the async module for output
   async_sub_out.io.in.bits := substitution.io.x_out
   // connect to the async diffusion layer module
@@ -224,22 +232,6 @@ class permutation_two extends Module {
   io.x_out := async_in.io.out.bits
   io.done := async_in.io.out.valid
 
-  // default assignment just in case
-  async_out.io.in.valid := false.B
-  async_in.io.out.ready := true.B
-
-  // Note: when start is set to true, this assumes the output (x_out) has been read from so no valid signal on the decoupled output is checked and the ready signal is sent for one cycle to "dequeue" the async_in's output.
-
-  when(io.start) {
-    // remove data from output async, signal a valid input in the input async
-    // WARN: might cause problems if there's no data to be read (but testing so far shows no problem reading when empty)
-    async_out.io.in.valid := true.B
-    async_in.io.out.ready := false.B
-  }
-    .otherwise {
-      async_out.io.in.valid := false.B
-      async_in.io.out.ready := true.B
-    }
 }
 
 // TODO: fifo wrapper for permutation with pynq
