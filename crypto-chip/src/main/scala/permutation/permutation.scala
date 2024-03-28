@@ -127,27 +127,37 @@ class permutation_two extends Module {
   // val reg_temp = RegInit(2340956.U)
   // reg_temp := reg_temp + 1.U
   // io.reg_init := reg_temp
+  val int_reset = Wire(Bool())
+  val reset_init_state = RegInit(1.U)
+  when(reset_init_state === 1.U) {
+    int_reset := true.B
+    reset_init_state := 0.U
+  }
+    .otherwise {
+      int_reset := false.B
+    }
 
-  val addition = withClockAndReset(io.clock_sub, reset.asAsyncReset) {
+  val addition = withClockAndReset(io.clock_sub, int_reset.asAsyncReset) {
     Module(new addition_layer())
   }
   // modules below are for async passing of data from input to output, going through substitution, then diffusion
   // after using these modules, this current module should be mostly combinational, like the asyncFIFOtest top module
   val async_out = Module(new async_io_out_vec_round(5, 64))
-  val async_sub_in = withClockAndReset(io.clock_sub, reset.asAsyncReset) {
+  val async_sub_in = withClockAndReset(io.clock_sub, int_reset.asAsyncReset) {
     Module(new async_io_in_vec(5, 64))
   }
-  val async_sub_out = withClockAndReset(io.clock_sub, reset.asAsyncReset) {
+  val async_sub_out = withClockAndReset(io.clock_sub, int_reset.asAsyncReset) {
     Module(new async_io_out_vec(5, 64))
   }
-  val async_diff_in = withClockAndReset(io.clock_diff, reset.asAsyncReset) {
+  val async_diff_in = withClockAndReset(io.clock_diff, int_reset.asAsyncReset) {
     Module(new async_io_in_vec(5, 64))
   }
-  val async_diff_out = withClockAndReset(io.clock_diff, reset.asAsyncReset) {
-    Module(new async_io_out_vec(5, 64))
-  }
+  val async_diff_out =
+    withClockAndReset(io.clock_diff, int_reset.asAsyncReset) {
+      Module(new async_io_out_vec(5, 64))
+    }
   val async_in = Module(new async_io_in_vec(5, 64))
-  val substitution = withClockAndReset(io.clock_sub, reset.asAsyncReset) {
+  val substitution = withClockAndReset(io.clock_sub, int_reset.asAsyncReset) {
     Module(new substitution_layer_compat())
   }
   // io.reg_temp := substitution.io.reg_temp
@@ -163,7 +173,7 @@ class permutation_two extends Module {
   async_sub_out.io.in.valid := substitution.io.done
 
   // setup control signals for diffusion layer
-  val diffusion = withClockAndReset(io.clock_diff, reset.asAsyncReset) {
+  val diffusion = withClockAndReset(io.clock_diff, int_reset.asAsyncReset) {
     Module(new diffusion_layer_compat())
   }
   diffusion.io.start := async_diff_in.io.out.valid
@@ -183,11 +193,11 @@ class permutation_two extends Module {
   async_out.io.in.bits(3) := io.x_in(3)
   async_out.io.in.bits(4) := io.x_in(4)
   // also add the round information
-  // ideally round_in should be 4 bits since it wil only ever go up to 12. For now, put 0s at the top
-  async_out.io.in_round := 0.U(4.W) ## io.round_in
+  // ideally round_in should be 4 bits since it wil only ever go up to 12. For now, put 0s at the top. If this is wrong, the max round will be 15, 7, 3, etc
+  async_out.io.in_round := io.round_in(3,0)
   // connect to the substitution async module
   async_sub_in.io.in <> async_out.io.out
-  
+
   // Q: for some reason, making the addition combinational to the substitution fixes the problem of the first round being incorrect
   // This is a small problem since it extends the critical path to include the substition and addition layers. The compat layer converts things to registers anyways, so it might have little impact
   // This might suggest that starting at the done state works weirdly; the state(2) assignment is not happening before the substitution layer starts as was previously assumed
@@ -222,7 +232,7 @@ class permutation_two extends Module {
 
   when(io.start) {
     // remove data from output async, signal a valid input in the input async
-      // WARN: might cause problems if there's no data to be read (but testing so far shows no problem reading when empty)
+    // WARN: might cause problems if there's no data to be read (but testing so far shows no problem reading when empty)
     async_out.io.in.valid := true.B
     async_in.io.out.ready := false.B
   }
@@ -355,6 +365,7 @@ class permutation_two_wrapper_reduced_io extends Module {
     val read = Input(Bool())
     val s_out = Output(UInt(64.W))
   })
+  // val reset_int = Wire(false.B)
   val permutation_w = Module(new permutation_two_wrapper())
   permutation_w.io.clock_diff := io.clock_diff
   permutation_w.io.clock_sub := io.clock_sub
@@ -420,6 +431,12 @@ class permutation_two_wrapper_reduced_io extends Module {
       }
   }
   io.s_out := tempout((4.U - read_counter))
+  // // simple reset init
+  // val init_state = RegInit(1.U)
+  // when(init_state === 1.U) {
+  //   init_state := 0.U
+  //   reset_int := true.B
+  // }
 }
 
 class permutation_three extends Module {
